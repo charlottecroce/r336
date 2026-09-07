@@ -1,0 +1,82 @@
+// bealaí.sb — loighic agus clárú na mbealaí (Céim 4 agus 5).
+//
+// Fanann Express agus EJS mar atá. Ó chéim 0.4 i leith is i Spicebag a
+// chláraítear na bealaí freisin, agus ní dhéanann JavaScript ach an tosú.
+//
+// Trí ghné nua le feiceáil anseo:
+//
+//   sealadach     staid an mhodúil: an rud atá ann faoi láthair, seachas an
+//                 rud atá ann go buan
+//   cuir … ar …   athrú staide mar ordú: ní féidir é a dhéanamh i bhfeidhm
+//   a <briathar>  an briathar ina ainmfhocal, an t-aon slí a luaitear ordú
+
+seasmhach sonraí   = ó "./sonraí.sb"
+seasmhach bun      = ó "../rt/bunúsach.js"
+seasmhach freastal = ó "../rt/freastal.js"
+
+struchtúr AmharcLiosta {
+    teideal: Teaghrán
+    daoine: Liosta(Iasacht)
+}
+
+struchtúr AmharcDuine {
+    teideal: Teaghrán
+    duine: Iasacht
+    aimsíodh: Bool
+}
+
+// Níl aon stór ann go dtí go dtosaítear an feidhmchlár, agus sin an rud a
+// insíonn "bí" dúinn.
+sealadach stór: Iasacht = neamhní
+
+ag gníomh tosaigh(conair: Teaghrán) {
+    cuir tar éis oscailStór ó shonraí(conair) ar stór
+    síolaigh
+}
+
+ag gníomh síolaigh() {
+    tar éis cruthaighScéim ó shonraí(stór)
+    seasmhach rónna: Liosta(Iasacht) = tar éis gachDuine ó shonraí(stór)
+    má folamh ó rónna {
+        tar éis cuirDuine ó shonraí(stór, "Charlotte", 20)
+        tar éis cuirDuine ó shonraí(stór, "Séamus", 12)
+        tar éis cuirDuine ó shonraí(stór, "Aoife", 34)
+    }
+}
+
+ag gníomh liostaigh(iarr: Iasacht, freag: Iasacht) {
+    seasmhach daoine = tar éis gachDuine ó shonraí(stór)
+    render ó fhreag("innéacs", AmharcLiosta {
+        teideal: "Daoine",
+        daoine: daoine
+    })
+}
+
+ag gníomh taispeáin(iarr: Iasacht, freag: Iasacht) {
+    // Coinníonn ball ar iasacht a ainm iasachta: ní aistrímid API duine eile.
+    seasmhach aitheantas = uimhir ó bhun(id ó pharams ó iarr)
+    // `is` mar aicmiú: an uimhir í an rud a tháinig isteach? Ní uimhir é NaN.
+    má aitheantas is Uimhir {
+        seasmhach duine = tar éis duineDeRéir ó shonraí(stór, aitheantas)
+        render ó fhreag("duine", AmharcDuine {
+            teideal: teideal(duine),
+            duine: duine,
+            aimsíodh: tá duine
+        })
+    } mura {
+        status ó fhreag(400)
+        send ó fhreag("Aitheantas neamhbhailí.")
+    }
+}
+
+// `bí` mar cheist bheithe, ní mar aicmiú: an bhfuil aon rud ann?
+feidhm teideal(duine: Iasacht) -> Teaghrán {
+    má tá duine { "Duine" } mura { "Gan aimsiú" }
+}
+
+// `a liostaigh`, `a thaispeáin`: an briathar mar ainmfhocal. Gan an cháithnín
+// seo bheadh E501 ann — ní ainmní é ordú.
+gníomh cláraigh(app: Iasacht) {
+    bealach ó fhreastal(app, "/", a liostaigh)
+    bealach ó fhreastal(app, "/duine/:id", a thaispeáin)
+}

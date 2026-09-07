@@ -1,0 +1,24 @@
+// beannacht.sb — an clár samplach ó §24 den tsonraíocht
+
+struchtúr Duine {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+feidhm beannacht(duine: Duine) -> Teaghrán {
+    "Dia duit, " + ainm ó dhuine
+}
+
+feidhm dúbail(x: Uimhir) -> Uimhir {
+    x + x
+}
+
+seasmhach duine = Duine {
+    ainm: "Charlotte",
+    aois: 20
+}
+
+seasmhach teachtaireacht = beannacht(duine)
+
+scríobh teachtaireacht
+scríobh dúbail(aois ó dhuine)

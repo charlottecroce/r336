@@ -1,0 +1,65 @@
+// staid.sb — seasmhach i gcoinne sealadach, agus "cuir … ar …".
+//
+// Is é an scaradh céanna atá idir `is` agus `bí` an scaradh atá idir an dá
+// chineál ceangail (§13, §14):
+//
+//   seasmhach → an rud atá ann go buan  : ní athraíonn sé
+//   sealadach → an rud atá ann faoi láthair : féadann sé athrú
+//
+// Agus is ordú é an t-athrú féin. "Cuir uisce ar an bplanda" — cuireann tú
+// staid ar rud. Toisc gur ordú é, tá sé faoi na rialacha modha atá ann
+// cheana: ní féidir "cuir" a úsáid taobh istigh d'fheidhm (E502), agus ní
+// féidir staid a chur ar rud seasmhach (E510).
+//
+// Séimhíonn `ar` a chomhlánú, díreach mar a dhéanann `ó`.
+
+struchtúr Cuntas {
+    úinéir: Teaghrán
+    iarmhéid: Uimhir
+}
+
+gníomh taisc(sealadach cuntas: Cuntas, méid: Uimhir) {
+    cuir iarmhéid ó chuntas + méid ar iarmhéid ó chuntas
+}
+
+// Ní athraíonn feidhm aon rud: ní dhéanann sí ach an luach a lua.
+feidhm saibhir ó Chuntas(féin) -> Bool {
+    iarmhéid ó fhéin >= 100
+}
+
+gníomh príomh() {
+    sealadach cuntas = Cuntas { úinéir: "Cáit", iarmhéid: 0 }
+
+    taisc cuntas, 40
+    taisc cuntas, 70
+
+    scríobh úinéir ó chuntas + ": " + tuairisc(cuntas)
+
+    sealadach comhaireamh = 0
+    cuir comhaireamh + 1 ar chomhaireamh
+    cuir comhaireamh + 1 ar chomhaireamh
+    scríobh "orduithe: " + focal(comhaireamh)
+
+    tuairiscigh Cuntas { úinéir: "Oisín", iarmhéid: 5 }
+}
+
+feidhm tuairisc(cuntas: Cuntas) -> Teaghrán {
+    má saibhir ó chuntas() { "saibhir" } mura { "bocht" }
+}
+
+// `mura <c>` is "if NOT c", not "else if c" — that is what the Irish word
+// means, and the compiler does not pretend otherwise. Positive alternatives
+// nest inside a bare `mura`.
+feidhm focal(u: Uimhir) -> Teaghrán {
+    má u == 1 { "aon" } mura {
+        má u == 2 { "dhá" } mura { "roinnt" }
+    }
+}
+
+// The natural use of `mura` with a condition is plain negation: Spicebag has
+// no `!` operator, because Irish negates with a particle, not an operator.
+gníomh tuairiscigh(cuntas: Cuntas) {
+    mura saibhir ó chuntas() {
+        scríobh úinéir ó chuntas + " is ag teastáil tuilleadh uaidh."
+    }
+}

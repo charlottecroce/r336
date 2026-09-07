@@ -1,0 +1,28 @@
+// copail.sb — `is` i gcoinne `bí`.
+//
+//   is  →  aitheantas / aicmiú : cén rud é?      (§13)
+//   bí  →  bheith / staid      : an bhfuil sé ann? (§14)
+//
+// Ní hionann iad, agus ní féidir ceann amháin a chur in ionad an chinn eile.
+
+struchtúr Duine {
+    ainm: Teaghrán
+}
+
+seasmhach duine = Duine { ainm: "Charlotte" }
+
+má duine is Duine {
+    scríobh "Is duine é: " + ainm ó dhuine
+}
+
+má tá duine {
+    scríobh "Tá duine ann."
+} mura {
+    scríobh "Níl duine ar bith ann."
+}
+
+// Aicmiú ar luach bunúsach.
+seasmhach aois = 20
+má aois is Uimhir {
+    scríobh "Is uimhir í an aois."
+}

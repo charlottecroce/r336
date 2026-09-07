@@ -1,0 +1,41 @@
+// modh.sb — an modh ordaitheach i gcoinne an mhodh tháscaigh (§17).
+//
+// Sa Ghaeilge is é fréamh an bhriathair an modh ordaitheach: "scríobh!",
+// "déan!", "fan!". Ní ainmní é ordú, ní ghlacann sé le hainmní, agus tagann
+// sé ar dtús san abairt. Sin an fáth go dtugtar orduithe gan lúibíní i
+// Spicebag agus nach féidir iad a úsáid mar shlonn.
+//
+//   feidhm  → luaitear rud : tugann sí ainmní ar ais
+//   gníomh  → déantar rud  : ní thugann sé aon rud ar ais
+
+struchtúr Duine {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+// Táscach: ríomhann sí luach agus ní dhéanann sí faic.
+feidhm céim ó Dhuine(féin) -> Teaghrán {
+    má aois ó fhéin >= 18 { "aosta" } mura { "óg" }
+}
+
+// Ordaitheach: ní thugann sé luach ar ais, agus tugtar mar ordú é.
+gníomh fógair(duine: Duine) {
+    scríobh "── " + ainm ó dhuine
+    scríobh "   céim: " + céim ó dhuine()
+}
+
+fógair Duine { ainm: "Charlotte", aois: 20 }
+fógair Duine { ainm: "Séamus", aois: 12 }
+
+// Liostaí. `fad ó dhaoine` — an gaol seilbhe céanna ar chineál ionsuite.
+seasmhach daoine = [
+    Duine { ainm: "Charlotte", aois: 20 },
+    Duine { ainm: "Séamus", aois: 12 }
+]
+
+scríobh "líon: " + comhaireamh(fad ó dhaoine)
+scríobh "folamh: " + comhaireamh(fad ó [])
+
+feidhm comhaireamh(u: Uimhir) -> Teaghrán {
+    má u == 0 { "náid" } mura { má u == 1 { "aon" } mura { "roinnt" } }
+}

@@ -1,0 +1,27 @@
+// seilbh.sb — seilbh iolraithe: `ó` a rialaíonn tús na habairtíne atá ina
+// dhiaidh, díreach mar a dhéanann réamhfhocal sa Ghaeilge.
+
+struchtúr Seoladh {
+    baile: Teaghrán
+    uimhir: Uimhir
+}
+
+struchtúr Duine {
+    ainm: Teaghrán
+    seoladh: Seoladh
+}
+
+seasmhach duine = Duine {
+    ainm: "Cáit",
+    seoladh: Seoladh { baile: "Corcaigh", uimhir: 14 }
+}
+
+// `duine` -> `dhuine`; `seoladh` -> `sheoladh`; `baile` is ceann na habairtíne
+// ar fad, mar sin fanann sé sa bhunfhoirm.
+scríobh baile ó sheoladh ó dhuine
+scríobh uimhir ó sheoladh ó dhuine
+
+// Aitheantóir a thosaíonn le guta: níl slot séimhithe aige, agus mar sin is í
+// an bhunfhoirm an fhoirm cheart i ndiaidh "ó".
+seasmhach áit = Seoladh { baile: "Gaillimh", uimhir: 3 }
+scríobh baile ó áit
