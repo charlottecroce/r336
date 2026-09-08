@@ -23,6 +23,8 @@ const EOCHAIRFHOCAIL = new Set([
   'struchtúr',   // struct
   'seasmhach',   // immutable binding
   'ó',           // possession / origin
+  'as',          // provenance — as Corcaigh, as Dún na nGall
+  'comhaontú',   // a bilateral agreement between two counties 
   'ag',          // progressive aspect: an ongoing action
   'tar éis',     // perfect aspect: a completed action
   'is',          // copula — identity / classification

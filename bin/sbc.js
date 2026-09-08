@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const {
-  comhaidSb, paraidimi, Tionscadal, Earraid, Cnuasach,
+  comhaidSb, paraidimi, duchasanna, Tionscadal, Earraid, Cnuasach,
 } = require('../src/index');
 
 const args = process.argv.slice(2);
@@ -20,7 +20,7 @@ if (!spriocanna.length) {
   sbc <comhad.sb> --amharc     taispeáin an JavaScript gan é a scríobh
   sbc <comhad.sb> --paraidím   taispeáin foirmeacha gramadaí na gceangal
   sbc <comhad.sb> --crann      taispeáin an crann teibí (AST)
-  sbc <comhad.sb> --graf       taispeáin na modúil a bhfuil sé ag brath orthu`);
+  sbc <comhad.sb> --graf       taispeáin na modúil, agus dúchas gach cineáil`);
   process.exit(1);
 }
 
@@ -52,6 +52,20 @@ async function príomh() {
         }
         for (const p of paraidimi(anailiseoir).filter((x) => x.foinse)) {
           console.log(`    ${p.lemma.padEnd(14)} ${p.kind.padEnd(9)} ${p.cineál}   ← ${p.foinse}`);
+        }
+        // §24 — provenance. Exile is annotated the way an eclipsed form is
+        // annotated in --paraidím: the thing is real, and it demands nothing.
+        const d = duchasanna(anailiseoir);
+        const ganAit = (x) => (x === d.deoraíocht ? '  (gan áit, §24)' : '');
+        console.log(`\ndúchas — as ${d.contae}${ganAit(d.contae)}`);
+        for (const t of d.cinealacha) {
+          console.log(`  ${t.ainm.padEnd(18)} as ${t.contae}${ganAit(t.contae)}`);
+        }
+        for (const c of d.comhaontuithe) {
+          console.log(`  comhaontú          ${c.a} ↔ ${c.b}${c.iomaíocht ? '  (seanaighneas)' : ''}`);
+        }
+        if (!d.comhaontuithe.length && d.contae !== d.deoraíocht) {
+          console.log('  comhaontú          (ceann ar bith)');
         }
       } else {
         console.log(`foirmeacha gramadaí — ${c}`);

@@ -26,6 +26,7 @@
  */
 
 const { earraid } = require('./diagnostics');
+const ctae = require('./contaetha');
 
 /**
  * Tokens that can begin an expression, for deciding a command's arity.
@@ -138,9 +139,69 @@ class Parsalai {
     return ref;
   }
 
+  /**
+   * `as Corcaigh`, `as Dún na nGall` — a county name after the preposition.
+   *
+   * Several county names are more than one word, and that is a fact about the
+   * table rather than about the tokenizer, so it is handled here instead of by
+   * a compound-keyword rule like `tar éis`. Identifiers are read greedily
+   * while the phrase so far still begins some county name. No name is a proper
+   * prefix of another (contaetha.js checks that), so the longest read is
+   * unambiguous and the parser never backtracks.
+   *
+   * Nothing here parses `an` or `na`. The article is not implemented and is
+   * not being implemented; *An Mhí* and *Dún na nGall* are opaque sequences in
+   * a lookup table (§21, and Part 4 of the 0.6 brief).
+   *
+   * Resolution belongs to the analyzer, which owns government and agreement.
+   * The parser only collects the words.
+   */
+  /**
+   * A bare county name. `slánú` is the error-path salvage: if the phrase read
+   * is not a whole name, keep taking identifiers so the diagnostic can report
+   * what was actually written — `as Dún na Sí` should name the phrase rather
+   * than stop at "Dún na" and then die on a stray word with a syntax error.
+   * A complete name never enters it, so it cannot swallow the statement after
+   * a good one.
+   *
+   * It is switched off for the first name of a `comhaontú`, where another name
+   * follows and swallowing it would turn a collected E602 into a thrown E401.
+   */
+  parsailAinmContae(slánú = true) {
+    const tus = this.suil('IDENT');
+    const focail = [tus.luach];
+    while (this.seiceail('IDENT') && ctae.isReamhran([...focail, this.peek().luach])) {
+      focail.push(this.toks[this.i++].luach);
+    }
+    while (slánú && !ctae.isContae(focail.join(' ')) && this.seiceail('IDENT')) {
+      focail.push(this.toks[this.i++].luach);
+    }
+    return { focail, ionad: tus.ionad };
+  }
+
+  parsailAsFrasa() {
+    this.suil('KW', 'as');
+    return this.parsailAinmContae();
+  }
+
+  /** `comhaontú Corcaigh Ciarraí` — two counties, no separator, file scope. */
+  parsailComhaontu() {
+    const kw = this.toks[this.i++];
+    const a = this.parsailAinmContae(false);
+    const b = this.parsailAinmContae();
+    return { cineál: 'Comhaontú', a, b, ionad: kw.ionad };
+  }
+
+  /** `as Corcaigh` at file scope: the module says where it is from. */
+  parsailContaeModuil() {
+    const frasa = this.parsailAsFrasa();
+    return { cineál: 'Contae', focail: frasa.focail, ionad: frasa.ionad };
+  }
+
   parsailStruchtur() {
     this.suil('KW', 'struchtúr');
     const ainm = this.suil('IDENT');
+    const contae = this.seiceail('KW', 'as') ? this.parsailAsFrasa() : null;
     this.suil('NOD', '{');
     const reimsi = [];
     while (!this.seiceail('NOD', '}')) {
@@ -150,7 +211,7 @@ class Parsalai {
       this.meaitseail('NOD', ',');
     }
     this.suil('NOD', '}');
-    return { cineál: 'Struchtúr', ainm: ainm.luach, ionad: ainm.ionad, reimsi };
+    return { cineál: 'Struchtúr', ainm: ainm.luach, ionad: ainm.ionad, reimsi, contae };
   }
 
   /**
@@ -218,6 +279,8 @@ class Parsalai {
   }
 
   parsailRaiteas() {
+    if (this.seiceail('KW', 'as')) return this.parsailContaeModuil();
+    if (this.seiceail('KW', 'comhaontú')) return this.parsailComhaontu();
     if (this.seiceail('KW', 'struchtúr')) return this.parsailStruchtur();
     if (this.seiceail('KW', 'feidhm') || this.seiceail('KW', 'gníomh')) return this.parsailBriathar(false);
     if (this.seiceail('KW', 'ag') && this.peek(1).cinéal === 'KW'

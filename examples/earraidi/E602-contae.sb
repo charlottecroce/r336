@@ -1,0 +1,5 @@
+// E602 — níl ann ach na 32, agus is stór focal iata é sin d'aon ghnó.
+
+struchtúr Duine as Yorkshire {
+    ainm: Teaghrán
+}

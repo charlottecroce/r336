@@ -55,6 +55,12 @@ class Ginteoir {
       this.líne(`const ${ailias} = require(${JSON.stringify(conair(foinse))});`);
     }
     for (const m of ast.mireanna) {
+      // Provenance is decided entirely in the front end and emits nothing.
+      // Deliberately no `__contae` on instances: `__cineál` is there because
+      // `__is` reads it and `async` is there because `ag` means it, but
+      // nothing at run time ever asks a value what county it is from. A tag
+      // nobody reads would assert a guarantee the emitted code does not make.
+      if (m.cineál === 'Contae' || m.cineál === 'Comhaontú') continue;
       if (m.cineál === 'Struchtúr') { this.struchtur(m); onnmhairi.push(`${m.ainm}$nua`); continue; }
       this.raiteas(m);
       if (m.cineál === 'Briathar' && m.jsAinm) onnmhairi.push(m.jsAinm);

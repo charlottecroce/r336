@@ -16,14 +16,35 @@ function __is(luach, cineál) {
 function __bí(luach) { return luach !== undefined && luach !== null; }
 function scríobh(luach) { console.log(luach); }
 
+const __m0 = require("./sonraí.js");
 const sonraí = require("./sonraí.js");
+const bun = require("../rt/bunúsach.js");
+const freastal = require("../rt/freastal.js");
 function AmharcLiosta$nua(réimsí) { return Object.assign({ __cineál: "AmharcLiosta" }, réimsí); }
 function AmharcDuine$nua(réimsí) { return Object.assign({ __cineál: "AmharcDuine" }, réimsí); }
-async function liostaigh(freag, stór) {
+function Síol$nua(réimsí) { return Object.assign({ __cineál: "Síol" }, réimsí); }
+let stór = null;
+const síolta = [{ __cineál: "Síol", ainm: "Charlotte", aois: 20 }, { __cineál: "Síol", ainm: "Séamus", aois: 12 }, { __cineál: "Síol", ainm: "Aoife", aois: 34 }];
+async function tosaigh(conair) {
+  stór = (await sonraí.oscailStór(conair));
+  await síolaigh();
+}
+async function cuirSíol(s) {
+  await __m0.cuirDuine(stór, s.ainm, s.aois);
+}
+async function síolaigh() {
+  await __m0.cruthaighScéim(stór);
+  const rónna = (await sonraí.gachDuine(stór));
+  if ((rónna.length === 0)) {
+    for (const __t0 of síolta) await cuirSíol(__t0);
+  }
+}
+async function liostaigh(iarr, freag) {
   const daoine = (await sonraí.gachDuine(stór));
   freag.render("innéacs", { __cineál: "AmharcLiosta", teideal: "Daoine", daoine: daoine });
 }
-async function taispeáin(freag, stór, aitheantas) {
+async function taispeáin(iarr, freag) {
+  const aitheantas = bun.uimhir(iarr.params.id);
   if (__is(aitheantas, "Uimhir")) {
     const duine = (await sonraí.duineDeRéir(stór, aitheantas));
     freag.render("duine", { __cineál: "AmharcDuine", teideal: teideal(duine), duine: duine, aimsíodh: __bí(duine) });
@@ -36,14 +57,10 @@ async function taispeáin(freag, stór, aitheantas) {
 function teideal(duine) {
   return (__bí(duine) ? "Duine" : "Gan aimsiú");
 }
-async function síolaigh(stór) {
-  (await sonraí.cruthaighScéim(stór));
-  const rónna = (await sonraí.gachDuine(stór));
-  if ((rónna.length === 0)) {
-    (await sonraí.cuirDuine(stór, "Charlotte", 20));
-    (await sonraí.cuirDuine(stór, "Séamus", 12));
-    (await sonraí.cuirDuine(stór, "Aoife", 34));
-  }
+function cláraigh(app) {
+  freastal.bealach(app, "/", liostaigh);
+  freastal.bealach(app, "/duine/:id", taispeáin);
 }
 
-module.exports = { sonraí, AmharcLiosta$nua, AmharcDuine$nua, liostaigh, taispeáin, teideal, síolaigh };
+module.exports = { sonraí, bun, freastal, AmharcLiosta$nua, AmharcDuine$nua, Síol$nua, síolta, tosaigh, cuirSíol, síolaigh, liostaigh, taispeáin, teideal, cláraigh };
+Object.defineProperty(module.exports, "stór", { get: () => stór, enumerable: true });

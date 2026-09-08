@@ -1,0 +1,11 @@
+{
+    "name": "spicebag",
+    "version": "0.4.0",
+    "description": "app",
+    "engines": { "node": ">=22" },
+    "scripts": {
+      "tosaigh": "node ../bin/sbc.js bealaí.sb && node freastalaí.js"
+    },
+    "license": "MIT"
+  }
+  

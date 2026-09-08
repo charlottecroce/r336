@@ -1,0 +1,10 @@
+// E603 — ní clib ar chineál é an contae ach a chéannacht, agus níl ann ach
+// 32 slot. Tá Corcaigh tógtha ag an gcéad struchtúr.
+
+struchtúr Duine as Corcaigh {
+    ainm: Teaghrán
+}
+
+struchtúr Áit as Corcaigh {
+    ainm: Teaghrán
+}

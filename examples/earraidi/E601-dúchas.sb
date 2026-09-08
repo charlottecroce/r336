@@ -1,0 +1,14 @@
+// E601 — dúchas: is bosca as contae eile é, agus ní osclaítear é.
+//
+// Tá cead ag téacs as Ciarraí struchtúr as Corcaigh a fhógairt: níl san fhógra
+// ach ainm a thabhairt air. Is é an t-oscailt atá faoi rialú.
+
+as Ciarraí
+
+struchtúr Duine as Corcaigh {
+    ainm: Teaghrán
+}
+
+feidhm ainmDe(duine: Duine) -> Teaghrán {
+    ainm ó dhuine
+}

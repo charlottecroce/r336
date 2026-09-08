@@ -25,6 +25,7 @@
 const mf = require('./morphology');
 const { FOIRM } = mf;
 const { Bailitheoir } = require('./diagnostics');
+const ctae = require('./contaetha');
 
 // ── cineálacha ────────────────────────────────────────────────────────
 const prim = (ainm) => ({ k: 'bun', ainm });
@@ -114,6 +115,12 @@ const FOCAIL_JS = new Set(['var', 'let', 'const', 'function', 'class', 'return',
   'await', 'async', 'yield', 'require', 'module', 'exports']);
 const jsAinm = (lemma) => (FOCAIL_JS.has(lemma) ? '_' + lemma : lemma);
 
+/**
+ * A treaty is unordered, so it is keyed by the sorted pair. County names
+ * contain spaces, so the separator is one that cannot occur in a name.
+ */
+const comhaontuEochair = (a, b) => [a, b].sort().join('\u0000');
+
 class Ceangal {
   constructor(lemma, cineal, kind = 'luach', sealadach = false) {
     this.lemma = lemma;
@@ -139,6 +146,37 @@ class Anailiseoir {
     // default, which is exactly the pre-0.5 behaviour: every import is a loan.
     this.modúil = comhthéacs.modúil || new Map();
     this.ailiasanna = new Map();   // foinse → the JS alias the backend requires
+    /*
+     * Where this module is from (§24.2).
+     *
+     * A mismatch needs two provenances and only one of them is on the value,
+     * so the other has to be the code doing the accessing. It is the module
+     * and not the verb, for one honest reason and several engineering ones.
+     *
+     * The honest one: Irish `as` predicates provenance of people and things —
+     * *is as Corcaigh mé*, *fear as Doire* — and a text is a thing, so
+     * *nuachtán as Baile Átha Cliath* is ordinary. There is no construction in
+     * which an *action* is from somewhere; you cannot say *déanamh as
+     * Corcaigh*. That is a tiebreaker between the two candidates, not a
+     * justification for the county system, which has none and does not claim
+     * one.
+     *
+     * The engineering: one line per file instead of ceremony on every verb; no
+     * per-verb override, because a local escape hatch would defeat the point;
+     * and a receiver-based county would make every method access trivially
+     * pass, which is precisely where the check most needs to bite.
+     *
+     * `deoraíocht` until declared otherwise, so every 0.5 program keeps
+     * compiling untouched: counties cost nothing until you use one.
+     */
+    this.contae = ctae.DEORAIOCHT;
+    this.ionadContae = null;
+    // contae → the struct that holds it. One county, one struct, across the
+    // whole graph — an imported type brings its claim with it.
+    this.contaeGafa = new Map();
+    // The treaties in force in *this file*. Sorted-pair keys, so a treaty is
+    // the same treaty whichever way round it was written.
+    this.comhaontuithe = new Set();
     // A module body is a sequence of commands, so top level is imperative.
     // It is not ongoing, so `tar éis` at top level is an error.
     this.ctx = { modh: 'ordaitheach', leanunach: false, ainm: '<barr>' };
@@ -201,6 +239,12 @@ class Anailiseoir {
 
       for (const [ainm, t] of siniu.cinealacha) {
         if (!this.cinealacha.has(ainm)) this.cinealacha.set(ainm, t);
+        // The county is the type's identity rather than a tag on it, so the
+        // claim is global and arrives with the import.
+        if (!t.contae || t.contae === ctae.DEORAIOCHT) continue;
+        const gafa = this.contaeGafa.get(t.contae);
+        if (gafa && gafa !== ainm) this.bail.cuir('E603', siniu.ionad, t.contae, gafa);
+        else this.contaeGafa.set(t.contae, ainm);
       }
 
       for (const [lemma, onn] of siniu.onnmhairi) {
@@ -236,7 +280,12 @@ class Anailiseoir {
       if (onn.kind === 'gníomh') { gniomhartha.add(lemma); briathra.add(lemma); }
       else if (onn.kind === 'feidhm') briathra.add(lemma);
     }
-    return { onnmhairi, cinealacha, gniomhartha, briathra, ionad };
+    // The module's own county rides in the signature so `--graf` can print it.
+    // Nothing consults it from the far side: a county is a property of a
+    // place, and reading someone else's text is not moving house (§24.2). The
+    // struct types in `cinealacha` carry theirs, and those *are* consulted,
+    // because a type's county is its identity.
+    return { onnmhairi, cinealacha, gniomhartha, briathra, ionad, contae: this.contae };
   }
 
   // ---- government + agreement ---------------------------------------
@@ -268,6 +317,84 @@ class Anailiseoir {
     const cod = res.earraid[0] === 'E101' && codGanSainmhiniu ? codGanSainmhiniu : res.earraid[0];
     const args = cod === codGanSainmhiniu ? [res.earraid[1], ...breise] : res.earraid.slice(1);
     this.bail.cuir(cod, ionad, ...args);
+  }
+
+  /**
+   * An `as` phrase to a county, or `deoraíocht` if there was no phrase.
+   *
+   * `as` governs the head of its complement and demands FOIRM.BUN, which is
+   * what every operator except `ó`, `ar` and `a` already demands. So this
+   * routes through `reitighFoirm` like everything else and the fourth operator
+   * adds no fifth mechanism. `as Chorcaigh` comes back E103 with no new code:
+   * unlicensed lenition is already an error everywhere, and `as` is policed
+   * correctly by the machinery doing nothing special for it.
+   *
+   * Only the head is governed. `Fhailí` in *Uíbh Fhailí* and `nGall` in *Dún
+   * na nGall* are frozen inside proper names and are nobody's business here;
+   * in particular the eclipsed slot is still empty (§12).
+   */
+  reitighContae(nód) {
+    if (!nód) return ctae.DEORAIOCHT;
+    const [ceann, ...eile] = nód.focail;
+    // Exile is not a place, so you cannot be from it. It is what you are when
+    // you declare nothing.
+    if (ceann === ctae.DEORAIOCHT) { this.bail.cuir('E605', nód.ionad); return ctae.DEORAIOCHT; }
+    const res = this.reitighFoirm(ceann, FOIRM.BUN, (l) => ctae.isCeannAinm(l), 'as');
+    if (res.earraid) { this.teip(res, nód.ionad, 'E602'); return ctae.DEORAIOCHT; }
+    const ainm = [res.lemma, ...eile].join(' ');
+    if (!ctae.isContae(ainm)) { this.bail.cuir('E602', nód.ionad, ainm); return ctae.DEORAIOCHT; }
+    return ainm;
+  }
+
+  /**
+   * The county a possessor carries, or `null` if provenance does not apply.
+   *
+   * A struct instance and an `Iasacht` are things you hold. A Spicebag module,
+   * a list and a primitive are not, and their exemption is a decision rather
+   * than an accident of where the check sits (§24.3): a `modúl` is a text you
+   * have read, not a thing you own, and reading vocabulary out of a text is
+   * not trade. Without that exemption the import graph and the treaty graph
+   * collapse into each other and `ó` ends up doing two jobs.
+   *
+   * A JavaScript module is deliberately *not* exempt, and the line falls
+   * exactly where 0.5 put it. `ó "./sonraí.sb"` is a `modúl`, because the
+   * compiler has read it; `ó "express"` is an `Iasacht`, because it has not.
+   * The first is a text, the second is a borrowed thing, and a borrowed thing
+   * is in exile like every other borrowed thing.
+   */
+  contaeDe(t) {
+    if (!t) return null;
+    if (t.k === 'iasacht') return ctae.DEORAIOCHT;
+    if (t.k === 'struchtúr') return t.contae || ctae.DEORAIOCHT;
+    return null;
+  }
+
+  /**
+   * The border check on `ó` (§24.3). Every `ó` on a county-bearing possessor,
+   * which is the pervasive option and was chosen deliberately.
+   *
+   * A *border* check, not a sameness check — one comparison covers both legal
+   * cases, because two things from nowhere are the same nowhere. Same county
+   * passes. Exile reading exile passes, since there is no border between two
+   * things that are from nowhere, which is why every 0.4 and 0.5 program still
+   * compiles untouched. Exile against a county fails with no remedy available,
+   * because an agreement is between two parties and exile is not a party.
+   *
+   * What is *not* checked is construction, argument passing, and returning:
+   * a county is a lock on the box, not a border on the road. Values travel
+   * anywhere; they simply cannot be opened except at home. That is what makes
+   * exile-trades-with-nobody survivable — an exile module can parse the
+   * outside world, build placed structs out of primitives, and hand them on.
+   */
+  seiceailDuchas(t, ball) {
+    const as = this.contaeDe(t);
+    if (as === null || as === this.contae) return;
+    // The only place a treaty is ever consulted. Exile needs no special case
+    // here: `fogairComhaontu` refuses to key a pair containing `deoraíocht`,
+    // so no lookup involving exile can ever succeed, and exile trades with
+    // nobody as a consequence of the table rather than as a rule about it.
+    if (this.comhaontuithe.has(comhaontuEochair(as, this.contae))) return;
+    this.bail.cuir('E601', ball.ionad, ball.surface, as, this.contae);
   }
 
   /** Declarations name the lemma, so they must be written in the base form. */
@@ -313,8 +440,18 @@ class Anailiseoir {
     this.iompórtail();
     ast.ailiasanna = this.ailiasanna;
 
+    // Pass 0b — where this module is from. Nothing else can be judged until
+    // the accessing side has a provenance to be judged against (§24.2).
+    for (const m of ast.mireanna) if (m.cineál === 'Contae') this.fogairContaeModuil(m);
+
+    // Pass 0c — the treaties in force here, before any access is judged. They
+    // are file scope, so position within the file does not matter and a treaty
+    // at the bottom licenses an access at the top.
+    for (const m of ast.mireanna) if (m.cineál === 'Comhaontú') this.fogairComhaontu(m);
+
     // Pass A — hoist type and verb declarations.
     for (const m of ast.mireanna) {
+      if (m.cineál === 'Contae' || m.cineál === 'Comhaontú') continue;
       if (m.cineál === 'Struchtúr') this.fogairStruchtur(m);
       else if (m.cineál === 'Briathar') briathra.push(m);
       else raitis.push(m);
@@ -334,11 +471,59 @@ class Anailiseoir {
     return ast;
   }
 
+  fogairContaeModuil(m) {
+    if (this.ionadContae) { this.bail.cuir('E604', m.ionad); return; }
+    this.ionadContae = m.ionad;
+    this.contae = this.reitighContae(m);
+  }
+
+  /**
+   * `comhaontú Corcaigh Ciarraí` — a bilateral agreement, in force in this
+   * file (§24.5).
+   *
+   * **Symmetric**, because an agreement between two parties binds both. The
+   * key is the sorted pair, so writing it either way round names the same
+   * treaty and the second writing is E607.
+   *
+   * **Not transitive**, deliberately. Corcaigh–Ciarraí together with
+   * Ciarraí–Gaillimh does not give Corcaigh–Gaillimh. Transitivity would
+   * partition the 32 into blocs, and a partition is not a treaty — it is the
+   * thing a treaty exists instead of. Nothing here computes a closure and
+   * nothing should.
+   *
+   * **File-scoped**, and it does not travel in the signature. The 0.5 boundary
+   * carries type, mood and aspect because those are properties of a *value*
+   * and go where the value goes; a treaty is a property of a *place*, and a
+   * file is a place. Keeping it local is also what lets E601 be diagnosed from
+   * the file in front of you rather than from a declaration three imports
+   * away, and what stops `--graf` from lying about what is in force here.
+   *
+   * `deoraíocht` is not a party and cannot be one, so a rejected name simply
+   * declares no treaty; `reitighContae` has already filed E605.
+   */
+  fogairComhaontu(m) {
+    const a = this.reitighContae(m.a);
+    const b = this.reitighContae(m.b);
+    if (a === ctae.DEORAIOCHT || b === ctae.DEORAIOCHT) return;   // already reported
+    if (a === b) { this.bail.cuir('E606', m.ionad, a); return; }
+    const eochair = comhaontuEochair(a, b);
+    if (this.comhaontuithe.has(eochair)) { this.bail.cuir('E607', m.ionad, a, b); return; }
+    this.comhaontuithe.add(eochair);
+  }
+
   fogairStruchtur(m) {
     if (!this.seiceailBunfhoirm(m.ainm, m.ionad)) return;
     if (this.cinealacha.has(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
+    const contae = this.reitighContae(m.contae);
+    if (contae !== ctae.DEORAIOCHT) {
+      const gafa = this.contaeGafa.get(contae);
+      // Exile is the one place that is not exclusive, because it is not a
+      // place: without that a program could hold 32 struct types in total.
+      if (gafa && gafa !== m.ainm) this.bail.cuir('E603', m.contae.ionad, contae, gafa);
+      else this.contaeGafa.set(contae, m.ainm);
+    }
     this.cinealacha.set(m.ainm, {
-      k: 'struchtúr', ainm: m.ainm, reimsi: new Map(), modhanna: new Map(),
+      k: 'struchtúr', ainm: m.ainm, reimsi: new Map(), modhanna: new Map(), contae,
     });
   }
 
@@ -717,6 +902,10 @@ class Anailiseoir {
           this.bail.cuir('E401', e.ball.ionad, '"slonn"', '"ball"');
           return IASACHT;
         }
+        // §24.3 — provenance, before agreement. The surface is used in the
+        // message because it is what was written; resolution continues either
+        // way, so a wrong member in the wrong county reports both faults.
+        this.seiceailDuchas(tS, e.ball);
         // The member is the head of *this* phrase, so it takes whatever form
         // this phrase's own governor demands (base at the top level).
         const socraigh = (lemma) => { e.ball.lemma = lemma; e.ball.foirm = foirm; };

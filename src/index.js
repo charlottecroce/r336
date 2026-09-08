@@ -67,7 +67,28 @@ function paraidimi(anailiseoir) {
   return amach;
 }
 
+/**
+ * Provenance of the module and of every type it knows, plus the treaties in
+ * force, for `sbc --graf`.
+ *
+ * Read off the analyzer rather than the emitted code, because there is nothing
+ * about provenance in the emitted code — no `__contae` and no county name. The
+ * front end is the only place this exists (§24.5).
+ */
+function duchasanna(anailiseoir) {
+  const ctae = require('./contaetha');
+  const cinealacha = [];
+  for (const [ainm, t] of anailiseoir.cinealacha) {
+    if (t.k !== 'struchtúr') continue;
+    cinealacha.push({ ainm, contae: t.contae || ctae.DEORAIOCHT });
+  }
+  const comhaontuithe = [...anailiseoir.comhaontuithe]
+    .map((k) => k.split('\u0000'))
+    .map(([a, b]) => ({ a, b, iomaíocht: ctae.isIomaiocht(a, b) }));
+  return { contae: anailiseoir.contae, deoraíocht: ctae.DEORAIOCHT, cinealacha, comhaontuithe };
+}
+
 module.exports = {
-  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, Tionscadal,
+  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, duchasanna, Tionscadal,
   Earraid, Cnuasach, morphology: mf,
 };

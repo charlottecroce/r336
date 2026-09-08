@@ -13,6 +13,7 @@
  *   3xx  copail / bí     — classification and existence
  *   4xx  comhréir        — lexing and parsing
  *   5xx  modh agus aspect— imperative vs indicative, ongoing vs completed
+ *   6xx  dúchas          — county, exile, treaty (§24)
  */
 
 const { reamhlitirH } = require('./morphology');
@@ -172,6 +173,34 @@ const M = {
   // nGaeilge: ní deirtear "an briathar iasachta X", ach X.
   E516: (ainm) =>
     `Ní ghlacann an t-ordú "${ainm}" le sealbhóir: tógann "ó" frása ainmfhoclach, agus ní ainmní é ordú. Tá briathar iasachta san fhoclóir gan cháiliú — tabhair "${ainm} …" mar ordú.`,
+
+  // ── 6xx: dúchas ───────────────────────────────────────────────────────
+  // A new axis, alongside morphology, types, the copula, syntax and mood.
+  // The county system is a bit and the notes say so (§24); the diagnostics
+  // are not, and they hold to the same standard as the rest.
+
+  // Curtha in áirithe do chéim 3: an tseiceáil féin ar an sealbhach.
+  // Modelled on E103 and E205 — what was found, what was demanded, and why.
+  E601: (ball, contaeBaill, contaeAitiuil) =>
+    `Níl cead ag téacs as ${contaeAitiuil} an ball "${ball}" a oscailt: is as ${contaeBaill} é, agus níl aon chomhaontú eatarthu.`,
+
+  E602: (ainm) =>
+    `Níl "${ainm}" ar cheann de na 32 contae.`,
+
+  E603: (contae, eile) =>
+    `Tá ${contae} tógtha cheana ag an struchtúr "${eile}". Ní bhíonn ach struchtúr amháin ag contae: ní clib ar chineál é an contae ach a chéannacht.`,
+
+  E604: () =>
+    `Tá contae an mhodúil fógartha faoi dhó. Ní bhíonn téacs as dhá áit.`,
+
+  E605: () =>
+    `Ní áit í an deoraíocht, ach an rud a bhíonn ann nuair nach bhfógraítear áit ar bith: ní féidir í a fhógairt, ná comhaontú a dhéanamh léi.`,
+
+  E606: (contae) =>
+    `Ní dhéantar comhaontú le duine féin: tá ${contae} luaite faoi dhó.`,
+
+  E607: (a, b) =>
+    `Tá comhaontú idir ${a} agus ${b} sa chomhad seo cheana. Is ionann comhaontú ón dá thaobh, mar sin níl san dara fógra ach athrá.`,
 };
 
 function earraid(cod, ionad, ...args) {
