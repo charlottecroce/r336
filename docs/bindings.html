@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Bindings & Types</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html" class="at">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Bindings &amp; Types</h1>
+  <p class="pagelede"></p>
+
+  <div class="slab">
+    <h2 class="slab-head">seasmhach / sealadach</h2>
+    <div class="slab-body">
+      <pre class="code">seasmhach x = 5              <span class="c">// immutable</span>
+sealadach y = 5              <span class="c">// mutable</span>
+seasmhach x: Uimhir = 5      <span class="c">// explicit type</span></pre>
+      <p>A binding must be declared in its base (unlenited) form -
+      <code>seasmhach dhuine = 3</code> is <a class="tag" href="errors.html">E107</a>.
+      Only a <code>sealadach</code> binding, or a <code>sealadach</code>
+      parameter, may be mutated.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Mutation</h2>
+    <div class="slab-body">
+      <pre class="code">cuir &lt;luach&gt; ar &lt;sprioc&gt;</pre>
+      <pre class="code">sealadach comhaireamh = 0
+cuir comhaireamh + 1 ar chomhaireamh</pre>
+      <p><code>cuir</code> is a command: only valid inside a <code>gníomh</code>
+      (<a class="tag" href="errors.html">E502</a> inside a <code>feidhm</code>).
+      The target must be <code>sealadach</code>
+      (<a class="tag" href="errors.html">E510</a> otherwise). The target's
+      head word lenites, the same as after <code>ó</code>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Primitive types</h2>
+    <div class="slab-body">
+      <table class="listing">
+        <tr><th>Type</th><th>Meaning</th></tr>
+        <tr><td><code>Uimhir</code></td><td>number</td></tr>
+        <tr><td><code>Teaghrán</code></td><td>string</td></tr>
+        <tr><td><code>Bool</code></td><td><code>fíor</code> / <code>bréagach</code></td></tr>
+        <tr><td><code>Neamhní</code></td><td><code>neamhní</code> - absence</td></tr>
+        <tr><td><code>Iasacht</code></td><td>any value crossing a JS boundary; untyped</td></tr>
+        <tr><td><code>Liosta(T)</code></td><td>a list of <code>T</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Literals</h2>
+    <div class="slab-body">
+      <pre class="code">42
+3.14
+"téacs"                <span class="c">// \n \t \" \\ are the escapes</span>
+fíor
+bréagach
+neamhní
+[1, 2, 3]
+seasmhach ys: Liosta(Uimhir) = []</pre>
+      <p>A list literal's element type is the common type of its items;
+      a mixed list widens to <code>Liosta(Iasacht)</code> rather than
+      erroring.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

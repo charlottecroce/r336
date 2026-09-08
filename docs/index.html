@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Start</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html" class="at">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Start</h1>
+  <p class="pagelede">A .sb file compiles to JavaScript. Node 22+ is required.</p>
+
+  <div class="slab">
+    <h2 class="slab-head">Compiler</h2>
+    <div class="slab-body">
+      <p>The compiler is <code>bin/sbc.js</code>.</p>
+      <pre class="code"><span class="c"># compile a file to file.js</span>
+node bin/sbc.js beannacht.sb
+
+<span class="c"># compile every .sb file under a directory</span>
+node bin/sbc.js feidhmchlár
+
+<span class="c"># compile and run, awaiting príomh() if it exists</span>
+node bin/sbc.js beannacht.sb --rith
+
+<span class="c"># print the generated JavaScript, don't write it</span>
+node bin/sbc.js beannacht.sb --amharc
+
+<span class="c"># print every grammatical form of each top-level binding</span>
+node bin/sbc.js beannacht.sb --paraidím
+
+<span class="c"># print the AST</span>
+node bin/sbc.js beannacht.sb --crann
+
+<span class="c"># print the module dependency graph</span>
+node bin/sbc.js beannacht.sb --graf</pre>
+    </div>
+  </div>
+
+  <div class="slab slab--focus">
+    <h2 class="slab-head">A first program</h2>
+    <div class="slab-body">
+      <pre class="code">struchtúr Duine {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+feidhm beannacht(duine: Duine) -&gt; Teaghrán {
+    "Dia duit, " + ainm ó dhuine
+}
+
+seasmhach duine = Duine { ainm: "Charlotte", aois: 20 }
+
+scríobh beannacht(duine)</pre>
+      <p class="gloss">prints <code>Dia duit, Charlotte</code></p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Comments and entry point</h2>
+    <div class="slab-body">
+      <p><code>//</code> to end of line, or <code>/* ... */</code>.</p>
+      <p>A file's top level is a sequence of commands. If it declares an
+      async action named <code>príomh</code>, <code>--rith</code> and the
+      module runner will call and await it. Anything needing
+      <code>tar éis</code> belongs inside <code>príomh</code>, not at the
+      top level.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Where to next</h2>
+    <div class="slab-body">
+      <ul>
+        <li><a href="bindings.html">Bindings &amp; Types</a> - values, mutation, primitives</li>
+        <li><a href="structures.html">Structures</a> - records and field access</li>
+        <li><a href="verbs.html">Verbs</a> - functions, actions, methods</li>
+        <li><a href="grammar.html">Grammar</a> - mutation rules, <code>is</code>/<code>tá</code>, <code>má</code>/<code>mura</code></li>
+        <li><a href="async.html">Async</a> - <code>ag</code> and <code>tar éis</code></li>
+        <li><a href="modules.html">Modules</a> - <code>ó "..."</code> imports</li>
+        <li><a href="errors.html">Errors</a> - every diagnostic code</li>
+      </ul>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

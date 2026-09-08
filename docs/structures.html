@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Structures</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html" class="at">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Structures</h1>
+  <p class="pagelede">Records with typed, all-required fields.</p>
+
+  <div class="slab">
+    <h2 class="slab-head">Declaration</h2>
+    <div class="slab-body">
+      <pre class="code">struchtúr Duine {
+    ainm: Teaghrán
+    aois: Uimhir
+}</pre>
+      <p>The name and every field name must be in base form
+      (<a class="tag" href="errors.html">E107</a>).</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Literal</h2>
+    <div class="slab-body">
+      <pre class="code">seasmhach duine = Duine { ainm: "Cáit", aois: 20 }</pre>
+      <p>Every field must be given
+      (<a class="tag" href="errors.html">E204</a> if any are missing),
+      and only declared fields are accepted
+      (<a class="tag" href="errors.html">E203</a>).</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Field access</h2>
+    <div class="slab-body">
+      <pre class="code">ainm ó dhuine
+baile ó sheoladh ó dhuine</pre>
+      <p><code>&lt;réimse&gt; ó &lt;luach&gt;</code> reads a field - right to
+      left, like possession. The value to the right of <code>ó</code>
+      lenites; the chain reads inside out, each <code>ó</code> governing only
+      its own complement. See <a href="grammar.html">Grammar</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Methods</h2>
+    <div class="slab-body">
+      <p>A function can be attached to a structure. See
+      <a href="verbs.html">Verbs</a> for how to declare and call one.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

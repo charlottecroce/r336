@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Verbs</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html" class="at">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Verbs</h1>
+  <p class="pagelede"></p>
+
+  <div class="slab">
+    <h2 class="slab-head">Declaring</h2>
+    <div class="slab-body">
+      <pre class="code">feidhm dúbail(x: Uimhir) -&gt; Uimhir { x + x }
+
+gníomh scríobhLine(t: Teaghrán) { scríobh t }</pre>
+      <p>A <code>gníomh</code> cannot declare a return type
+      (<a class="tag" href="errors.html">E404</a>). Inside a
+      <code>feidhm</code> body the last expression statement is the return
+      value; every other value must actually be used, not dropped
+      (<a class="tag" href="errors.html">E503</a>). A <code>gníomh</code>
+      cannot be called from inside a <code>feidhm</code>
+      (<a class="tag" href="errors.html">E502</a>).</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Calling</h2>
+    <div class="slab-body">
+      <p>A command takes no parentheses, arguments separated by commas:</p>
+      <pre class="code">scríobhLine "hello"
+fógair "a", 1</pre>
+      <p>A function call takes parentheses:</p>
+      <pre class="code">dúbail(21)</pre>
+      <p>A <code>gníomh</code> can only ever be obeyed as a command, never
+      mentioned as a value - writing its bare name, or calling it with
+      parentheses, is <a class="tag" href="errors.html">E501</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Methods</h2>
+    <div class="slab-body">
+      <pre class="code">feidhm beannacht ó Dhuine(féin) -&gt; Teaghrán {
+    "Dia duit, " + ainm ó fhéin
+}
+
+scríobh beannacht ó dhuine()</pre>
+      <p><code>ó &lt;Cineál&gt;</code> after the verb name attaches it to a
+      structure type; the type name lenites. The receiver is the first
+      parameter, written bare with no <code>:</code> type. Only structures
+      can carry methods (<a class="tag" href="errors.html">E509</a>). At the
+      call site it is the ordinary field-access relation, followed by a
+      call: <code>beannacht ó dhuine()</code>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Passing a verb as a value</h2>
+    <div class="slab-body">
+      <pre class="code">déan a fhógair ar dhaoine
+forEach ó liosta(a fhógair)</pre>
+      <p><code>a</code> + the lenited verb name turns a declared verb into a
+      nominal so it can be passed where a value is expected.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Verb types</h2>
+    <div class="slab-body">
+      <pre class="code">feidhm(Uimhir) -&gt; Uimhir      <span class="c">// indicative, one Uimhir param</span>
+gníomh(Teaghrán)              <span class="c">// imperative, no result</span>
+ag feidhm(Iasacht) -&gt; Bool    <span class="c">// async, see Async</span></pre>
+      <p>Mood and aspect are part of the type: a <code>gníomh</code> value
+      never matches a <code>feidhm</code> parameter. Used to type
+      higher-order parameters:</p>
+      <pre class="code">gníomh faoiDhó(g: gníomh(Teaghrán), xs: Liosta(Teaghrán)) {
+    déan g ar xs
+    déan g ar xs
+}</pre>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Iterating: déan … ar …</h2>
+    <div class="slab-body">
+      <pre class="code">déan a fhógair ar dhaoine</pre>
+      <p>Runs a <code>gníomh(T)</code> once per element of a
+      <code>Liosta(T)</code> or <code>Iasacht</code>. The element type must
+      match the verb's parameter (<a class="tag" href="errors.html">E201</a>).
+      <code>déan</code> and <code>cuir</code> are the two built-in verbs that
+      take an <code>ar</code> phrase; a user-declared verb never takes one, so
+      writing <code>fógair 1 ar 2</code> is
+      <a class="tag" href="errors.html">E515</a>, and calling <code>déan</code>
+      without the phrase is <a class="tag" href="errors.html">E514</a>.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

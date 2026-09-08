@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Grammar</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html" class="at">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Grammar</h1>
+  <p class="pagelede"></p>
+
+  <div class="slab">
+    <h2 class="slab-head">Lenition</h2>
+    <div class="slab-body">
+      <p>Three operators demand the lenited (séimhithe) form of the word
+      immediately after them:</p>
+      <table class="listing">
+        <tr><th>Operator</th><th>Lenites</th><th>Example</th></tr>
+        <tr><td><code>ó</code></td><td>its complement's head word</td><td><code>ó dhuine</code></td></tr>
+        <tr><td><code>ar</code></td><td>its complement's head word</td><td><code>cuir x ar dhuine</code></td></tr>
+        <tr><td><code>a</code></td><td>the verb that follows</td><td><code>a fhógair</code></td></tr>
+      </table>
+      <p>Only these nine consonants can lenite: <code>b c d f g m p s t</code>
+      (written by prefixing <code>h</code>: <code>duine</code> >
+      <code>dhuine</code>, case preserved: <code>Duine</code> >
+      <code>Dhuine</code>). Vowels and <code>l n r h</code> never lenite, so
+      the base form is written unchanged after any of the three operators
+      above. <code>s</code> lenites before a vowel or <code>l n r</code>, but
+      resists it in <code>sc- sf- sm- sp- st-</code> clusters.</p>
+      <p>A word that cannot lenite keeps its base form after <code>ó</code> /
+      <code>ar</code> / <code>a</code> - that is not an exception, it is
+      what happens when there is nothing to change. Writing a lenited form
+      where none is called for is <a class="tag" href="errors.html">E103</a>;
+      writing the base form where lenition is required is
+      <a class="tag" href="errors.html">E102</a>; lenited spelling of a word
+      that cannot lenite is <a class="tag" href="errors.html">E104</a>.</p>
+      <p>A member borrowed from outside Spicebag (anything reached through
+      <code>ó "some-package"</code> or <code>ó "file.js"</code>) keeps its
+      exact spelling and is never lenited - see
+      <a href="modules.html">Modules</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Classification: is</h2>
+    <div class="slab-body">
+      <pre class="code">má aois is Uimhir { scríobh "uimhir í" }</pre>
+      <p><code>x is Cineál</code> asks whether <code>x</code> belongs to a
+      type. The right side must be a known type name
+      (<a class="tag" href="errors.html">E202</a>), never an expression
+      (<a class="tag" href="errors.html">E301</a>). <code>NaN</code> belongs
+      to no numeric category, so <code>x is Uimhir</code> is false for it.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Existence: tá / bhfuil</h2>
+    <div class="slab-body">
+      <pre class="code">má tá duine { scríobh "ann" }
+mura bhfuil duine { scríobh "as" }</pre>
+      <p><code>bí</code> asks whether something is present (not
+      <code>neamhní</code>). Its written form must agree with the particle
+      governing the clause: <code>tá</code> after <code>má</code>,
+      <code>bhfuil</code> after <code>mura</code>. The wrong form is
+      <a class="tag" href="errors.html">E512</a>. <code>bí</code> itself is
+      the citation / imperative form.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">má / mura</h2>
+    <div class="slab-body">
+      <pre class="code">má u == 1 { "a" } mura u == 2 { "b" } mura { "c" }</pre>
+      <p><code>mura &lt;coinníoll&gt;</code> means "if not", not "else if" -
+      it negates its own condition. A bare <code>mura { }</code> with no
+      condition is the else branch. Chain them to get if/else-if/else.</p>
+      <p>A <code>má</code> chain can be used as an expression only when it
+      ends in a bare <code>mura</code>, so every path produces a value
+      (<a class="tag" href="errors.html">E507</a> otherwise); both sides of
+      each branch must agree in type
+      (<a class="tag" href="errors.html">E201</a>).</p>
+      <p>There is no <code>!</code> operator - negate with <code>mura</code>.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Modules</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html" class="at">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Modules</h1>
+  <p class="pagelede"></p>
+
+  <div class="slab">
+    <h2 class="slab-head">Importing</h2>
+    <div class="slab-body">
+      <pre class="code">seasmhach foclóir = ó "./foclóir.sb"   <span class="c">// native Spicebag module</span>
+seasmhach e       = ó "express"        <span class="c">// npm package</span>
+seasmhach p       = ó "node:path"      <span class="c">// node builtin</span></pre>
+      <p>A relative specifier resolves relative to the importing file, as in
+      Node. A <code>.sb</code> path is a native module; anything else is
+      foreign.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Native (.sb) modules</h2>
+    <div class="slab-body">
+      <pre class="code">scríobh BEANNACHT ó fhoclóir
+scríobh beannaigh ó fhoclóir("Oisín")
+fáiltigh "Aoife"</pre>
+      <p>Values and functions are reached through the ordinary
+      <code>&lt;ball&gt; ó &lt;modúl&gt;</code> relation, lenited like any
+      other field access, with real types, mood and aspect preserved across
+      the boundary.</p>
+      <p>An imported <code>gníomh</code> joins the caller's vocabulary
+      directly and is called unqualified, like any other command - it cannot
+      be called with a possessor, since a command is not a noun phrase:
+      <code>fáiltigh ó fhoclóir("Cáit")</code> is
+      <a class="tag" href="errors.html">E516</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Foreign modules</h2>
+    <div class="slab-body">
+      <pre class="code">seasmhach R = Router ó "express"</pre>
+      <p>Everything reached from a non-<code>.sb</code> origin is
+      <code>Iasacht</code>. A foreign member keeps its exact borrowed
+      spelling - it is never lenited, and its category is only known by
+      asking <code>is</code> at runtime.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Rules</h2>
+    <div class="slab-body">
+      <table class="listing">
+        <tr><td><a class="tag" href="errors.html">E109</a></td><td>module not found</td></tr>
+        <tr><td><a class="tag" href="errors.html">E110</a></td><td>circular import</td></tr>
+        <tr><td><a class="tag" href="errors.html">E106</a></td><td>the same lemma exported by two imported modules - rename one</td></tr>
+        <tr><td><a class="tag" href="errors.html">E208</a></td><td>a local declaration collides with an import</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

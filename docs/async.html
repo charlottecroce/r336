@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Async</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html" class="at">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Async</h1>
+  <p class="pagelede"><code>ag</code> marks a verb as ongoing;
+  <code>tar éis</code> completes it.</p>
+
+  <div class="slab">
+    <h2 class="slab-head">Declaring</h2>
+    <div class="slab-body">
+      <pre class="code">ag feidhm oscail(conair: Teaghrán) -&gt; Iasacht {
+    tar éis stórlann.oscail(conair)
+}
+
+ag gníomh sábháil(u: Uimhir) {
+    tar éis moill(u)
+}</pre>
+      <p><code>ag</code> before <code>feidhm</code> or <code>gníomh</code>
+      marks the verb as ongoing - it compiles to an <code>async</code>
+      function.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">tar éis</h2>
+    <div class="slab-body">
+      <pre class="code">seasmhach stór = tar éis oscail(":memory:")</pre>
+      <p><code>tar éis &lt;glao&gt;</code> completes an ongoing call and
+      yields its result - it compiles to <code>await</code>. Rules:</p>
+      <ul>
+        <li><code>tar éis</code> is only valid inside a verb itself marked
+        <code>ag</code> (<a class="tag" href="errors.html">E504</a>
+        otherwise).</li>
+        <li>The result of calling an <code>ag</code> verb is not a value
+        until completed with <code>tar éis</code>
+        (<a class="tag" href="errors.html">E505</a> if used directly).</li>
+        <li><code>tar éis</code> on something that isn't an ongoing action is
+        <a class="tag" href="errors.html">E508</a>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Ongoing commands</h2>
+    <div class="slab-body">
+      <pre class="code">ag gníomh a(x: Iasacht) { tar éis x() }
+ag gníomh b(x: Iasacht) { a x }   <span class="c">// implicitly awaited</span></pre>
+      <p>Calling an <code>ag gníomh</code> as a command completes it
+      automatically - but the calling verb must itself be <code>ag</code>
+      (<a class="tag" href="errors.html">E504</a> otherwise). The same
+      applies to <code>déan &lt;a-verb&gt; ar &lt;xs&gt;</code> when the verb
+      passed in is ongoing.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>
