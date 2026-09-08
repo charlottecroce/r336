@@ -1,0 +1,3 @@
+// E515 — ní roghnaíonn `fógair` aon réamhfhocal, mar sin níl aon áit don fhrása.
+gníomh fógair(u: Uimhir) { scríobh u }
+gníomh príomh() { fógair 1 ar 2 }

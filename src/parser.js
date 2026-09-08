@@ -27,11 +27,19 @@
 
 const { earraid } = require('./diagnostics');
 
-/** Tokens that can begin an expression, for deciding a command's arity. */
-function tosachSloinn(t) {
+/**
+ * Tokens that can begin an expression, for deciding a command's arity.
+ *
+ * `ó` is deliberately absent and handled by the caller: bare `ó` begins an
+ * expression only before a string (`ó "express"`, the elliptical prepositional
+ * phrase). Before anything else it is the infix of possession and needs a left
+ * operand, so it cannot start one.
+ */
+function tosachSloinn(t, aran = null) {
+  if (t.cinéal === 'KW' && t.luach === 'ó') return !!aran && aran.cinéal === 'STR';
   if (t.cinéal === 'NUM' || t.cinéal === 'STR' || t.cinéal === 'IDENT') return true;
   if (t.cinéal === 'KW') {
-    return ['fíor', 'bréagach', 'neamhní', 'bí', 'tá', 'bhfuil', 'ó', 'tar éis', 'má'].includes(t.luach);
+    return ['fíor', 'bréagach', 'neamhní', 'bí', 'tá', 'bhfuil', 'tar éis', 'má'].includes(t.luach);
   }
   if (t.cinéal === 'OP') return t.luach === '-';
   if (t.cinéal === 'NOD') return t.luach === '(' || t.luach === '[';
@@ -80,8 +88,44 @@ class Parsalai {
     return { cineál: 'Clár', mireanna };
   }
 
-  /** `Teaghrán`, `Liosta(Duine)`. */
+  /**
+   * `Teaghrán`, `Liosta(Duine)`, and the type of a verb.
+   *
+   * A verb's type is its declaration with the name abstracted away, which is
+   * what a type is. Mood is a lexical property of the verb (§17), so it is
+   * part of what the verb *is* and therefore part of its type: `feidhm(T) -> U`
+   * and `gníomh(T)` are different types, not one type with a flag. `ag` sits
+   * where it sits in a declaration, because aspect marks the verb too.
+   *
+   *   feidhm(Uimhir) -> Uimhir      an indicative of one argument
+   *   gníomh(Teaghrán)              an imperative; no toradh, as in §E404
+   *   ag feidhm(Iasacht) -> Bool    ongoing
+   */
   parsailTagairtCineail() {
+    let leanunach = false;
+    if (this.seiceail('KW', 'ag') && this.peek(1).cinéal === 'KW'
+      && ['feidhm', 'gníomh'].includes(this.peek(1).luach)) { this.i++; leanunach = true; }
+    if (this.seiceail('KW', 'feidhm') || this.seiceail('KW', 'gníomh')) {
+      const kw = this.toks[this.i++];
+      const modh = kw.luach === 'gníomh' ? 'ordaitheach' : 'táscach';
+      this.suil('NOD', '(');
+      const params = [];
+      while (!this.seiceail('NOD', ')')) {
+        params.push(this.parsailTagairtCineail());
+        if (!this.meaitseail('NOD', ',')) break;
+      }
+      this.suil('NOD', ')');
+      let toradh = null;
+      if (this.seiceail('OP', '->')) {
+        const op = this.toks[this.i++];
+        if (modh === 'ordaitheach') throw earraid('E404', op.ionad);
+        toradh = this.parsailTagairtCineail();
+      }
+      return {
+        k: 'briathar', ainm: kw.luach, modh, leanunach, params, toradh,
+        ionad: kw.ionad, argointi: [],
+      };
+    }
     const t = this.suil('IDENT');
     const ref = { ainm: t.luach, ionad: t.ionad, argointi: [] };
     if (this.meaitseail('NOD', '(')) {
@@ -194,13 +238,28 @@ class Parsalai {
     return { cineál: 'Slonn', slonn, ionad: slonn.ionad };
   }
 
+  /**
+   * A command, optionally with the prepositional phrase its verb governs.
+   *
+   * Irish verbs select a preposition lexically — *déan scrúdú **ar***, *cuir
+   * uisce **ar***, *éist **le***. `cuir … ar …` was already that pattern with
+   * its own parse rule; this generalises it, so the frame is a property of the
+   * verb in the lexicon rather than a one-off in the grammar. The parser
+   * collects the phrase; the analyzer asks the verb whether it wanted one.
+   */
   parsailOrdu() {
     const ainm = this.toks[this.i++];
     const argointi = [];
-    if (tosachSloinn(this.peek())) {
+    if (tosachSloinn(this.peek(), this.peek(1))) {
       do { argointi.push(this.parsailSlonn()); } while (this.meaitseail('NOD', ','));
     }
-    return { cineál: 'Ordú', ainm: ainm.luach, ionad: ainm.ionad, argointi };
+    // `cuirDuine ó shonraí …`. An imported verb joins the lexicon unqualified,
+    // because `ó` builds noun phrases and E501 says an imperative is not one.
+    if (this.seiceail('KW', 'ó')) throw earraid('E516', this.peek().ionad, ainm.luach);
+    let fras = null;
+    const kwAr = this.meaitseail('KW', 'ar');
+    if (kwAr) fras = { reamhfhocal: 'ar', abhar: this.parsailSlonn(), ionad: kwAr.ionad };
+    return { cineál: 'Ordú', ainm: ainm.luach, ionad: ainm.ionad, argointi, fras };
   }
 
   parsailCeangal() {

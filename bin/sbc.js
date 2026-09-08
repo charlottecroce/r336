@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const {
-  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, Earraid, Cnuasach,
+  comhaidSb, paraidimi, Tionscadal, Earraid, Cnuasach,
 } = require('../src/index');
 
 const args = process.argv.slice(2);
@@ -19,34 +19,52 @@ if (!spriocanna.length) {
   sbc <comhad.sb> --rith       tiomsaigh agus rith
   sbc <comhad.sb> --amharc     taispeáin an JavaScript gan é a scríobh
   sbc <comhad.sb> --paraidím   taispeáin foirmeacha gramadaí na gceangal
-  sbc <comhad.sb> --crann      taispeáin an crann teibí (AST)`);
+  sbc <comhad.sb> --crann      taispeáin an crann teibí (AST)
+  sbc <comhad.sb> --graf       taispeáin na modúil a bhfuil sé ag brath orthu`);
   process.exit(1);
 }
 
 const comhaid = spriocanna.flatMap((s) =>
   (fs.existsSync(s) && fs.statSync(s).isDirectory() ? comhaidSb(s) : [s]));
 
+// One project across every target, so a shared dependency is compiled once and
+// so compilation order follows the graph rather than whatever readdirSync
+// happened to return.
+const tionscadal = new Tionscadal();
+
 async function príomh() {
   for (const c of comhaid) {
     if (bratacha.has('--crann') || bratacha.has('--amharc')
-      || bratacha.has('--paraidím') || bratacha.has('--paraidim')) {
-      const { js, ast, anailiseoir } = tiomsaigh(fs.readFileSync(c, 'utf8'), path.basename(c));
+      || bratacha.has('--paraidím') || bratacha.has('--paraidim') || bratacha.has('--graf')) {
+      // Read through the project, so imported signatures are in scope and
+      // --paraidím shows an imported verb's real mood rather than Iasacht.
+      const { js, ast, anailiseoir } = tionscadal.tiomsaigh(c);
       if (bratacha.has('--crann')) {
         console.log(JSON.stringify(ast, (k, v) =>
-          (['ceangal', 'scoip', 'cineálSocraithe', 'modhSpicebag'].includes(k) ? undefined : v), 2));
+          (['ceangal', 'scoip', 'cineálSocraithe', 'modhSpicebag', 'ailiasanna', 'siniu'].includes(k)
+            ? undefined : v), 2));
       } else if (bratacha.has('--amharc')) {
         console.log(js);
+      } else if (bratacha.has('--graf')) {
+        console.log(`modúil — ${c}`);
+        for (const [foinse, ailias] of ast.ailiasanna || []) {
+          console.log(`  ${ailias.padEnd(6)} ${foinse}`);
+        }
+        for (const p of paraidimi(anailiseoir).filter((x) => x.foinse)) {
+          console.log(`    ${p.lemma.padEnd(14)} ${p.kind.padEnd(9)} ${p.cineál}   ← ${p.foinse}`);
+        }
       } else {
         console.log(`foirmeacha gramadaí — ${c}`);
         for (const p of paraidimi(anailiseoir)) {
           const s = p.inséimhithe ? p.séimhithe : `${p.bun}  (ní féidir: ${p.cúis})`;
           const u = p.urúFéideartha ? `  [urú: ${p.urúFéideartha} — gan bhrí, §12]` : '';
-          console.log(`  ${p.lemma.padEnd(14)} ${(p.sealadach ? 'sealadach' : p.kind).padEnd(9)} ${String(p.cineál).padEnd(15)} bun=${p.bun.padEnd(13)} séimhithe=${s}${u}`);
+          const ó = p.foinse ? `  ← ${p.foinse}` : '';
+          console.log(`  ${p.lemma.padEnd(14)} ${(p.sealadach ? 'sealadach' : p.kind).padEnd(9)} ${String(p.cineál).padEnd(24)} bun=${p.bun.padEnd(13)} séimhithe=${s}${u}${ó}`);
         }
       }
       continue;
     }
-    const { amach } = tiomsaighComhad(c);
+    const { amach } = tionscadal.scriobh(c);
     if (!bratacha.has('--rith')) { console.error(`scríofa: ${amach}`); continue; }
     const mod = require(path.resolve(amach));
     // Convention, not syntax: a module's top level is imperative but not

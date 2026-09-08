@@ -9,6 +9,9 @@
 //
 // Agus an scaradh idir aspect: tá gach oibríocht bunachair "ar siúl" (`ag`)
 // go dtí go gcuirtear i gcrích í le "tar éis".
+//
+// Ó chéim 0.5 i leith téann an scaradh sin trasna na teorann idir modúil:
+// feiceann bealaí.sb gur gníomh é `cuirDuine`, agus ní luach.
 
 seasmhach stórlann = ó "../rt/stór.js"
 

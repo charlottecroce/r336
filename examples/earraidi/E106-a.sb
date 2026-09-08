@@ -1,0 +1,1 @@
+gníomh fógair(t: Teaghrán) { scríobh "a: " + t }

@@ -1,0 +1,5 @@
+// E516 — ordú le sealbhóir. Tógann `ó` frása ainmfhoclach agus ní ainmní é
+// ordú (E501); tá an briathar iasachta san fhoclóir gan cháiliú cheana féin,
+// mar sin scríobh `fáiltigh "Cáit"`.
+seasmhach foclóir = ó "../modúil/foclóir.sb"
+gníomh príomh() { fáiltigh ó fhoclóir("Cáit") }

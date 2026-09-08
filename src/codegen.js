@@ -49,6 +49,11 @@ class Ginteoir {
   clar(ast) {
     const onnmhairi = [];
     const beo = [];   // sealadach bindings: exported live, not as a snapshot
+    // Verbs imported unqualified still have to come from somewhere at run
+    // time. The alias is invisible in the source, as the lexicon is.
+    for (const [foinse, ailias] of (ast.ailiasanna || new Map())) {
+      this.líne(`const ${ailias} = require(${JSON.stringify(conair(foinse))});`);
+    }
     for (const m of ast.mireanna) {
       if (m.cineál === 'Struchtúr') { this.struchtur(m); onnmhairi.push(`${m.ainm}$nua`); continue; }
       this.raiteas(m);
@@ -111,6 +116,16 @@ class Ginteoir {
         return this.máRáiteas(r, null);
 
       case 'Ordú': {
+        // `déan a fhógair ar dhaoine`. A `for…of` rather than `forEach`,
+        // because an ongoing verb has to be awaited in sequence — commands are
+        // sequential by nature — and because Spicebag has no closure to hand
+        // a callback anyway.
+        if (r.iteraid) {
+          const g = this.slonn(r.argointi[0]);
+          const xs = this.slonn(r.fras.abhar);
+          const v = this.sealadach();
+          return this.líne(`for (const ${v} of ${xs}) ${r.leanunach ? 'await ' : ''}${g}(${v});`);
+        }
         const args = r.argointi.map((a) => this.slonn(a)).join(', ');
         const ainm = r.ceangal ? r.ceangal.jsAinm : r.ainm;
         return this.líne(`${r.leanunach ? 'await ' : ''}${ainm}(${args});`);

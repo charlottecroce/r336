@@ -1,0 +1,24 @@
+// príomh.sb — an modúl a fhoghlaimíonn é (DEARADH.md §19).
+//
+// Tagann briathar iasachta isteach san fhoclóir gan cháiliú, mar a thagann i
+// nGaeilge: nuair a thógann an Ghaeilge briathar ó theanga eile, réimníonn sí
+// go dúchasach é agus téann sé isteach san fhoclóir. Ní deirtear "an briathar
+// iasachta X"; deirtear X. Mar sin is ordú é `fáiltigh "Cáit"`.
+//
+// Is sealbhóir é an modúl fós, agus is é `ó` an gaol céanna a bhí riamh ann —
+// níl ann ach go bhfuil an sealbhóir níos fearr aitheanta anois. Coinníonn
+// `ó shonraí` a shéimhiú, agus tá cineál ceart ag gach ball.
+
+seasmhach foclóir = ó "./foclóir.sb"
+
+gníomh príomh() {
+    // ball luachmhar tríd an ngaol sealbhach
+    scríobh BEANNACHT ó fhoclóir
+
+    // feidhm iasachta: is féidir í a ghlaoch gan cháiliú nó tríd an sealbhóir
+    scríobh beannaigh("Cáit")
+    scríobh beannaigh ó fhoclóir("Oisín")
+
+    // gníomh iasachta: ordú atá ann, agus tugtar mar ordú é
+    fáiltigh "Aoife"
+}

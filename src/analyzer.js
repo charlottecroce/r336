@@ -45,6 +45,14 @@ const IASACHT = { k: 'iasacht', ainm: 'Iasacht' };
 const liosta = (mir) => ({ k: 'liosta', ainm: 'Liosta', mir });
 const arSiul = (inner) => ({ k: 'arSiúl', inner });
 
+/**
+ * A Spicebag module reached through `ó`. Not `Iasacht`: the possessor is a
+ * text written in this language, so its members keep their types, their mood
+ * and their aspect. The relation is unchanged — the possessor is just better
+ * known than it used to be.
+ */
+const modul = (ainm, siniu) => ({ k: 'modúl', ainm, siniu });
+
 const BUNCHINEALACHA = new Map([
   ['Uimhir', UIMHIR], ['Teaghrán', TEAGHRAN], ['Bool', BOOL],
   ['Neamhní', NEAMHNI], ['Iasacht', IASACHT],
@@ -55,7 +63,16 @@ function ainmCineail(t) {
   switch (t.k) {
     case 'liosta': return `Liosta(${ainmCineail(t.mir)})`;
     case 'arSiúl': return `ag ${ainmCineail(t.inner)}`;
-    case 'feidhm': return t.modh === 'ordaitheach' ? 'gníomh' : 'feidhm';
+    case 'modúl': return `modúl ${t.ainm}`;
+    case 'feidhm': {
+      // Render a verb type the way it is written, so a mismatch reads as the
+      // declaration the caller should have made.
+      const ceann = (t.leanunach ? 'ag ' : '') + (t.modh === 'ordaitheach' ? 'gníomh' : 'feidhm');
+      const ps = (t.params || []).map(ainmCineail).join(', ');
+      return t.modh === 'ordaitheach'
+        ? `${ceann}(${ps})`
+        : `${ceann}(${ps}) -> ${ainmCineail(t.toradh)}`;
+    }
     default: return t.ainm || '?';
   }
 }
@@ -66,7 +83,17 @@ function comhionann(a, b) {
   if (a.k !== b.k) return false;
   if (a.k === 'liosta') return comhionann(a.mir, b.mir);
   if (a.k === 'arSiúl') return comhionann(a.inner, b.inner);
-  if (a.k === 'feidhm') return true;
+  if (a.k === 'modúl') return a.ainm === b.ainm;
+  if (a.k === 'feidhm') {
+    // Mood and aspect are part of what a verb is, so they are part of its
+    // type: a `gníomh` is never a `feidhm`, however the arguments line up.
+    if (a.modh !== b.modh) return false;
+    if (!!a.leanunach !== !!b.leanunach) return false;
+    const pa = a.params || [], pb = b.params || [];
+    if (pa.length !== pb.length) return false;
+    for (let i = 0; i < pa.length; i++) if (!comhionann(pa[i], pb[i])) return false;
+    return comhionann(a.toradh || NEAMHNI, b.toradh || NEAMHNI);
+  }
   return a.ainm === b.ainm;
 }
 
@@ -103,11 +130,15 @@ class Ceangal {
 
 // ── anailís ───────────────────────────────────────────────────────────
 class Anailiseoir {
-  constructor() {
+  constructor(comhthéacs = {}) {
     this.bail = new Bailitheoir();
     this.cinealacha = new Map(BUNCHINEALACHA);
     this.domhanda = new Scoip();
     this.modhanna = [];   // method declarations, for the backend
+    // foinse → síniú, filled in by the module graph before analysis. Empty by
+    // default, which is exactly the pre-0.5 behaviour: every import is a loan.
+    this.modúil = comhthéacs.modúil || new Map();
+    this.ailiasanna = new Map();   // foinse → the JS alias the backend requires
     // A module body is a sequence of commands, so top level is imperative.
     // It is not ongoing, so `tar éis` at top level is an error.
     this.ctx = { modh: 'ordaitheach', leanunach: false, ainm: '<barr>' };
@@ -118,11 +149,94 @@ class Anailiseoir {
   }
 
   tusaigh() {
-    const c = new Ceangal('scríobh', {
+    this.domhanda.cuir(new Ceangal('scríobh', {
       k: 'feidhm', modh: 'ordaitheach', leanunach: false,
       params: [IASACHT], toradh: NEAMHNI,
+    }, 'gníomh'));
+
+    /*
+     * `déan a fhógair ar dhaoine` — iteration (DEARADH.md §21).
+     *
+     * `déan` is the Irish light verb that turns a verbal noun into an action
+     * performed: *déan scrúdú ar na cáipéisí*, *déan iniúchadh ar*, *déan cur
+     * síos ar*. The verbal noun names the action and `ar` marks what it is
+     * done to; with a plural object the action distributes over its members,
+     * which is what a loop is.
+     *
+     * Nothing new in the grammar. `déan` is a bare imperative root (§17);
+     * `a fhógair` is the nominalising particle already in the language (§13);
+     * `ar` is the preposition already governing `cuir … ar …` (§12), and it
+     * lenites here through the same code path. The only addition is the
+     * lexical fact that `déan` selects `ar`, which is ordinary Irish verb
+     * government of prepositions.
+     *
+     * Its argument must be a `gníomh`, not a `feidhm`: `déan` discards what
+     * the verb yields, and in the indicative a mention must be used (E503).
+     */
+    const d = new Ceangal('déan', {
+      k: 'feidhm', modh: 'ordaitheach', leanunach: false,
+      params: [{ k: 'feidhm', modh: 'ordaitheach', leanunach: false, params: [IASACHT], toradh: NEAMHNI }],
+      toradh: NEAMHNI, frama: 'ar', ionsuite: 'déan',
     }, 'gníomh');
-    this.domhanda.cuir(c);
+    this.domhanda.cuir(d);
+  }
+
+  // ---- modúil --------------------------------------------------------
+  /**
+   * Bring an imported module's vocabulary into this one, before anything
+   * local is declared — so a local declaration that collides with an import
+   * is E208 in the ordinary way.
+   *
+   * Verbs come in unqualified, because a verb is vocabulary and vocabulary is
+   * not qualified: you cannot write `cuirDuine ó shonraí stór, …` and still
+   * have a command, since `ó` builds noun phrases and E501 exists precisely
+   * to say an imperative is not a nominal. Values do not come in unqualified,
+   * because a value is a possession and possession is exactly what `ó` is for.
+   */
+  iompórtail() {
+    let uimh = 0;
+    for (const [foinse, siniu] of this.modúil) {
+      const ailias = `__m${uimh++}`;
+      this.ailiasanna.set(foinse, ailias);
+
+      for (const [ainm, t] of siniu.cinealacha) {
+        if (!this.cinealacha.has(ainm)) this.cinealacha.set(ainm, t);
+      }
+
+      for (const [lemma, onn] of siniu.onnmhairi) {
+        if (onn.kind === 'luach') continue;              // a possession, not a word
+        const ann = this.domhanda.faighAitiuil(lemma);
+        if (ann) { this.bail.cuir('E106', siniu.ionad, lemma, [ann.foinse || '<áitiúil>', foinse]); continue; }
+        const c = new Ceangal(lemma, onn.cineal, onn.kind);
+        c.jsAinm = `${ailias}.${onn.jsAinm || lemma}`;
+        c.foinse = foinse;
+        this.domhanda.cuir(c);
+      }
+    }
+  }
+
+  /** The signature this module presents to anything importing it. */
+  siniu(ionad = null) {
+    const onnmhairi = new Map();
+    for (const c of this.domhanda.clar.values()) {
+      if (c.foinse) continue;                            // re-export nothing
+      if (c.lemma === 'scríobh' || c.lemma === 'déan') continue;
+      onnmhairi.set(c.lemma, {
+        cineal: c.cineal, kind: c.kind, sealadach: c.sealadach, jsAinm: c.jsAinm,
+      });
+    }
+    const cinealacha = new Map();
+    for (const [ainm, t] of this.cinealacha) {
+      if (BUNCHINEALACHA.has(ainm)) continue;
+      if (t.k === 'struchtúr') cinealacha.set(ainm, t);
+    }
+    const gniomhartha = new Set();
+    const briathra = new Set();
+    for (const [lemma, onn] of onnmhairi) {
+      if (onn.kind === 'gníomh') { gniomhartha.add(lemma); briathra.add(lemma); }
+      else if (onn.kind === 'feidhm') briathra.add(lemma);
+    }
+    return { onnmhairi, cinealacha, gniomhartha, briathra, ionad };
   }
 
   // ---- government + agreement ---------------------------------------
@@ -167,6 +281,14 @@ class Anailiseoir {
 
   tagairtCineail(ref) {
     if (!ref) return IASACHT;
+    if (ref.k === 'briathar') {
+      return {
+        k: 'feidhm', modh: ref.modh, leanunach: ref.leanunach,
+        params: ref.params.map((p) => this.tagairtCineail(p)),
+        toradh: ref.toradh ? this.tagairtCineail(ref.toradh) : NEAMHNI,
+        faighteoir: null,
+      };
+    }
     if (ref.ainm === 'Liosta') {
       if (ref.argointi.length !== 1) {
         this.bail.cuir('E212', ref.ionad, 'Liosta', 1, ref.argointi.length);
@@ -186,6 +308,10 @@ class Anailiseoir {
   clar(ast) {
     const briathra = [];
     const raitis = [];
+
+    // Pass 0 — the imported lexicon, before anything local exists.
+    this.iompórtail();
+    ast.ailiasanna = this.ailiasanna;
 
     // Pass A — hoist type and verb declarations.
     for (const m of ast.mireanna) {
@@ -303,7 +429,21 @@ class Anailiseoir {
       this.raiteas(nód, scoip);
       return NEAMHNI;
     }
-    return this.luach(b.luach, scoip);
+    const t = this.luach(b.luach, scoip);
+    if (this.ctx.modh === 'ordaitheach') this.seiceailLuaite(b.luach, t);
+    return t;
+  }
+
+  /**
+   * A verb standing alone was mentioned and not obeyed. That is E501 whether
+   * the mention came from a name or from `a` + verbal noun; the parser cannot
+   * catch it, because its lexicon holds the verbs of the language and a
+   * parameter of verb type is a bound name rather than a word.
+   */
+  seiceailLuaite(e, t) {
+    if (t && t.k === 'feidhm' && t.modh === 'ordaitheach') {
+      this.bail.cuir('E501', e.ionad, e.lemma || e.surface || '?');
+    }
   }
 
   raiteas(r, scoip) {
@@ -375,12 +515,20 @@ class Anailiseoir {
           this.bail.cuir('E207', r.ionad, ainmCineail(c.cineal)); return;
         }
         r.ceangal = c;
+
+        // Verb government of prepositions: the verb says which phrase, if any,
+        // belongs with it. A verb without a frame takes none.
+        const frama = c.cineal.frama || null;
+        if (frama && !r.fras) { this.bail.cuir('E514', r.ionad, res.lemma, frama); return; }
+        if (!frama && r.fras) { this.bail.cuir('E515', r.fras.ionad, res.lemma); return; }
+
         // A command to an ongoing imperative is sequenced by the imperative
         // itself: it is implicitly completed, so the caller must be ongoing.
         if (c.cineal.leanunach) {
           r.leanunach = true;
           if (!this.ctx.leanunach) this.bail.cuir('E504', r.ionad);
         }
+        if (c.cineal.ionsuite === 'déan') { this.deanIteraid(r, scoip, res.lemma); return; }
         this.argointi(r, c.cineal, scoip, res.lemma);
         return;
       }
@@ -388,7 +536,8 @@ class Anailiseoir {
       case 'Slonn': {
         // In the indicative you mention things, and a mention must be used.
         if (this.ctx.modh === 'táscach') this.bail.cuir('E503', r.ionad);
-        this.luach(r.slonn, scoip);
+        // In the imperative you do them: a verb left standing is E501.
+        this.seiceailLuaite(r.slonn, this.luach(r.slonn, scoip));
         return;
       }
 
@@ -407,6 +556,56 @@ class Anailiseoir {
     const c = this.luach(r.coinniall, scoip);
     this.rialuBriathair = roimhe;
     if (!comhionann(c, BOOL)) this.bail.cuir('E201', r.coinniall.ionad, 'Bool', ainmCineail(c));
+  }
+
+  /**
+   * `déan <a bhriathar> ar <bailiúchán>` — the action distributed over the
+   * members of what `ar` marks.
+   *
+   * Checked here rather than through the ordinary arity path because the
+   * relation between the two halves is a dependency: the verb's one parameter
+   * must be the element type of the collection. That is the only piece of
+   * inference in the language and it is deliberately confined to this verb —
+   * generalising it is what sum types and a real quantifier are for.
+   */
+  deanIteraid(r, scoip, ainm) {
+    if (r.argointi.length !== 1) {
+      this.bail.cuir('E206', r.ionad, ainm, 1, r.argointi.length);
+      for (const a of r.argointi) this.luach(a, scoip);
+      this.luach(r.fras.abhar, scoip, FOIRM.SEIMHITHE, 'ar');
+      return;
+    }
+    const tG = this.luach(r.argointi[0], scoip);
+    // `ar` governs its complement here exactly as it does in `cuir … ar …`.
+    const tXs = this.luach(r.fras.abhar, scoip, FOIRM.SEIMHITHE, 'ar');
+
+    const mir = tXs.k === 'liosta' ? tXs.mir : (tXs.k === 'iasacht' ? IASACHT : null);
+    if (mir === null) {
+      this.bail.cuir('E201', r.fras.abhar.ionad, 'Liosta(Iasacht)', ainmCineail(tXs));
+      return;
+    }
+    if (tG.k === 'iasacht') { r.iteraid = true; return; }
+    if (tG.k !== 'feidhm' || tG.modh !== 'ordaitheach') {
+      this.bail.cuir('E201', r.argointi[0].ionad,
+        ainmCineail({ k: 'feidhm', modh: 'ordaitheach', params: [mir], toradh: NEAMHNI }),
+        ainmCineail(tG));
+      return;
+    }
+    if ((tG.params || []).length !== 1) {
+      this.bail.cuir('E206', r.argointi[0].ionad, ainm, 1, (tG.params || []).length);
+      return;
+    }
+    if (!comhionann(tG.params[0], mir)) {
+      this.bail.cuir('E201', r.argointi[0].ionad, ainmCineail(mir), ainmCineail(tG.params[0]));
+      return;
+    }
+    // The aspect of the verb is the aspect of the loop: commands are
+    // sequential, so an ongoing verb makes the whole command ongoing.
+    if (tG.leanunach) {
+      r.leanunach = true;
+      if (!this.ctx.leanunach) this.bail.cuir('E504', r.ionad);
+    }
+    r.iteraid = true;
   }
 
   /** The binding a `cuir … ar …` target ultimately rests on. */
@@ -476,6 +675,26 @@ class Anailiseoir {
           this.bail.cuir('E401', e.ball.ionad, '"slonn"', '"ball"');
           return IASACHT;
         }
+        const siniu = this.modúil.get(e.foinse);
+        if (siniu) {
+          // A native origin. The member is an Irish lemma with a paradigm, so
+          // it goes through the ordinary agreement check in whatever form
+          // *this* phrase's own governor demands — base at the top level, as
+          // for any head. A foreign member is exempt from all of that, and
+          // that exemption is now a statement about the word rather than
+          // about the syntax: a foreign name has no mutation slot, the same
+          // way `áit` and `stór` have none.
+          if (!e.ball) return modul(e.foinse, siniu);
+          const r = this.reitighFoirm(e.ball.surface, foirm, (l) => siniu.onnmhairi.has(l), oibreoir);
+          if (r.earraid) { this.teip(r, e.ball.ionad, 'E203', e.foinse); return IASACHT; }
+          e.ball.lemma = r.lemma;
+          e.ball.foirm = foirm;
+          const onn = siniu.onnmhairi.get(r.lemma);
+          if (onn.kind === 'gníomh') { this.bail.cuir('E501', e.ball.ionad, r.lemma); return IASACHT; }
+          return onn.cineal;
+        }
+        // A borrowed member keeps its borrowed name: you do not get to rename
+        // someone else's API by importing it (§7).
         if (e.ball) e.ball.lemma = e.ball.surface;
         return IASACHT;
       }
@@ -507,6 +726,23 @@ class Anailiseoir {
           if (res.earraid) { this.teip(res, e.ball.ionad); return IASACHT; }
           socraigh(res.lemma);
           return IASACHT;
+        }
+
+        if (tS.k === 'modúl') {
+          // The same relation, a better-typed possessor. `ó` still governs the
+          // possessor and the member is still the head of this phrase, so not
+          // one line of the government machinery changes — only the question
+          // asked of the symbol table.
+          const res = this.reitighFoirm(e.ball.surface, foirm,
+            (l) => tS.siniu.onnmhairi.has(l), oibreoir);
+          if (res.earraid) { this.teip(res, e.ball.ionad, 'E203', tS.ainm); return IASACHT; }
+          socraigh(res.lemma);
+          const onn = tS.siniu.onnmhairi.get(res.lemma);
+          // Mood survives the boundary, which is the whole point: a
+          // cross-module imperative is a command you give, not a value you
+          // call and complete.
+          if (onn.kind === 'gníomh') { this.bail.cuir('E501', e.ball.ionad, res.lemma); return IASACHT; }
+          return onn.cineal;
         }
 
         if (tS.k === 'liosta') {
@@ -680,8 +916,8 @@ class Anailiseoir {
   }
 }
 
-function anailisigh(ast) {
-  const a = new Anailiseoir();
+function anailisigh(ast, comhthéacs = {}) {
+  const a = new Anailiseoir(comhthéacs);
   a.clar(ast);
   return { ast, anailiseoir: a };
 }

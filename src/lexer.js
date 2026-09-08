@@ -143,7 +143,29 @@ function leacs(src, comhad = '<foinse>') {
  * because they already know which words are verbs; the parser is handed the
  * same lexicon by a pre-scan for `gníomh AINM` before it starts.
  */
-const GNIOMHARTHA_IONSUITE = new Set(['scríobh']);
+const GNIOMHARTHA_IONSUITE = new Set(['scríobh', 'déan']);
+
+/**
+ * Import pre-scan. `ó "…"` is the only import form, and both the particle and
+ * the path are lexemes, so a file's origins can be read off the token stream
+ * without parsing it.
+ *
+ * That is not an optimisation, it is forced. A reader of Irish parses VSO
+ * because they already know which words are verbs, and a reader who picks up
+ * a text built on another text's vocabulary must have read the other text
+ * first. So an imported module's verb lexicon has to be in hand *before* this
+ * file is parsed — and you cannot parse this file to discover what to load.
+ * The lexicon is acquired before reading, never during it.
+ */
+function bunuis(toks) {
+  const amach = [];
+  for (let i = 0; i < toks.length - 1; i++) {
+    if (toks[i].cinéal === 'KW' && toks[i].luach === 'ó' && toks[i + 1].cinéal === 'STR') {
+      amach.push({ foinse: toks[i + 1].luach, ionad: toks[i + 1].ionad });
+    }
+  }
+  return amach;
+}
 
 /**
  * Two lexicons, both gathered before parsing.
@@ -156,9 +178,17 @@ const GNIOMHARTHA_IONSUITE = new Set(['scríobh']);
  * an ordinary identifier. Deciding by lexicon rather than by keyword means
  * `seasmhach a = 3` still works.
  */
-function lexeain(toks) {
+function lexeain(toks, iasachta = null) {
   const gniomhartha = new Set(GNIOMHARTHA_IONSUITE);
   const briathra = new Set(GNIOMHARTHA_IONSUITE);
+  // A borrowed verb is still a verb. When Irish takes a verb from elsewhere it
+  // conjugates it natively and it simply joins the lexicon — you do not say
+  // "the borrowed verb X", you say X. So an imported imperative enters the
+  // lexicon unqualified, and `cuirDuine stór, "Cáit", 20` parses as a command.
+  if (iasachta) {
+    for (const g of iasachta.gniomhartha || []) { gniomhartha.add(g); briathra.add(g); }
+    for (const b of iasachta.briathra || []) briathra.add(b);
+  }
   for (let i = 0; i < toks.length - 1; i++) {
     const t = toks[i];
     if (t.cinéal !== 'KW' || toks[i + 1].cinéal !== 'IDENT') continue;
@@ -168,4 +198,4 @@ function lexeain(toks) {
   return { gniomhartha, briathra };
 }
 
-module.exports = { leacs, lexeain, EOCHAIRFHOCAIL, GNIOMHARTHA_IONSUITE };
+module.exports = { leacs, lexeain, bunuis, EOCHAIRFHOCAIL, GNIOMHARTHA_IONSUITE };

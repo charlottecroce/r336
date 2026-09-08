@@ -61,10 +61,20 @@ const M = {
   E105: (surface, lemma, ceart) =>
     `Níl an fhoirm "${surface}" bailí don aitheantóir "${lemma}". An fhoirm a bhí ag teastáil: "${ceart}".`,
 
+  // Onnmhairíonn níos mó ná modúl amháin an lemma céanna: ní féidir a rá cé
+  // acu briathar atá i gceist gan cháiliú, agus ní cháilítear briathra.
+  E106: (ainm, foinsi) =>
+    `Tá "${ainm}" á onnmhairiú ag níos mó ná modúl amháin (${foinsi.map((f) => `"${f}"`).join(', ')}). Athainmnigh ceann acu.`,
+
   E107: (surface, ceart) =>
     `Ní mór aitheantóirí a fhógairt sa bhunfhoirm. Fógraíodh "${surface}"; úsáid "${ceart}".`,
 
   E108: (ainm) => `Níl urú curtha i bhfeidhm sa teanga fós: "${ainm}".`,
+
+  E109: (conair) => `Ní bhfuarthas an modúl "${conair}".`,
+
+  E110: (timthriall) =>
+    `Timthriall i measc na modúl: ${timthriall.join(' → ')}. Ní féidir modúl a thiomsú roimhe féin.`,
 
   // ── 2xx: cineálacha ───────────────────────────────────────────────────
   // `le` prefixes h- to a vowel-initial word (le hUimhir, le Teaghrán), so
@@ -148,6 +158,20 @@ const M = {
 
   E513: (ainm) =>
     `Ní briathar é "${ainm}": ní féidir "a" a chur roimh rud nach féidir a ainmniú.`,
+
+  // Réamhfhocal an bhriathair: roghnaíonn briathar réamhfhocal ar leith, agus
+  // ní ghlactar le frása gan é ná le frása mícheart.
+  E514: (ainm, reamhfhocal) =>
+    `Tá frása "${reamhfhocal}" ag teastáil ón ordú "${ainm}": is é sin an réamhfhocal a roghnaíonn an briathar seo.`,
+
+  E515: (ainm) =>
+    `Ní ghlacann an t-ordú "${ainm}" le frásaí réamhfhoclacha.`,
+
+  // Tógann `ó` frása ainmfhoclach, agus ní ainmní é ordú (E501). Tagann
+  // briathar iasachta isteach sa fhoclóir gan cháiliú, mar a thagann i
+  // nGaeilge: ní deirtear "an briathar iasachta X", ach X.
+  E516: (ainm) =>
+    `Ní ghlacann an t-ordú "${ainm}" le sealbhóir: tógann "ó" frása ainmfhoclach, agus ní ainmní é ordú. Tá briathar iasachta san fhoclóir gan cháiliú — tabhair "${ainm} …" mar ordú.`,
 };
 
 function earraid(cod, ionad, ...args) {

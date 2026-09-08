@@ -6,27 +6,33 @@ const { leacs, lexeain } = require('./lexer');
 const { parsail } = require('./parser');
 const { anailisigh } = require('./analyzer');
 const { gin } = require('./codegen');
+const { Tionscadal, lexeanIompórtálacha } = require('./modúil');
 const mf = require('./morphology');
 const { Earraid, Cnuasach } = require('./diagnostics');
 
 /**
- * .sb → JS.
- * Returns { js, ast, anailiseoir }. Throws Earraid or Cnuasach on failure.
+ * .sb → JS, for one string of source.
+ *
+ * `comhthéacs.modúil` is a Map from the written origin to that module's
+ * signature. Left out, it is empty, and every import is an `Iasacht` exactly
+ * as it was before the module graph existed — which is what the test harness
+ * and `--amharc` want, and why 0.4's behaviour is still reachable in one call.
  */
-function tiomsaigh(foinse, comhad = '<foinse>') {
+function tiomsaigh(foinse, comhad = '<foinse>', comhthéacs = {}) {
   const toks = leacs(foinse, comhad);
-  const ast = parsail(toks, lexeain(toks));
-  const { anailiseoir } = anailisigh(ast);
+  const modúil = comhthéacs.modúil || new Map();
+  const ast = parsail(toks, lexeain(toks, lexeanIompórtálacha(modúil)));
+  const { anailiseoir } = anailisigh(ast, { modúil });
   return { js: gin(ast), ast, anailiseoir };
 }
 
-/** Compile one file to a sibling .js. */
-function tiomsaighComhad(conair) {
-  const foinse = fs.readFileSync(conair, 'utf8');
-  const t = tiomsaigh(foinse, path.basename(conair));
-  const amach = conair.replace(/\.sb$/, '.js');
-  fs.writeFileSync(amach, t.js);
-  return { ...t, amach };
+/**
+ * Compile one file, and everything it stands on, to sibling .js files.
+ * Dependencies are compiled first: with a module graph, order is no longer
+ * whatever `readdirSync` happened to return.
+ */
+function tiomsaighComhad(conair, tionscadal = null) {
+  return (tionscadal || new Tionscadal()).scriobh(conair);
 }
 
 /** Compile every .sb under a directory, skipping node_modules. */
@@ -49,6 +55,7 @@ function paraidimi(anailiseoir) {
       lemma: c.lemma,
       kind: c.kind,
       sealadach: c.sealadach,
+      foinse: c.foinse || null,
       cineál: require('./analyzer').ainmCineail(c.cineal),
       bun: c.paraidim[mf.FOIRM.BUN],
       séimhithe: c.paraidim[mf.FOIRM.SEIMHITHE],
@@ -61,6 +68,6 @@ function paraidimi(anailiseoir) {
 }
 
 module.exports = {
-  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi,
+  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, Tionscadal,
   Earraid, Cnuasach, morphology: mf,
 };
