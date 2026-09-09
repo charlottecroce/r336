@@ -1,0 +1,23 @@
+// E608 — ní dhéantar comhaontú idir iomaitheoirí.
+//
+// Seo an botún a dhéanfar: tá `Foireann` i Laighin, tá an téacs seo as
+// Ciarraí, agus is é an comhaontú an chéad rud a shínfear amach chuige. Tá
+// seanaighneas idir Ciarraí agus Baile Átha Cliath, mar sin ní dhéantar é.
+//
+// Níl aon `sos cogaidh` sa teanga: dá mbeadh, is riail a cheanglaítear agus
+// a scaoiltear san aon chomhad amháin a bheadh inti, agus ní riail ar bith í
+// sin. Tá éalú ann cheana, agus is rogha é seachas eochairfhocal — athraigh
+// `as Ciarraí` go `as Luimneach` agus osclóidh an comhaontú céanna an bosca.
+// Caillfidh tú an contae a bhí uait. Sin an praghas (§25.4, §25.5).
+//
+// Cuir `feidhm ainmDe(f: Foireann) -> Teaghrán { ainm ó fh }` leis agus
+// gheobhaidh tú E609 in éineacht leis: ní hé an comhaontú an t-aon rud a
+// theipeann.
+
+as Ciarraí
+
+struchtúr Foireann as Baile Átha Cliath {
+    ainm: Teaghrán
+}
+
+comhaontú Ciarraí Baile Átha Cliath

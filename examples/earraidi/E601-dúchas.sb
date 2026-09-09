@@ -1,11 +1,16 @@
-// E601 — dúchas: is bosca as contae eile é, agus ní osclaítear é.
+// E601 — dúchas: is bosca as cúige eile é, agus ní osclaítear é.
 //
-// Tá cead ag téacs as Ciarraí struchtúr as Corcaigh a fhógairt: níl san fhógra
-// ach ainm a thabhairt air. Is é an t-oscailt atá faoi rialú.
+// Ó chéim 0.7 is é an cúige an teorainn, ní an contae. Tá Corcaigh in An
+// Mhumhain agus tá Gaillimh i gConnachta, mar sin tá teorainn eatarthu agus
+// níl aon chomhaontú sa chomhad seo. (Dá mba as Luimneach an struchtúr,
+// d'osclófaí é gan chomhaontú ar bith: aon chineál amháin atá ag cúige.)
+//
+// Tá cead ag téacs as Corcaigh struchtúr as Gaillimh a fhógairt: níl san
+// fhógra ach ainm a thabhairt air. Is í an oscailt atá faoi rialú.
 
-as Ciarraí
+as Corcaigh
 
-struchtúr Duine as Corcaigh {
+struchtúr Duine as Gaillimh {
     ainm: Teaghrán
 }
 

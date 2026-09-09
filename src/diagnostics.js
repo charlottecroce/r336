@@ -13,10 +13,11 @@
  *   3xx  copail / bí     — classification and existence
  *   4xx  comhréir        — lexing and parsing
  *   5xx  modh agus aspect— imperative vs indicative, ongoing vs completed
- *   6xx  dúchas          — county, exile, treaty (§24)
+ *   6xx  dúchas          — province, county, exile, treaty (§24, §25)
  */
 
 const { reamhlitirH } = require('./morphology');
+const ctae = require('./contaetha');
 
 class Earraid extends Error {
   constructor(cod, teachtaireacht, ionad) {
@@ -45,6 +46,17 @@ const CUISEANNA = {
   'neamhlitir': 'ní tosaíonn sé le consan inséimhithe',
   'folamh': 'tá sé folamh',
 };
+
+/**
+ * A place, named the way the reader needs it in a 6xx message.
+ *
+ * Since 0.7 the border compares provinces, so a message that names only
+ * counties is not saying why it fired: *as Corcaigh* against *as Gaillimh*
+ * is refused for a reason a reader cannot see unless the message says
+ * "An Mhumhain" and "Connachta". Exile has no province and gets no
+ * parenthesis, because "deoraíocht (deoraíocht)" says nothing twice.
+ */
+const ait = (c) => (c === ctae.DEORAIOCHT ? c : `${c} (${ctae.cuigeDe(c)})`);
 
 const M = {
   // ── 1xx: moirfeolaíocht ───────────────────────────────────────────────
@@ -176,19 +188,27 @@ const M = {
 
   // ── 6xx: dúchas ───────────────────────────────────────────────────────
   // A new axis, alongside morphology, types, the copula, syntax and mood.
-  // The county system is a bit and the notes say so (§24); the diagnostics
-  // are not, and they hold to the same standard as the rest.
+  // The county system is a bit and the notes say so (§24.1, §25.1); the
+  // diagnostics are not, and they hold to the same standard as the rest.
+  //
+  // Three of these are funny, and none of them is written to be. The rule is
+  // the joke; the message states the rule.
 
-  // Curtha in áirithe do chéim 3: an tseiceáil féin ar an sealbhach.
   // Modelled on E103 and E205 — what was found, what was demanded, and why.
+  // Since 0.7 the comparison is between provinces, so both places are named
+  // with theirs or the message does not say why it fired.
   E601: (ball, contaeBaill, contaeAitiuil) =>
-    `Níl cead ag téacs as ${contaeAitiuil} an ball "${ball}" a oscailt: is as ${contaeBaill} é, agus níl aon chomhaontú eatarthu.`,
+    `Níl cead ag téacs as ${ait(contaeAitiuil)} an ball "${ball}" a oscailt: is as ${ait(contaeBaill)} é, agus níl aon chomhaontú eatarthu.`,
 
   E602: (ainm) =>
     `Níl "${ainm}" ar cheann de na 32 contae.`,
 
-  E603: (contae, eile) =>
-    `Tá ${contae} tógtha cheana ag an struchtúr "${eile}". Ní bhíonn ach struchtúr amháin ag contae: ní clib ar chineál é an contae ach a chéannacht.`,
+  // Three things named, because the author needs all three to fix it: the
+  // province that is gone, the county sitting in it, and the struct that put
+  // it there. Naming only the county — which is what 0.6 did — is now wrong,
+  // because the thing that was taken is not the county that was written.
+  E603: (cuige, contae, struchtur) =>
+    `Tá ${cuige} tógtha cheana ag an struchtúr "${struchtur}", atá as ${contae}. Ní bhíonn ach struchtúr amháin ag cúige: ceithre chineál churtha atá i gclár, agus is ionann contae a roghnú agus cúige a roghnú.`,
 
   E604: () =>
     `Tá contae an mhodúil fógartha faoi dhó. Ní bhíonn téacs as dhá áit.`,
@@ -201,6 +221,18 @@ const M = {
 
   E607: (a, b) =>
     `Tá comhaontú idir ${a} agus ${b} sa chomhad seo cheana. Is ionann comhaontú ón dá thaobh, mar sin níl san dara fógra ach athrá.`,
+
+  // §25.4 — an t-iompú. Ní eisceacht sa tábla comhaontuithe é seo: ní
+  // fhéadfadh comhaontú idir iomaitheoirí cead a thabhairt riamh, mar go
+  // ritheann an cosc roimh an gcuardach. Insítear anseo é san áit a
+  // gceapann an t-údar go bhfuil leigheas ann.
+  E608: (a, b) =>
+    `Ní dhéantar comhaontú idir ${a} agus ${b}: is seanaighneas atá eatarthu. Níl aon leigheas air.`,
+
+  // The last clause is the whole rule and is meant flatly: the province does
+  // not help. Two rivals in one province are still two rivals.
+  E609: (ball, contaeBaill, contaeAitiuil) =>
+    `Níl cead ag téacs as ${contaeAitiuil} an ball "${ball}" a oscailt: is as ${contaeBaill} é, agus is seanaighneas atá eatarthu. Ní réitíonn comhaontú é seo (E608), ná an cúige céanna.`,
 };
 
 function earraid(cod, ionad, ...args) {

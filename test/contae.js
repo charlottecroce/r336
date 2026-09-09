@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * test/contae.js — tástálacha do chéim 0.6, céimeanna 1 agus 2.
+ * test/contae.js — tástálacha do chéimeanna 0.6 agus 0.7.
  *
  * Ar leithligh ó run.js agus ó nua.js, ar an gcúis chéanna: níl aon rud anseo
  * a bhaineann le 0.4 ná le 0.5, agus is féidir na trí chomhad a rith le chéile
@@ -9,9 +9,12 @@
  *
  *     node test/contae.js
  *
- * Ní chlúdaítear anseo ach an fhoirm agus an réiteach: `as` san fhoclóir agus
- * sa pharsálaí, an réimse `contae` ar an struchtúr, agus contae an mhodúil.
- * Níl an tseiceáil féin (E601) ná na comhaontuithe ann go fóill.
+ * NÓTA DON LÉITHEOIR. Ba é `Corcaigh` / `Ciarraí` an péire ginearálta "dhá
+ * chontae éagsúla" ar fud an chomhaid seo go dtí 0.7. Is é an péire is
+ * speisialta sa teanga anois é: aon chúige amháin atá acu, agus seanaighneas
+ * eatarthu. Mar sin is `Corcaigh` / `Gaillimh` an péire neodrach anois — dhá
+ * chúige, gan aighneas — agus ní úsáidtear `Corcaigh` / `Ciarraí` ach nuair
+ * is é an t-aighneas féin atá á thástáil.
  */
 
 const assert = require('assert');
@@ -62,21 +65,23 @@ async function rithTionscadal(comhaid, tosach = 'príomh.sb') {
   return amach;
 }
 
-function coid(src) {
+function earraidiDe(src) {
   try { tiomsaigh(src, 'tástáil.sb'); return []; }
   catch (e) {
-    if (e instanceof Cnuasach) return e.earraidi.map((x) => x.cod);
-    if (e instanceof Earraid) return [e.cod];
+    if (e instanceof Cnuasach) return e.earraidi;
+    if (e instanceof Earraid) return [e];
     throw e;
   }
 }
+
+const coid = (src) => earraidiDe(src).map((x) => x.cod);
 
 const jsDe = (src) => tiomsaigh(src, 'tástáil.sb').js;
 const anailiseDe = (src) => tiomsaigh(src, 'tástáil.sb').anailiseoir;
 const contaeStruchtuir = (src, ainm) => anailiseDe(src).cinealacha.get(ainm).contae;
 
 // ══ 1. An tábla: stór focal, ní moirfeolaíocht ════════════════════════
-it('tá 32 contae ann, agus níl aon ainm ina réamhrán d\'ainm eile', () => {
+it('tá 32 contae ann, agus seasann gach ionvariant sa tábla', () => {
   assert.deepStrictEqual(ctae.seiceailTabla(), []);
 });
 
@@ -90,9 +95,51 @@ it('fanann an t-urú gan bhrí: ainm dílis atá i "nGall", ní foirm', () => {
   // it and nothing demands it: the eclipsed slot is still empty (§12).
   assert.ok(ctae.isContae('Dún na nGall'));
   assert.throws(() => mf.foirmDe('gall', mf.FOIRM.URAITHE));
-  // Nor did the article arrive with it.
+  // Nor did the article arrive with it. Nor did it arrive with the provinces:
+  // `An Mhumhain` is one opaque string and no program ever writes it.
   assert.strictEqual(ctae.isContae('na'), false);
   assert.strictEqual(ctae.isContae('An'), false);
+  assert.strictEqual(ctae.isContae('An Mhumhain'), false);
+  assert.deepStrictEqual(coid('as An Mhumhain\nseasmhach x = 1'), ['E602']);
+});
+
+it('freagraíonn an deoraíocht mar chúige di féin', () => {
+  // This is what keeps the border rule at four cases and one comparison:
+  // same-province and both-exile collapse into a single equality (§25.3).
+  assert.strictEqual(ctae.cuigeDe('Corcaigh'), ctae.CUIGI.MUMHAIN);
+  assert.strictEqual(ctae.cuigeDe('Ciarraí'), ctae.CUIGI.MUMHAIN);
+  assert.strictEqual(ctae.cuigeDe('Gaillimh'), ctae.CUIGI.CONNACHTA);
+  assert.strictEqual(ctae.cuigeDe(ctae.DEORAIOCHT), ctae.DEORAIOCHT);
+});
+
+it('níl an deoraíocht ina hiomaitheoir ag aon duine', () => {
+  // Why no pre-0.7 program is touched by the veto: exile has no history.
+  assert.strictEqual(ctae.isIomaiocht(ctae.DEORAIOCHT, 'Corcaigh'), false);
+  assert.strictEqual(ctae.isIomaiocht('Corcaigh', ctae.DEORAIOCHT), false);
+  assert.strictEqual(ctae.isIomaiocht(ctae.DEORAIOCHT, ctae.DEORAIOCHT), false);
+});
+
+it('tá an t-aighneas comhchineálach agus tá sé gearr', () => {
+  assert.strictEqual(ctae.isIomaiocht('Corcaigh', 'Ciarraí'), true);
+  assert.strictEqual(ctae.isIomaiocht('Ciarraí', 'Corcaigh'), true);
+  assert.strictEqual(ctae.isIomaiocht('Baile Átha Cliath', 'Ciarraí'), true);
+  assert.strictEqual(ctae.isIomaiocht('Corcaigh', 'Liatroim'), false);
+  // Short enough to stay true. If this ever needs raising, the thing to check
+  // first is whether it is still a list a reader recognises (§24.4, §25.4).
+  assert.ok(ctae.IOMAIOCHT.length <= 12, `${ctae.IOMAIOCHT.length} péire`);
+});
+
+it('fágann gach aighneas éalú: níl aon dá chúige dúnta ar a chéile', () => {
+  // The answer to "is there a sos cogaidh?" — there is no keyword because
+  // there is already an escape, and it costs you the county you wanted.
+  for (const p of ctae.CUIGI_UILE) {
+    for (const q of ctae.CUIGI_UILE) {
+      if (p === q) continue;
+      const saor = ctae.contaethaCuige(p)
+        .some((a) => ctae.contaethaCuige(q).some((b) => !ctae.isIomaiocht(a, b)));
+      assert.ok(saor, `${p} / ${q}`);
+    }
+  }
 });
 
 // ══ 2. `as` san fhoclóir agus sa pharsálaí ════════════════════════════
@@ -121,9 +168,6 @@ it('léitear ainmneacha ilfhoclacha ina n-iomláine', () => {
 });
 
 it('stopann an léamh santach ag deireadh an ainm', () => {
-  // The only case where the greedy read could overrun is a county followed by
-  // an identifier. `Corcaigh scríobh` begins no county, so the reader stops
-  // and the next statement parses as itself.
   const src = 'as Corcaigh\nscríobh 1\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'seasmhach d = Duine { ainm: "Cáit" }\nscríobh ainm ó dh';
@@ -132,24 +176,17 @@ it('stopann an léamh santach ag deireadh an ainm', () => {
 });
 
 it('fanann "as" ina eochairfhocal gan "asal" a bhriseadh', () => {
-  // Identifiers are read maximally and *then* checked against the table, so a
-  // word merely beginning with `as` is untouched (léacsóir.js).
   assert.deepStrictEqual(coid('seasmhach asal = 1\nscríobh asal'), []);
 });
 
 // ══ 3. Rialú: ní shéimhíonn `as`, agus sin an tseiceáil ═══════════════
 it('is E103 é séimhiú gan údar i ndiaidh "as" — gan chód nua', () => {
-  // The government table does not grow. `as` demands the base form, which is
-  // what everything except ó/ar/a already demands, so unlicensed lenition is
-  // caught by the mechanism that was already there.
   assert.deepStrictEqual(coid('as Chorcaigh\nseasmhach x = 1'), ['E103']);
   assert.deepStrictEqual(coid('struchtúr D as Chorcaigh { a: Uimhir }'), ['E103']);
   assert.deepStrictEqual(coid('struchtúr D as Dhún na nGall { a: Uimhir }'), ['E103']);
 });
 
 it('ní shéimhítear ach ceann an fhrása', () => {
-  // Only the head of the phrase is governed, so the frozen `Fhailí` and
-  // `nGall` inside a name are not the mechanism's business.
   assert.deepStrictEqual(coid('struchtúr D as Uíbh Fhailí { a: Uimhir }'), []);
 });
 
@@ -157,10 +194,7 @@ it('ní shéimhítear ach ceann an fhrása', () => {
 it('níl ann ach na 32 (E602)', () => {
   assert.deepStrictEqual(coid('as Corcaig\nseasmhach x = 1'), ['E602']);
   assert.deepStrictEqual(coid('struchtúr D as Yorkshire { a: Uimhir }'), ['E602']);
-  // A real head word on its own is not a county either.
   assert.deepStrictEqual(coid('struchtúr D as Dún { a: Uimhir }'), ['E602']);
-  // Wrong tail: the salvage read means the phrase is named whole rather than
-  // truncated to "Dún na" and then failing as a syntax error.
   assert.deepStrictEqual(coid('struchtúr D as Dún na Sí { a: Uimhir }'), ['E602']);
 });
 
@@ -169,20 +203,52 @@ it('ní féidir "as deoraíocht" a scríobh (E605)', () => {
   assert.deepStrictEqual(coid('struchtúr D as deoraíocht { a: Uimhir }'), ['E605']);
 });
 
-// ══ 5. Contae amháin, struchtúr amháin: E603, E604 ═══════════════════
-it('ní bhíonn ach struchtúr amháin ag contae (E603)', () => {
+// ══ 5. Cúige amháin, struchtúr amháin: E603, E604 (§25.2) ════════════
+it('ní bhíonn ach struchtúr amháin ag cúige (E603)', () => {
+  // The 0.6 rule was one per county and this pair was legal. It is not.
+  assert.deepStrictEqual(
+    coid('struchtúr Duine as Corcaigh { a: Uimhir }\nstruchtúr Áit as Ciarraí { b: Uimhir }'),
+    ['E603']);
+  // The same county is still the same province, so 0.6's case still fires.
   assert.deepStrictEqual(
     coid('struchtúr Duine as Corcaigh { a: Uimhir }\nstruchtúr Áit as Corcaigh { b: Uimhir }'),
     ['E603']);
-  assert.deepStrictEqual(
-    coid('struchtúr Duine as Corcaigh { a: Uimhir }\nstruchtúr Áit as Ciarraí { b: Uimhir }'),
-    []);
+  // Every county of a taken province is closed, not just the neighbours
+  // anyone would think of.
+  for (const c of ['Luimneach', 'An Clár', 'Port Láirge', 'Tiobraid Árann']) {
+    assert.deepStrictEqual(
+      coid(`struchtúr Duine as Corcaigh { a: Uimhir }\nstruchtúr Áit as ${c} { b: Uimhir }`),
+      ['E603'], c);
+  }
+});
+
+it('ainmníonn E603 an cúige, an contae atá ann, agus an struchtúr', () => {
+  // The message has three jobs now: what was taken, who is sitting in it, and
+  // under what name. Naming only the county is what 0.6 did and it is wrong,
+  // because the thing that was taken is not the county that was written.
+  const [e] = earraidiDe(
+    'struchtúr Duine as Corcaigh { a: Uimhir }\nstruchtúr Áit as Ciarraí { b: Uimhir }');
+  assert.strictEqual(e.cod, 'E603');
+  for (const cuid of [ctae.CUIGI.MUMHAIN, 'Corcaigh', 'Duine']) {
+    assert.ok(e.teachtaireacht.includes(cuid), `${cuid} ar iarraidh: ${e.teachtaireacht}`);
+  }
+});
+
+it('coinnítear na ceithre chúige ar fad, agus is E603 an cúigiú cineál', () => {
+  const ceithre = 'struchtúr A as Corcaigh { a: Uimhir }\n'        // An Mhumhain
+    + 'struchtúr B as Cill Dara { a: Uimhir }\n'                    // Laighin
+    + 'struchtúr C as Sligeach { a: Uimhir }\n'                     // Connachta
+    + 'struchtúr D as Muineachán { a: Uimhir }';                    // Ulaidh
+  assert.deepStrictEqual(coid(ceithre), []);
+  assert.deepStrictEqual(coid(`${ceithre}\nstruchtúr E as Liatroim { a: Uimhir }`), ['E603']);
 });
 
 it('níl an deoraíocht eisiach', () => {
-  // Otherwise a program could hold at most 32 struct types in total.
+  // Otherwise a program could hold at most four struct types in total, which
+  // is a different and much worse language.
   assert.deepStrictEqual(
-    coid('struchtúr A { a: Uimhir }\nstruchtúr B { b: Uimhir }\nstruchtúr C { c: Uimhir }'),
+    coid('struchtúr A { a: Uimhir }\nstruchtúr B { b: Uimhir }\nstruchtúr C { c: Uimhir }\n'
+      + 'struchtúr D { d: Uimhir }\nstruchtúr E { e: Uimhir }'),
     []);
 });
 
@@ -203,21 +269,26 @@ it('iompraíonn an síniú contae an mhodúil féin', () => {
   assert.strictEqual(t.tiomsaigh('/sb/a.sb').siniu.contae, 'Ciarraí');
 });
 
-it('is domhanda an t-éileamh ar chontae (E603 trasna comhad)', () => {
-  // The claim travels with the imported type, so two files cannot both take
-  // Corcaigh. "One struct per county, globally" means the whole graph.
+it('is domhanda an t-éileamh ar chúige (E603 trasna comhad)', () => {
+  // "One struct per province, globally" means the whole graph. The claim
+  // travels with the imported type, so a second file cannot take a different
+  // county of a province the first has already spent.
   assert.deepStrictEqual(
     coidTionscadal({
       'duine.sb': 'struchtúr Duine as Corcaigh { ainm: Teaghrán }',
-      'príomh.sb': 'seasmhach d = ó "./duine.sb"\nstruchtúr Áit as Corcaigh { ainm: Teaghrán }',
+      'príomh.sb': 'seasmhach d = ó "./duine.sb"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
     }),
     ['E603']);
+  // …and a free province across the graph is still free.
+  assert.deepStrictEqual(
+    coidTionscadal({
+      'duine.sb': 'struchtúr Duine as Corcaigh { ainm: Teaghrán }',
+      'príomh.sb': 'seasmhach d = ó "./duine.sb"\nstruchtúr Áit as Gaillimh { ainm: Teaghrán }',
+    }),
+    []);
 });
 
 it('ní théann contae an mhodúil trasna na teorann mar riail', () => {
-  // The signature carries it so `--graf` can print it, but nothing consults
-  // it from the far side: a county is a property of a place, and importing a
-  // text is not moving house (§24.2).
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': 'as Gaillimh\nfeidhm beannaigh(a: Teaghrán) -> Teaghrán { "Dia duit, " + a }',
@@ -228,20 +299,18 @@ it('ní théann contae an mhodúil trasna na teorann mar riail', () => {
 
 // ══ 7. Ní fheiceann an chúlchríoch aon rud de seo ════════════════════
 it('ní shroicheann an dúchas an JavaScript', () => {
-  // The same proof that applies to lenition and to tá/bhfuil (§28). Provenance
-  // is checked entirely at compile time, so unlike mood and aspect it has no
-  // runtime shadow at all — there is deliberately no `__contae`, because
-  // nothing would ever read it and its presence would imply otherwise. The
-  // multi-word county is the interesting one: its frozen `nGall` must not
-  // appear either.
+  // Provenance is checked entirely at compile time, so unlike mood and aspect
+  // it has no runtime shadow at all — no `__contae`, and now no province
+  // either. The multi-word county is the interesting one: its frozen `nGall`
+  // must not appear.
   const js = jsDe('as Dún na nGall\n'
     + 'struchtúr Duine as Dún na nGall { ainm: Teaghrán }\n'
     + 'gníomh fógair(duine: Duine) { scríobh ainm ó dhuine }\n'
     + 'gníomh príomh() { fógair Duine { ainm: "Cáit" } }');
-  for (const focal of ['Corcaigh', 'Dún na nGall', 'nGall', '__contae', 'contae']) {
+  for (const focal of ['Corcaigh', 'Dún na nGall', 'nGall', '__contae', 'contae',
+    'cúige', 'Ulaidh', '__cúige']) {
     assert.ok(!js.includes(focal), `${focal} sa JS:\n${js}`);
   }
-  // and the 0.5 proof still holds alongside it
   for (const focal of ['dhuine', 'fhógair']) assert.ok(!js.includes(focal), focal);
 });
 
@@ -254,49 +323,67 @@ it('gineann clár gan "as" an cód céanna a ghin sé riamh', () => {
   assert.ok(jsDe(src).includes('Duine$nua') || jsDe(src).includes('__cineál: "Duine"'));
 });
 
-// ══ 9. An tseiceáil féin: E601 (céim 3) ══════════════════════════════
+// ══ 9. An teorainn: cúige in aghaidh cúige (E601, §25.3) ═════════════
 it('osclaítear bosca sa bhaile', () => {
   assert.deepStrictEqual(coid('as Corcaigh\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), []);
 });
 
-it('ní osclaítear bosca as contae eile (E601)', () => {
-  assert.deepStrictEqual(coid('as Ciarraí\n'
+it('is é an cúige an teorainn, ní an contae', () => {
+  // The 0.7 headline in two lines. A Limerick text opens the Munster type
+  // without a treaty, because there is one Munster type and Limerick is in
+  // Munster. In 0.6 this was E601.
+  assert.deepStrictEqual(coid('as Luimneach\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), []);
+  for (const c of ['An Clár', 'Port Láirge', 'Tiobraid Árann']) {
+    assert.deepStrictEqual(coid(`as ${c}\n`
+      + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
+      + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), [], c);
+  }
+});
+
+it('ní osclaítear bosca as cúige eile (E601)', () => {
+  assert.deepStrictEqual(coid('as Corcaigh\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), ['E601']);
 });
 
+it('ainmníonn E601 an dá chúige', () => {
+  const [e] = earraidiDe('as Corcaigh\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }');
+  assert.strictEqual(e.cod, 'E601');
+  for (const cuid of [ctae.CUIGI.MUMHAIN, ctae.CUIGI.CONNACHTA]) {
+    assert.ok(e.teachtaireacht.includes(cuid), `${cuid} ar iarraidh: ${e.teachtaireacht}`);
+  }
+});
+
 it('ná ó dheoraíocht ach oiread — níl leigheas air', () => {
-  // No `comhaontú` will ever fix this one: exile is not a party to an
-  // agreement. The only remedy is to place the accessing text.
   assert.deepStrictEqual(coid(
     'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), ['E601']);
 });
 
 it('ní trádáil í deoraíocht ar dheoraíocht', () => {
-  // The reason every 0.4 and 0.5 program still compiles: there is no border
-  // between two things that are from nowhere.
+  // The reason every 0.4, 0.5 and 0.6 program still compiles: there is no
+  // border between two things that are from nowhere, and `cuigeDe` of exile
+  // is exile, so this passes through the same equality as same-province.
   assert.deepStrictEqual(coid(
     'struchtúr Duine { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), []);
 });
 
-it('is deoraí é an luach ar iasacht, agus mar sin scarann contae ón JavaScript', () => {
-  // A placed text cannot reach `Iasacht` at all. This is the pressure the
-  // feature exists to apply (§24.3).
+it('is deoraí é an luach ar iasacht, agus mar sin scarann cúige ón JavaScript', () => {
   assert.deepStrictEqual(
     coid('as Corcaigh\ngníomh g(x: Iasacht) { scríobh fad ó x }'), ['E601']);
   assert.deepStrictEqual(
     coid('as Corcaigh\nseasmhach p = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), ['E601']);
-  // …and in exile the same two lines are ordinary.
   assert.deepStrictEqual(coid('gníomh g(x: Iasacht) { scríobh fad ó x }'), []);
 });
 
 it('níl an modúl Spicebag ina rud a shealbhaítear', () => {
-  // `ó "./foclóir.sb"` is a text this compiler has read, not a thing owned,
-  // so its members are exempt even across a county line.
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': 'as Gaillimh\nseasmhach BEANNACHT = "Dia duit"',
@@ -310,19 +397,13 @@ it('ní sheiceáiltear baill liosta ná bunchineálacha', () => {
     + 'seasmhach xs: Liosta(Uimhir) = [1, 2]\nscríobh fad ó xs\nscríobh céad ó xs'), []);
 });
 
-it('is glas ar an mbosca é an contae, ní teorainn ar an mbóthar', () => {
-  // Construction, argument passing and returning are all unchecked, on
-  // purpose. An exile shell builds placed values and hands them on; only the
-  // opening is placed.
+it('is glas ar an mbosca é an cúige, ní teorainn ar an mbóthar', () => {
   assert.deepStrictEqual(coid(
     'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'seasmhach d = Duine { ainm: "Cáit" }'), []);
 });
 
-it('feidhmíonn an patrún: blaosc ar deoraíocht, croí curtha', async () => {
-  // The flagship shape. `príomh.sb` is in exile, so it may touch the outside
-  // world; it constructs a Corcaigh value and hands it to Corcaigh code, which
-  // is the only place that value can be opened.
+it('feidhmíonn an patrún: blaosc ar deoraíocht, croí curtha', () => {
   const comhaid = {
     'duine.sb': 'as Corcaigh\nstruchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
       + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }',
@@ -330,14 +411,12 @@ it('feidhmíonn an patrún: blaosc ar deoraíocht, croí curtha', async () => {
       + 'gníomh príomh() { scríobh ainmDe(Duine { ainm: "Cáit" }) }',
   };
   assert.deepStrictEqual(coidTionscadal(comhaid), []);
-  assert.deepStrictEqual(await rithTionscadal(comhaid), ['Cáit']);
+  return rithTionscadal(comhaid).then((amach) => assert.deepStrictEqual(amach, ['Cáit']));
 });
 
 it('seiceáiltear glao modha, ach ní fhógra modha', () => {
-  // Declaring `ó Dhuine` names a category; it opens nothing. Calling
-  // `beannacht ó dh` opens the value, and so does `ainm ó fhéin` in the body.
-  const coidi = coid('as Ciarraí\n'
-    + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
+  const coidi = coid('as Corcaigh\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'feidhm beannacht ó Dhuine(féin) -> Teaghrán { ainm ó fhéin }\n'
     + 'seasmhach d = Duine { ainm: "Cáit" }\nscríobh beannacht ó dh()');
   assert.strictEqual(coidi.length, 2, JSON.stringify(coidi));
@@ -345,10 +424,10 @@ it('seiceáiltear glao modha, ach ní fhógra modha', () => {
 });
 
 it('seiceáiltear gach nasc de shlabhra sealbhaigh ar leith', () => {
-  // The same shape as lenition: each `ó` governs its own complement, and each
-  // `ó` opens its own box.
+  // Each `ó` governs its own complement and each `ó` opens its own box. The
+  // inner link is Munster on Munster and passes; the outer one is Connacht.
   assert.deepStrictEqual(coid('as Corcaigh\n'
-    + 'struchtúr Áit as Ciarraí { ainm: Teaghrán }\n'
+    + 'struchtúr Áit as Gaillimh { ainm: Teaghrán }\n'
     + 'struchtúr Duine as Corcaigh { áit: Áit }\n'
     + 'feidhm cá(duine: Duine) -> Teaghrán { ainm ó áit ó dhuine }'), ['E601']);
 });
@@ -358,43 +437,113 @@ it('ní fhágann an tseiceáil rian ar bith sa JavaScript', () => {
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'gníomh fógair(duine: Duine) { scríobh ainm ó dhuine }\n'
     + 'gníomh príomh() { fógair Duine { ainm: "Cáit" } }');
-  for (const focal of ['Corcaigh', '__contae', 'contae', 'deoraíocht', 'dhuine'])
+  for (const focal of ['Corcaigh', '__contae', 'contae', 'cúige', 'An Mhumhain', 'deoraíocht', 'dhuine'])
     assert.ok(!js.includes(focal), `${focal} sa JS:\n${js}`);
 });
 
-// ══ 10. Comhaontuithe (céim 4) ═══════════════════════════════════════
+// ══ 9b. An seanaighneas: E608, E609 (§25.4) ══════════════════════════
+it('sáraíonn an t-aighneas an cúige céanna (E609)', () => {
+  // The flagship case, and the one the 0.7 brief thought was unreachable.
+  // Exclusivity constrains which counties may hold a *type*; it constrains
+  // the county on a *file* not at all, so any number of texts may be from
+  // Ciarraí and none of them may open Corcaigh's box.
+  assert.deepStrictEqual(coid('as Ciarraí\n'
+    + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), ['E609']);
+  // And the other way round, because a rivalry is symmetric.
+  assert.deepStrictEqual(coid('as Corcaigh\n'
+    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }'), ['E609']);
+});
+
+it('sáraíonn an t-aighneas an teorainn idir cúigí freisin (E609)', () => {
+  assert.deepStrictEqual(coid('as Ciarraí\n'
+    + 'struchtúr Foireann as Baile Átha Cliath { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(f: Foireann) -> Teaghrán { ainm ó fh }'), ['E609']);
+});
+
+it('ní dhéantar comhaontú idir iomaitheoirí (E608)', () => {
+  assert.deepStrictEqual(coid('as Ciarraí\ncomhaontú Ciarraí Baile Átha Cliath'), ['E608']);
+  assert.deepStrictEqual(coid('as Ciarraí\ncomhaontú Baile Átha Cliath Ciarraí'), ['E608']);
+  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Corcaigh Ciarraí'), ['E608']);
+});
+
+it('níl aon leigheas ar an aighneas: teipeann ar an gcomhaontú agus ar an oscailt', () => {
+  // Both codes, in the order the passes run: the treaty is refused in pass 0c
+  // and the access in pass C. The treaty was the remedy the author reached
+  // for, so E608 fires where they still think there is one.
+  assert.deepStrictEqual(coid('as Ciarraí\n'
+    + 'comhaontú Ciarraí Baile Átha Cliath\n'
+    + 'struchtúr Foireann as Baile Átha Cliath { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(f: Foireann) -> Teaghrán { ainm ó fh }'), ['E608', 'E609']);
+});
+
+it('ainmníonn E609 an dá chontae agus deir sé nach gcabhraíonn an cúige', () => {
+  const [e] = earraidiDe('as Ciarraí\n'
+    + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }');
+  assert.strictEqual(e.cod, 'E609');
+  for (const cuid of ['Ciarraí', 'Corcaigh', 'E608']) {
+    assert.ok(e.teachtaireacht.includes(cuid), `${cuid} ar iarraidh: ${e.teachtaireacht}`);
+  }
+});
+
+it('is é an t-éalú an contae a athrú, agus sin an chúis nach bhfuil sos cogaidh ann', () => {
+  // Ciarraí cannot reach Dublin and no keyword is coming. What exists instead
+  // is the decision: be from somewhere else, and pay the county you wanted.
+  const olc = 'as Ciarraí\n'
+    + 'struchtúr Foireann as Baile Átha Cliath { ainm: Teaghrán }\n'
+    + 'feidhm ainmDe(f: Foireann) -> Teaghrán { ainm ó fh }';
+  assert.deepStrictEqual(coid(olc), ['E609']);
+  const ceart = olc.replace('as Ciarraí', 'as Luimneach\ncomhaontú Luimneach Baile Átha Cliath');
+  assert.deepStrictEqual(coid(ceart), []);
+});
+
+it('ní chuireann an t-aighneas cosc ar aon rud eile', () => {
+  // Two rivals may both exist in one program if they are in different
+  // provinces. They simply cannot agree, and neither may be opened from the
+  // other's county. Declaring is not opening (§24.3), so this compiles.
+  assert.deepStrictEqual(coid('as Gaillimh\n'
+    + 'struchtúr Foireann as Baile Átha Cliath { ainm: Teaghrán }\n'
+    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }'), []);
+  // …and construction still crosses freely, because a county is a lock on the
+  // box and not a border on the road.
+  assert.deepStrictEqual(coid('as Ciarraí\n'
+    + 'struchtúr Foireann as Baile Átha Cliath { ainm: Teaghrán }\n'
+    + 'seasmhach f = Foireann { ainm: "Áth Cliath" }'), []);
+});
+
+// ══ 10. Comhaontuithe ════════════════════════════════════════════════
 it('osclaíonn comhaontú an bosca', () => {
   const bun = 'as Corcaigh\n'
-    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }';
   assert.deepStrictEqual(coid(bun), ['E601']);
-  assert.deepStrictEqual(coid('comhaontú Corcaigh Ciarraí\n' + bun), []);
+  assert.deepStrictEqual(coid('comhaontú Corcaigh Gaillimh\n' + bun), []);
 });
 
 it('is comhaontú é ón dá thaobh', () => {
   const bun = 'as Corcaigh\n'
-    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }';
-  assert.deepStrictEqual(coid('comhaontú Ciarraí Corcaigh\n' + bun), []);
+  assert.deepStrictEqual(coid('comhaontú Gaillimh Corcaigh\n' + bun), []);
 });
 
 it('níl comhaontú tarchurthach — sin an rud a dhéanann comhaontú de', () => {
-  // Corcaigh–Ciarraí plus Ciarraí–Gaillimh does not give Corcaigh–Gaillimh.
-  // A transitive treaty would be a partition of the 32 into blocs, which is
+  // Corcaigh–Gaillimh plus Gaillimh–Aontroim does not give Corcaigh–Aontroim.
+  // A transitive treaty would be a partition of the four into blocs, which is
   // the thing a treaty exists instead of.
   assert.deepStrictEqual(coid('as Corcaigh\n'
-    + 'comhaontú Corcaigh Ciarraí\ncomhaontú Ciarraí Gaillimh\n'
-    + 'struchtúr Áit as Gaillimh { ainm: Teaghrán }\n'
+    + 'comhaontú Corcaigh Gaillimh\ncomhaontú Gaillimh Aontroim\n'
+    + 'struchtúr Áit as Aontroim { ainm: Teaghrán }\n'
     + 'feidhm cá(áit: Áit) -> Teaghrán { ainm ó áit }'), ['E601']);
 });
 
 it('is cuma cá bhfuil an comhaontú sa chomhad', () => {
-  // File scope, not lexical order: a treaty at the bottom licenses an access
-  // at the top, because it describes the place rather than a point in it.
   assert.deepStrictEqual(coid('as Corcaigh\n'
-    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }\n'
-    + 'comhaontú Corcaigh Ciarraí'), []);
+    + 'comhaontú Corcaigh Gaillimh'), []);
 });
 
 it('ní dhéantar comhaontú le duine féin (E606)', () => {
@@ -403,75 +552,89 @@ it('ní dhéantar comhaontú le duine féin (E606)', () => {
 
 it('ní hionann ord agus comhaontú nua (E607)', () => {
   assert.deepStrictEqual(
-    coid('as Corcaigh\ncomhaontú Corcaigh Ciarraí\ncomhaontú Ciarraí Corcaigh'), ['E607']);
+    coid('as Corcaigh\ncomhaontú Corcaigh Gaillimh\ncomhaontú Gaillimh Corcaigh'), ['E607']);
   assert.deepStrictEqual(
-    coid('as Corcaigh\ncomhaontú Corcaigh Ciarraí\ncomhaontú Corcaigh Gaillimh'), []);
+    coid('as Corcaigh\ncomhaontú Corcaigh Gaillimh\ncomhaontú Corcaigh Aontroim'), []);
 });
 
 it('ní páirtí í an deoraíocht (E605), agus níl leigheas uirthi', () => {
   assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Corcaigh deoraíocht'), ['E605']);
-  // Even with every treaty a file could write, `Iasacht` stays out of reach.
   assert.deepStrictEqual(
-    coid('as Corcaigh\ncomhaontú Corcaigh Ciarraí\ngníomh g(x: Iasacht) { scríobh fad ó x }'),
+    coid('as Corcaigh\ncomhaontú Corcaigh Gaillimh\ngníomh g(x: Iasacht) { scríobh fad ó x }'),
     ['E601']);
 });
 
 it('seiceáiltear ainmneacha comhaontaithe mar aon ainm eile', () => {
   assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Corcaigh Yorkshire'), ['E602']);
-  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Chorcaigh Ciarraí'), ['E103']);
-  // Two multi-word names in a row, no separator between them.
+  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Chorcaigh Gaillimh'), ['E103']);
   assert.deepStrictEqual(coid('as Dún na nGall\ncomhaontú Dún na nGall Baile Átha Cliath'), []);
-  // A truncated first name does not swallow the second: E602, not a parse error.
-  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Dún Ciarraí'), ['E602']);
+  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Dún Gaillimh'), ['E602']);
 });
 
 it('ní thaistealaíonn comhaontú trasna na teorann', () => {
-  // A treaty is a property of a place, not of a value, so it stays in the file
-  // that declared it. "Declared elsewhere, silently applies here" would make
-  // E601 undiagnosable from the file in front of you.
   const bun = {
-    'duine.sb': 'as Corcaigh\ncomhaontú Corcaigh Ciarraí\n'
-      + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+    'duine.sb': 'as Corcaigh\ncomhaontú Corcaigh Gaillimh\n'
+      + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
       + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }',
   };
   assert.deepStrictEqual(coidTionscadal({ ...bun, 'príomh.sb': 'seasmhach d = ó "./duine.sb"' }), []);
   const olc = { ...bun, 'príomh.sb': 'as Corcaigh\nseasmhach d = ó "./duine.sb"\n'
     + 'feidhm f(duine: Duine) -> Teaghrán { ainm ó dhuine }' };
   assert.deepStrictEqual(coidTionscadal(olc), ['E601']);
-  const ceart = { ...olc, 'príomh.sb': 'comhaontú Corcaigh Ciarraí\n' + olc['príomh.sb'] };
+  const ceart = { ...olc, 'príomh.sb': 'comhaontú Corcaigh Gaillimh\n' + olc['príomh.sb'] };
   assert.deepStrictEqual(coidTionscadal(ceart), []);
 });
 
 it('ní fhágann comhaontú rian ar bith sa JavaScript ach oiread', () => {
-  const js = jsDe('as Corcaigh\ncomhaontú Corcaigh Ciarraí\n'
-    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+  const js = jsDe('as Corcaigh\ncomhaontú Corcaigh Gaillimh\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'gníomh fógair(duine: Duine) { scríobh ainm ó dhuine }');
-  for (const focal of ['comhaontú', 'Corcaigh', 'Ciarraí', 'contae'])
+  for (const focal of ['comhaontú', 'Corcaigh', 'Gaillimh', 'contae', 'cúige'])
     assert.ok(!js.includes(focal), `${focal} sa JS:\n${js}`);
 });
 
-// ══ 11. --graf (céim 5) ══════════════════════════════════════════════
+// ══ 11. --graf ═══════════════════════════════════════════════════════
 it('tuairiscíonn --graf dúchas gach cineáil', () => {
   const { duchasanna } = require('../src/index');
-  const d = duchasanna(anailiseDe('as Corcaigh\ncomhaontú Corcaigh Ciarraí\n'
-    + 'struchtúr Duine as Ciarraí { ainm: Teaghrán }\n'
+  const d = duchasanna(anailiseDe('as Corcaigh\ncomhaontú Corcaigh Gaillimh\n'
+    + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'struchtúr Nóta { téacs: Teaghrán }'));
   assert.strictEqual(d.contae, 'Corcaigh');
   assert.deepStrictEqual(d.cinealacha, [
-    { ainm: 'Duine', contae: 'Ciarraí' },
+    { ainm: 'Duine', contae: 'Gaillimh' },
     { ainm: 'Nóta', contae: ctae.DEORAIOCHT },
   ]);
-  assert.deepStrictEqual(d.comhaontuithe, [{ a: 'Ciarraí', b: 'Corcaigh', iomaíocht: true }]);
+  assert.strictEqual(d.comhaontuithe.length, 1);
+  assert.strictEqual(d.comhaontuithe[0].a, 'Corcaigh');
+  assert.strictEqual(d.comhaontuithe[0].b, 'Gaillimh');
 });
 
-it('is scéal a insíonn --graf, ní riail a chuireann sé i bhfeidhm', () => {
-  // The rivalry mark is presentation. A treaty between rivals is legal and
-  // behaves like any other; refusing it would be a hard-coded exception in the
-  // one place the system claims to be uniform (§24.5).
-  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Corcaigh Ciarraí'), []);
-  assert.strictEqual(ctae.isIomaiocht('Corcaigh', 'Ciarraí'), true);
-  assert.strictEqual(ctae.isIomaiocht('Ciarraí', 'Corcaigh'), true);
-  assert.strictEqual(ctae.isIomaiocht('Corcaigh', 'Liatroim'), false);
+it('ní scéal a insíonn --graf faoin aighneas a thuilleadh, ach riail', () => {
+  // The inversion of 0.6. §24.5 kept the rivalry as presentation on the
+  // grounds that a hard-coded refusal would be an exception in the one place
+  // the system claims to be uniform. It is not an exception: the veto is a
+  // precondition on all four cases of the border rule, not a special case
+  // inside one of them (§25.4). So the treaty this test used to assert legal
+  // is now a compile error, and `iomaíocht` can never be true on a treaty
+  // that exists.
+  assert.deepStrictEqual(coid('as Corcaigh\ncomhaontú Corcaigh Ciarraí'), ['E608']);
+  const { duchasanna } = require('../src/index');
+  const d = duchasanna(anailiseDe('as Corcaigh\ncomhaontú Corcaigh Gaillimh'));
+  for (const t of d.comhaontuithe) {
+    assert.strictEqual(ctae.isIomaiocht(t.a, t.b), false);
+  }
+});
+
+it('is féidir le --graf a rá cé nach n-osclófar go deo', () => {
+  // What the flag can now say that it could not before: this text is from
+  // Ciarraí, An Mhumhain is held by Corcaigh, and no treaty will ever open it.
+  const d = require('../src/index').duchasanna(anailiseDe('as Ciarraí\n'
+    + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }'));
+  const cuirthe = d.cinealacha.filter((t) => t.contae !== ctae.DEORAIOCHT);
+  assert.strictEqual(cuirthe.length, 1);
+  assert.strictEqual(ctae.cuigeDe(cuirthe[0].contae), ctae.CUIGI.MUMHAIN);
+  assert.strictEqual(ctae.isIomaiocht(cuirthe[0].contae, d.contae), true);
+  assert.ok(ctae.iomaitheoiri('Ciarraí').includes('Corcaigh'));
 });
 
 // ── rith ──────────────────────────────────────────────────────────────

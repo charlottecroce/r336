@@ -171,9 +171,22 @@ class Anailiseoir {
      */
     this.contae = ctae.DEORAIOCHT;
     this.ionadContae = null;
-    // contae → the struct that holds it. One county, one struct, across the
-    // whole graph — an imported type brings its claim with it.
-    this.contaeGafa = new Map();
+    /*
+     * cúige → { contae, struchtúr }. One province, one struct, across the
+     * whole graph — an imported type brings its claim with it.
+     *
+     * Keyed by province and not by county, which is the headline of 0.7
+     * (§25.2). Four slots, not 32. The county is still recorded, because
+     * E603 has to be able to say who is sitting there and under what name,
+     * and because the county is what the rivalry table is keyed on.
+     *
+     * Province exclusivity is the point, not an implementation detail. The
+     * 32 names remain the vocabulary and remain checked; 28 of them are
+     * decoys at any given moment, and choosing between the decoys is the
+     * game, because the county you choose decides who will not deal with
+     * you (§25.4).
+     */
+    this.cuigeGafa = new Map();
     // The treaties in force in *this file*. Sorted-pair keys, so a treaty is
     // the same treaty whichever way round it was written.
     this.comhaontuithe = new Set();
@@ -239,12 +252,17 @@ class Anailiseoir {
 
       for (const [ainm, t] of siniu.cinealacha) {
         if (!this.cinealacha.has(ainm)) this.cinealacha.set(ainm, t);
-        // The county is the type's identity rather than a tag on it, so the
-        // claim is global and arrives with the import.
+        // The province is the type's identity and the county is its name, so
+        // the claim is global and arrives with the import. One struct per
+        // province, globally, across the whole graph.
         if (!t.contae || t.contae === ctae.DEORAIOCHT) continue;
-        const gafa = this.contaeGafa.get(t.contae);
-        if (gafa && gafa !== ainm) this.bail.cuir('E603', siniu.ionad, t.contae, gafa);
-        else this.contaeGafa.set(t.contae, ainm);
+        const cuige = ctae.cuigeDe(t.contae);
+        const gafa = this.cuigeGafa.get(cuige);
+        if (gafa && gafa.struchtur !== ainm) {
+          this.bail.cuir('E603', siniu.ionad, cuige, gafa.contae, gafa.struchtur);
+        } else {
+          this.cuigeGafa.set(cuige, { contae: t.contae, struchtur: ainm });
+        }
       }
 
       for (const [lemma, onn] of siniu.onnmhairi) {
@@ -370,25 +388,50 @@ class Anailiseoir {
   }
 
   /**
-   * The border check on `ó` (§24.3). Every `ó` on a county-bearing possessor,
-   * which is the pervasive option and was chosen deliberately.
+   * The border check on `ó` (§24.3, §25.3). Every `ó` on a county-bearing
+   * possessor, which is the pervasive option and was chosen deliberately.
    *
-   * A *border* check, not a sameness check — one comparison covers both legal
-   * cases, because two things from nowhere are the same nowhere. Same county
-   * passes. Exile reading exile passes, since there is no border between two
-   * things that are from nowhere, which is why every 0.4 and 0.5 program still
-   * compiles untouched. Exile against a county fails with no remedy available,
-   * because an agreement is between two parties and exile is not a party.
+   * Two rules, in this order, and the order is the design.
+   *
+   * **Rivals do not trade.** The veto sits *above* the four cases rather
+   * than inside one of them, so it is not an exception to the border rule —
+   * it is a precondition on all of it. Not across a province line, not
+   * inside one province, and not under a treaty, because no treaty between
+   * rivals can exist (E608). It is the only irremediable relation in the
+   * language besides exile, and the two are a pair: exile trades with nobody
+   * because it is not a party, rivals trade with nobody because they will
+   * not. Exile is nobody's rival, so this never fires on a pre-0.7 program.
+   *
+   * **Otherwise, the border.** A *border* check, not a sameness check — one
+   * comparison covers both legal cases, because two things from nowhere are
+   * the same nowhere. Same province passes, and `cuigeDe(deoraíocht)` is
+   * `deoraíocht`, so exile reading exile passes through the same equality
+   * rather than through a second branch. That is why the rule is still four
+   * cases and one comparison after the province change, and why every 0.4,
+   * 0.5 and 0.6 program compiles untouched. Exile against a placed county
+   * fails with no remedy available, because an agreement is between two
+   * parties and exile is not a party.
+   *
+   * The province is the jurisdiction and the county is the name it goes by.
+   * §24.4 said the county *was* the type's identity; that is now split, and
+   * the split is what makes the county choice load-bearing again instead of
+   * a synonym for the province (§25.4).
    *
    * What is *not* checked is construction, argument passing, and returning:
    * a county is a lock on the box, not a border on the road. Values travel
-   * anywhere; they simply cannot be opened except at home. That is what makes
-   * exile-trades-with-nobody survivable — an exile module can parse the
-   * outside world, build placed structs out of primitives, and hand them on.
+   * anywhere; they simply cannot be opened except at home. That is what
+   * makes exile-trades-with-nobody survivable — an exile module can parse
+   * the outside world, build placed structs out of primitives, and hand
+   * them on.
    */
   seiceailDuchas(t, ball) {
     const as = this.contaeDe(t);
-    if (as === null || as === this.contae) return;
+    if (as === null) return;
+    if (ctae.isIomaiocht(as, this.contae)) {
+      this.bail.cuir('E609', ball.ionad, ball.surface, as, this.contae);
+      return;
+    }
+    if (ctae.cuigeDe(as) === ctae.cuigeDe(this.contae)) return;
     // The only place a treaty is ever consulted. Exile needs no special case
     // here: `fogairComhaontu` refuses to key a pair containing `deoraíocht`,
     // so no lookup involving exile can ever succeed, and exile trades with
@@ -506,6 +549,7 @@ class Anailiseoir {
     const b = this.reitighContae(m.b);
     if (a === ctae.DEORAIOCHT || b === ctae.DEORAIOCHT) return;   // already reported
     if (a === b) { this.bail.cuir('E606', m.ionad, a); return; }
+    if (ctae.isIomaiocht(a, b)) { this.bail.cuir('E608', m.ionad, a, b); return; }
     const eochair = comhaontuEochair(a, b);
     if (this.comhaontuithe.has(eochair)) { this.bail.cuir('E607', m.ionad, a, b); return; }
     this.comhaontuithe.add(eochair);
@@ -516,11 +560,21 @@ class Anailiseoir {
     if (this.cinealacha.has(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
     const contae = this.reitighContae(m.contae);
     if (contae !== ctae.DEORAIOCHT) {
-      const gafa = this.contaeGafa.get(contae);
+      const cuige = ctae.cuigeDe(contae);
+      const gafa = this.cuigeGafa.get(cuige);
+      // Declaring `struchtúr Duine as Corcaigh` claims the whole of An
+      // Mhumhain: Ciarraí, Luimneach, An Clár, Port Láirge and Tiobraid
+      // Árann are closed for the rest of the program. Choosing a county is
+      // choosing a province, and what is left over is the decision about
+      // who you are willing to deal with (§25.2).
+      //
       // Exile is the one place that is not exclusive, because it is not a
-      // place: without that a program could hold 32 struct types in total.
-      if (gafa && gafa !== m.ainm) this.bail.cuir('E603', m.contae.ionad, contae, gafa);
-      else this.contaeGafa.set(contae, m.ainm);
+      // place: without that a program could hold four struct types in total.
+      if (gafa && gafa.struchtur !== m.ainm) {
+        this.bail.cuir('E603', m.contae.ionad, cuige, gafa.contae, gafa.struchtur);
+      } else {
+        this.cuigeGafa.set(cuige, { contae, struchtur: m.ainm });
+      }
     }
     this.cinealacha.set(m.ainm, {
       k: 'struchtúr', ainm: m.ainm, reimsi: new Map(), modhanna: new Map(), contae,

@@ -1,6 +1,11 @@
-// E607 — is ionann comhaontú ón dá thaobh, mar sin níl sa dara ceann ach
-// athrá. Ní hé ord na gcontaetha a dhéanann comhaontú nua de.
+// E607 — athrá ar chomhaontú.
+//
+// Is ionann comhaontú ón dá thaobh: is é an péire sórtáilte an eochair, mar
+// sin ainmníonn `comhaontú Gaillimh Corcaigh` an comhaontú céanna a
+// ainmníodh cheana. Níl san dara fógra ach athrá, agus deirtear sin leat
+// seachas é a shlogadh.
 
 as Corcaigh
-comhaontú Corcaigh Ciarraí
-comhaontú Ciarraí Corcaigh
+
+comhaontú Corcaigh Gaillimh
+comhaontú Gaillimh Corcaigh

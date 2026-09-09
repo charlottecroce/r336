@@ -1,0 +1,19 @@
+// E609 — seanaighneas: ní osclaítear an bosca, fiú sa chúige céanna.
+//
+// Tá Corcaigh agus Ciarraí araon in An Mhumhain, agus mar sin níl teorainn
+// ar bith eatarthu — d'osclófaí an bosca seo ó Luimneach nó ón gClár gan
+// chomhaontú ar bith. Ní osclaítear ó Chiarraí é.
+//
+// Ritheann an cosc os cionn na gceithre chás, ní istigh i gceann acu: ní
+// dhéanann iomaitheoirí trádáil, thall ná abhus. Níl aon leigheas air —
+// tá comhaontú eatarthu ina earráid inti féin (E608).
+
+as Ciarraí
+
+struchtúr Duine as Corcaigh {
+    ainm: Teaghrán
+}
+
+feidhm ainmDe(duine: Duine) -> Teaghrán {
+    ainm ó dhuine
+}

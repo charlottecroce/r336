@@ -6,6 +6,7 @@ const path = require('path');
 const {
   comhaidSb, paraidimi, duchasanna, Tionscadal, Earraid, Cnuasach,
 } = require('../src/index');
+const ctae = require('../src/contaetha');
 
 const args = process.argv.slice(2);
 const bratacha = new Set(args.filter((a) => a.startsWith('--')));
@@ -20,7 +21,7 @@ if (!spriocanna.length) {
   sbc <comhad.sb> --amharc     taispeáin an JavaScript gan é a scríobh
   sbc <comhad.sb> --paraidím   taispeáin foirmeacha gramadaí na gceangal
   sbc <comhad.sb> --crann      taispeáin an crann teibí (AST)
-  sbc <comhad.sb> --graf       taispeáin na modúil, agus dúchas gach cineáil`);
+  sbc <comhad.sb> --graf       taispeáin na modúil, na cúigí, agus dúchas gach cineáil`);
   process.exit(1);
 }
 
@@ -31,6 +32,42 @@ const comhaid = spriocanna.flatMap((s) =>
 // so compilation order follows the graph rather than whatever readdirSync
 // happened to return.
 const tionscadal = new Tionscadal();
+
+/*
+ * §25 — the province block.
+ *
+ * Four slots is the whole of the 0.7 game, so this is the first thing the
+ * flag prints and the per-type list is demoted to whatever is left over in
+ * exile. What a reader wants to know, in order: which provinces are gone,
+ * who took them, what is still free, and what this file cannot reach.
+ *
+ * The refusal annotation is the useful new thing. A rivalry is absolute —
+ * no treaty lifts it (E608) and the province does not help (E609) — so a
+ * placed type that this file can never open is worth saying out loud before
+ * the author writes the access and finds out.
+ *
+ * Read off the analyzer, like everything else here. There is no `__contae`
+ * and no county name in the emitted JavaScript, and there is no province
+ * either (§24.5).
+ */
+function cloCuigi(d) {
+  const gafa = new Map();
+  for (const t of d.cinealacha) {
+    if (t.contae === d.deoraíocht) continue;
+    gafa.set(ctae.cuigeDe(t.contae), t);
+  }
+  console.log('\n  cúigí');
+  for (const cuige of ctae.CUIGI_UILE) {
+    const t = gafa.get(cuige);
+    if (!t) { console.log(`    ${cuige.padEnd(14)} (saor)`); continue; }
+    const cosc = ctae.isIomaiocht(t.contae, d.contae)
+      ? `   ✗ seanaighneas le ${d.contae}, §25.4`
+      : '';
+    console.log(`    ${cuige.padEnd(14)} ${t.ainm.padEnd(18)} as ${t.contae}${cosc}`);
+  }
+  const saor = ctae.CUIGI_UILE.filter((c) => !gafa.has(c)).length;
+  console.log(`    ${String(4 - saor)}/4 tógtha`);
+}
 
 async function príomh() {
   for (const c of comhaid) {
@@ -53,19 +90,37 @@ async function príomh() {
         for (const p of paraidimi(anailiseoir).filter((x) => x.foinse)) {
           console.log(`    ${p.lemma.padEnd(14)} ${p.kind.padEnd(9)} ${p.cineál}   ← ${p.foinse}`);
         }
-        // §24 — provenance. Exile is annotated the way an eclipsed form is
-        // annotated in --paraidím: the thing is real, and it demands nothing.
+        // §24, §25 — provenance. Exile is annotated the way an eclipsed form
+        // is annotated in --paraidím: the thing is real, and it demands
+        // nothing.
         const d = duchasanna(anailiseoir);
-        const ganAit = (x) => (x === d.deoraíocht ? '  (gan áit, §24)' : '');
-        console.log(`\ndúchas — as ${d.contae}${ganAit(d.contae)}`);
-        for (const t of d.cinealacha) {
-          console.log(`  ${t.ainm.padEnd(18)} as ${t.contae}${ganAit(t.contae)}`);
+        const áitiúil = d.contae === d.deoraíocht
+          ? `${d.contae}  (gan áit, §24)`
+          : `${d.contae} (${ctae.cuigeDe(d.contae)})`;
+        console.log(`\ndúchas — as ${áitiúil}`);
+
+        cloCuigi(d);
+
+        const deoraithe = d.cinealacha.filter((t) => t.contae === d.deoraíocht);
+        if (deoraithe.length) {
+          console.log('\n  ar deoraíocht  (gan áit, §24 — gan uimhir uirthi)');
+          for (const t of deoraithe) console.log(`    ${t.ainm}`);
         }
-        for (const c of d.comhaontuithe) {
-          console.log(`  comhaontú          ${c.a} ↔ ${c.b}${c.iomaíocht ? '  (seanaighneas)' : ''}`);
+
+        console.log('\n  comhaontuithe');
+        for (const t of d.comhaontuithe) {
+          console.log(`    ${t.a} ↔ ${t.b}`);
         }
-        if (!d.comhaontuithe.length && d.contae !== d.deoraíocht) {
-          console.log('  comhaontú          (ceann ar bith)');
+        if (!d.comhaontuithe.length) {
+          console.log(d.contae === d.deoraíocht
+            ? '    (ceann ar bith — ní páirtí í an deoraíocht, §24.3)'
+            : '    (ceann ar bith)');
+        }
+
+        // Who this file could never agree with, whether or not it tried.
+        const naimhde = d.contae === d.deoraíocht ? [] : ctae.iomaitheoiri(d.contae);
+        if (naimhde.length) {
+          console.log(`\n  seanaighneas — ní dhéanann ${d.contae} comhaontú le ${naimhde.join(', ')}  (E608)`);
         }
       } else {
         console.log(`foirmeacha gramadaí — ${c}`);

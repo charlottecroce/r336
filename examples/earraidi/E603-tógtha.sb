@@ -1,10 +1,19 @@
-// E603 — ní clib ar chineál é an contae ach a chéannacht, agus níl ann ach
-// 32 slot. Tá Corcaigh tógtha ag an gcéad struchtúr.
+// E603 — tá an cúige tógtha cheana.
+//
+// Ní hé an dearmad seo dhá struchtúr a chur san aon chontae amháin. Sin an
+// dearmad a bhí ann i gcéim 0.6. Is é an dearmad a dhéanfar anois ná dhá
+// chontae éagsúla a roghnú gan a thabhairt faoi deara gurb ionann cúige dóibh.
+//
+// Tá Corcaigh agus Ciarraí araon in An Mhumhain. Ní bhíonn ach struchtúr
+// amháin ag cúige, mar sin nuair a thóg `Duine` Corcaigh, dhún sé Ciarraí,
+// Luimneach, An Clár, Port Láirge agus Tiobraid Árann sa chlár seo.
+//
+// Ceithre chineál churtha atá i gclár. Sin an méid.
 
 struchtúr Duine as Corcaigh {
     ainm: Teaghrán
 }
 
-struchtúr Áit as Corcaigh {
+struchtúr Áit as Ciarraí {
     ainm: Teaghrán
 }
