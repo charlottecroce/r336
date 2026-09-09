@@ -65,6 +65,11 @@ function ainmCineail(t) {
     case 'liosta': return `Liosta(${ainmCineail(t.mir)})`;
     case 'arSiúl': return `ag ${ainmCineail(t.inner)}`;
     case 'modúl': return `modúl ${t.ainm}`;
+    // A variant is named on its own, because it is its own name in the type
+    // namespace: `suim Toradh { Ceart … }` makes `Ceart` unavailable to
+    // anything else, and E208 says so.
+    case 'malairt': return t.ainm;
+    case 'suim': return t.ainm;
     case 'feidhm': {
       // Render a verb type the way it is written, so a mismatch reads as the
       // declaration the caller should have made.
@@ -78,9 +83,18 @@ function ainmCineail(t) {
   }
 }
 
+/** Is `b` one of the variants `a` enumerates? */
+const isMalairtDe = (a, b) => a && b && a.k === 'suim' && b.k === 'malairt'
+  && a.malairti.has(b.ainm) && b.suim === a.ainm;
+
 function comhionann(a, b) {
   if (!a || !b) return false;
   if (a.k === 'iasacht' || b.k === 'iasacht') return true;
+  // Introduction is widening and widening is free (§26.1): a `Ceart` already
+  // *is* a `Toradh`, so there is no constructor to write and nothing to
+  // convert. Directional on purpose — `comhionann(súil, fuarthas)` — because
+  // the reverse is the narrowing the copula does and it is not free.
+  if (isMalairtDe(a, b)) return true;
   if (a.k !== b.k) return false;
   if (a.k === 'liosta') return comhionann(a.mir, b.mir);
   if (a.k === 'arSiúl') return comhionann(a.inner, b.inner);
@@ -96,6 +110,27 @@ function comhionann(a, b) {
     return comhionann(a.toradh || NEAMHNI, b.toradh || NEAMHNI);
   }
   return a.ainm === b.ainm;
+}
+
+/**
+ * The type that covers both, or null if nothing does.
+ *
+ * Used where two types meet without one of them being expected — the branches
+ * of a value `má`, and the items of a list literal. Two variants of one sum
+ * meet at the sum, which is what finally gives a heterogeneous list literal
+ * somewhere to go and makes E211 reachable (§26.5).
+ */
+function nasc(a, b, cinealacha) {
+  if (!a || !b) return null;
+  if (a.k === 'iasacht') return b;
+  if (b.k === 'iasacht') return a;
+  if (comhionann(a, b)) return a;
+  if (comhionann(b, a)) return b;
+  const suimDe = (t) => (t.k === 'malairt' ? cinealacha.get(t.suim) : null);
+  const sa = suimDe(a) || (a.k === 'suim' ? a : null);
+  const sb = suimDe(b) || (b.k === 'suim' ? b : null);
+  if (sa && sb && sa.ainm === sb.ainm) return sa;
+  return null;
 }
 
 // ── scóip ─────────────────────────────────────────────────────────────
@@ -290,7 +325,7 @@ class Anailiseoir {
     const cinealacha = new Map();
     for (const [ainm, t] of this.cinealacha) {
       if (BUNCHINEALACHA.has(ainm)) continue;
-      if (t.k === 'struchtúr') cinealacha.set(ainm, t);
+      if (['struchtúr', 'suim', 'malairt'].includes(t.k)) cinealacha.set(ainm, t);
     }
     const gniomhartha = new Set();
     const briathra = new Set();
@@ -384,6 +419,13 @@ class Anailiseoir {
     if (!t) return null;
     if (t.k === 'iasacht') return ctae.DEORAIOCHT;
     if (t.k === 'struchtúr') return t.contae || ctae.DEORAIOCHT;
+    if (t.k === 'suim') return t.contae || ctae.DEORAIOCHT;
+    // A variant answers with the sum's county and holds none of its own. That
+    // is §26.2 in one line: the sum is the identity that claims a province,
+    // and the variant is a name that identity goes by. If a variant carried
+    // its own county it would claim a province of its own, and a two-variant
+    // sum would eat half the program's budget.
+    if (t.k === 'malairt') return t.contaeSuime || ctae.DEORAIOCHT;
     return null;
   }
 
@@ -496,11 +538,13 @@ class Anailiseoir {
     for (const m of ast.mireanna) {
       if (m.cineál === 'Contae' || m.cineál === 'Comhaontú') continue;
       if (m.cineál === 'Struchtúr') this.fogairStruchtur(m);
+      else if (m.cineál === 'Suim') this.fogairSuim(m);
       else if (m.cineál === 'Briathar') briathra.push(m);
       else raitis.push(m);
     }
     // Pass A2 — field types, then signatures, so a call may precede its verb.
     for (const m of ast.mireanna) if (m.cineál === 'Struchtúr') this.socraighReimsi(m);
+    for (const m of ast.mireanna) if (m.cineál === 'Suim') this.socraighMalairti(m);
     for (const b of briathra) this.fogairBriathar(b);
     for (const b of briathra) this.socraighSiniu(b);
 
@@ -555,6 +599,25 @@ class Anailiseoir {
     this.comhaontuithe.add(eochair);
   }
 
+  /**
+   * Claim a province for a placed type, or report who holds it (§25.2).
+   *
+   * Shared by `struchtúr` and `suim`, which is the whole of what 0.8 does to
+   * the province rule: sums compete for the same four slots on the same terms.
+   * Nothing about the rule changed; there are simply more things that want one,
+   * and that is what finally makes the budget scarce (§26.5).
+   */
+  eiligh(ainm, contae, ionad) {
+    if (contae === ctae.DEORAIOCHT) return;
+    const cuige = ctae.cuigeDe(contae);
+    const gafa = this.cuigeGafa.get(cuige);
+    if (gafa && gafa.struchtur !== ainm) {
+      this.bail.cuir('E603', ionad, cuige, gafa.contae, gafa.struchtur);
+    } else {
+      this.cuigeGafa.set(cuige, { contae, struchtur: ainm });
+    }
+  }
+
   fogairStruchtur(m) {
     if (!this.seiceailBunfhoirm(m.ainm, m.ionad)) return;
     if (this.cinealacha.has(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
@@ -587,6 +650,69 @@ class Anailiseoir {
     for (const r of m.reimsi) {
       if (!this.seiceailBunfhoirm(r.ainm, r.ionad)) continue;
       t.reimsi.set(r.ainm, this.tagairtCineail(r.cineal));
+    }
+  }
+
+  /**
+   * `suim Toradh as Corcaigh { Ceart { … } Earráid { … } }` — §26.
+   *
+   * Both the sum and every variant go into `cinealacha`, because both are
+   * written: `Toradh` in a signature, `Ceart` in a literal and to the right of
+   * `is`. That also means a variant name collides with anything else of that
+   * name through E208 in the ordinary way, with nothing written here to make
+   * it happen.
+   *
+   * Only the sum claims a province. See `contaeDe`.
+   */
+  fogairSuim(m) {
+    if (!this.seiceailBunfhoirm(m.ainm, m.ionad)) return;
+    if (this.cinealacha.has(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
+    const contae = this.reitighContae(m.contae);
+    this.eiligh(m.ainm, contae, m.contae ? m.contae.ionad : m.ionad);
+
+    const t = { k: 'suim', ainm: m.ainm, contae, malairti: new Map() };
+    this.cinealacha.set(m.ainm, t);
+    for (const mal of m.malairti) {
+      if (!this.seiceailBunfhoirm(mal.ainm, mal.ionad)) continue;
+      if (this.cinealacha.has(mal.ainm)) { this.bail.cuir('E208', mal.ionad, mal.ainm); continue; }
+      const tm = {
+        k: 'malairt', ainm: mal.ainm, suim: m.ainm, contaeSuime: contae, reimsi: new Map(),
+      };
+      this.cinealacha.set(mal.ainm, tm);
+      t.malairti.set(mal.ainm, tm);
+    }
+  }
+
+  /**
+   * Variant field types, and the one new rule: no field may be `Iasacht`.
+   *
+   * A sum is the language's statement of exactly what a value may be, and
+   * `Iasacht` is the statement that its category is unknown. A payload of
+   * unknown category inside an enumeration of categories is a sum that has not
+   * finished being written, so it is E213 rather than something to normalise
+   * away. It is also what forces the conversion to happen at the exile
+   * boundary, which is what lets §25.9's third finding actually close.
+   *
+   * A `struchtúr` field may still be `Iasacht`, and the asymmetry is
+   * deliberate: a record is a bag of fields and has never claimed otherwise,
+   * while a sum claims to enumerate. Every 0.4–0.7 program keeps compiling.
+   */
+  socraighMalairti(m) {
+    const t = this.cinealacha.get(m.ainm);
+    if (!t || t.k !== 'suim') return;
+    for (const mal of m.malairti) {
+      const tm = t.malairti.get(mal.ainm);
+      if (!tm) continue;
+      for (const r of mal.reimsi) {
+        if (!this.seiceailBunfhoirm(r.ainm, r.ionad)) continue;
+        const tr = this.tagairtCineail(r.cineal);
+        const iasachtach = tr.k === 'iasacht' || (tr.k === 'liosta' && tr.mir.k === 'iasacht');
+        if (iasachtach) {
+          this.bail.cuir('E213', r.ionad, m.ainm, mal.ainm, r.ainm, ainmCineail(tr));
+          continue;
+        }
+        tm.reimsi.set(r.ainm, tr);
+      }
     }
   }
 
@@ -653,9 +779,14 @@ class Anailiseoir {
   }
 
   // ---- ráitis --------------------------------------------------------
-  bloc(b, tuisScoip) {
+  bloc(b, tuisScoip, caolu = null) {
     const scoip = new Scoip(tuisScoip);
     b.scoip = scoip;
+    // The narrowed binding shadows the outer one for the length of the branch.
+    // It is the same lemma with a different type, which is what the copula
+    // just established, so it is one more entry in a scope rather than a new
+    // concept: `t` inside `má t is Ceart { … }` is a `Ceart`.
+    if (caolu) scoip.cuir(new Ceangal(caolu.lemma, caolu.cineal));
     for (const r of b.raitis) this.raiteas(r, scoip);
     if (!b.luach) return NEAMHNI;
     // An imperative body has no return value, so a trailing conditional is a
@@ -704,17 +835,18 @@ class Anailiseoir {
 
       case 'Má': {
         this.coinniall(r, scoip);
+        const caol = this.caolu(r, scoip);
         // A branch that produces a value in statement position is discarding
         // it, which the indicative does not permit — same rule as E503.
-        const craobh = (b) => {
+        const craobh = (b, c) => {
           if (b.cineál === 'Má') { this.raiteas(b, scoip); return; }
-          const t = this.bloc(b, scoip);
+          const t = this.bloc(b, scoip, c);
           if (b.luach && this.ctx.modh === 'táscach' && !comhionann(t, NEAMHNI)) {
             this.bail.cuir('E503', b.luach.ionad);
           }
         };
-        craobh(r.ansin);
-        if (r.eile) craobh(r.eile);
+        craobh(r.ansin, caol && caol.ansin);
+        if (r.eile) craobh(r.eile, caol && caol.eile);
         return;
       }
 
@@ -783,6 +915,48 @@ class Anailiseoir {
       default:
         throw new Error(`ráiteas anaithnid: ${r.cineál}`);
     }
+  }
+
+  /**
+   * The narrowing a condition licenses, or null (§26.3).
+   *
+   * `má t is Ceart` says that in the affirmative branch `t` is a `Ceart`, and
+   * that is elimination: the copula is a predicate over a value, and once the
+   * predicate has been asked the answer is known for as long as the branch
+   * lasts. Recognised in exactly one shape — an identifier, `is`, a variant of
+   * that identifier's own sum — because a wider shape would be inference
+   * rather than agreement, and the project has one piece of inference already
+   * and confines it to `déan` (§21).
+   *
+   * **The complement narrows only when the sum has two variants**, because
+   * only then is "not `Ceart`" the name of something. With three, the negative
+   * branch keeps the sum and the author asks again. That is a real limit and
+   * not a temporary one: naming the complement of one variant among many would
+   * need anonymous unions, which 0.8 does not have.
+   *
+   * **Only a `seasmhach` binding narrows.** A `sealadach` one may be assigned
+   * inside the branch, and a narrowing that a `cuir` can invalidate is a
+   * narrowing that is not true. Essence narrows; accident does not.
+   */
+  caolu(r, scoip) {
+    const c = r.coinniall;
+    if (!c || c.cineál !== 'Copail' || c.abhar.cineál !== 'Aitheantóir') return null;
+    const lemma = mf.lemmaTuairim(c.abhar.surface);
+    const ceangal = scoip.faigh(lemma);
+    if (!ceangal || ceangal.kind !== 'luach' || ceangal.sealadach) return null;
+    const tS = ceangal.cineal;
+    if (!tS || tS.k !== 'suim') return null;
+    const tM = tS.malairti.get(c.cineal.ainm);
+    if (!tM) return null;                                   // E302 has it, or E202
+
+    let eile = null;
+    if (tS.malairti.size === 2) {
+      for (const [ainm, t] of tS.malairti) if (ainm !== tM.ainm) eile = t;
+    }
+    const dearfach = { lemma, cineal: tM };
+    const diultach = eile ? { lemma, cineal: eile } : null;
+    // `mura t is Ceart` inverts which branch learned what.
+    return r.diultach ? { ansin: diultach, eile: dearfach } : { ansin: dearfach, eile: diultach };
   }
 
   /** Analyse a condition under the particle that governs its verb. */
@@ -900,11 +1074,19 @@ class Anailiseoir {
       case 'Liosta': {
         if (!e.mireanna.length) return liosta(IASACHT);
         const ts = e.mireanna.map((m) => this.luach(m, scoip));
-        const ceann = ts.find((t) => t.k !== 'iasacht') || ts[0];
-        // A heterogeneous literal is a container of things whose types the
-        // compiler is not tracking, which is what Iasacht means. The honest
-        // fix is sum types; until then, widening beats a false error.
-        return liosta(ts.every((t) => comhionann(ceann, t)) ? ceann : IASACHT);
+        // Until 0.8 a heterogeneous literal widened to `Liosta(Iasacht)`,
+        // because there was nothing else to widen it to, and E211 was
+        // unreachable as a result. There is now: two variants of one sum meet
+        // at the sum. What has no meeting point is an error, which is what
+        // E211 has been reserved to say since 0.4 (§26.5).
+        let acc = ts[0];
+        for (let i = 1; i < ts.length && acc; i++) acc = nasc(acc, ts[i], this.cinealacha);
+        // Two variants of one sum meet at the sum, which is new in 0.8 and is
+        // what a list of results needs. What has no meeting point still widens
+        // to `Liosta(Iasacht)`, and E211 stays unreachable — see §26.7. The
+        // reason is `[ainm, aois]` in `sonraí.sb`: a driver's parameter list is
+        // legitimately heterogeneous and no sum can or should cover it.
+        return liosta(acc || IASACHT);
       }
 
       // `Router ó "express"` / `ó "express"` — origin, the same relation `ó`
@@ -999,10 +1181,16 @@ class Anailiseoir {
           return ballaí.get(res.lemma);
         }
 
-        if (tS.k !== 'struchtúr') { this.bail.cuir('E205', e.sealbhoir.ionad, ainmCineail(tS)); return IASACHT; }
+        // A narrowed variant is opened exactly as a struct is: it has fields
+        // and `ó` is how fields are read. An *un*-narrowed sum is E205 with no
+        // new code, and the message is the right one — you cannot open a box
+        // you have not yet identified. Ask the copula first (§26.3).
+        if (tS.k !== 'struchtúr' && tS.k !== 'malairt') {
+          this.bail.cuir('E205', e.sealbhoir.ionad, ainmCineail(tS)); return IASACHT;
+        }
 
         const res = this.reitighFoirm(e.ball.surface, foirm,
-          (l) => tS.reimsi.has(l) || tS.modhanna.has(l), oibreoir);
+          (l) => tS.reimsi.has(l) || (tS.modhanna && tS.modhanna.has(l)), oibreoir);
         if (res.earraid) { this.teip(res, e.ball.ionad, 'E203', tS.ainm); return IASACHT; }
         socraigh(res.lemma);
 
@@ -1038,7 +1226,11 @@ class Anailiseoir {
 
       case 'Déantús': {
         const t = this.tagairtCineail(e.cineal);
-        if (t.k !== 'struchtúr') {
+        // A variant literal is a struct literal. Introduction needed no new
+        // syntax and gets none: `Ceart { duine: d }` is the record form the
+        // language already had, and every field check below is the one
+        // `struchtúr` already used (§26.1).
+        if (t.k !== 'struchtúr' && t.k !== 'malairt') {
           if (t.k !== 'iasacht') this.bail.cuir('E205', e.ionad, ainmCineail(t));
           for (const r of e.reimsi) this.luach(r.luach, scoip);
           return IASACHT;
@@ -1072,9 +1264,16 @@ class Anailiseoir {
       // §13 — the copula: identification / classification. The right operand
       // is a category, never a value, so this is not `==` with Irish paint.
       case 'Copail': {
-        this.luach(e.abhar, scoip);
-        if (!this.cinealacha.has(e.cineal.ainm)) {
-          this.bail.cuir('E202', e.cineal.ionad, e.cineal.ainm);
+        const tA = this.luach(e.abhar, scoip);
+        const tC = this.cinealacha.get(e.cineal.ainm);
+        if (!tC) { this.bail.cuir('E202', e.cineal.ionad, e.cineal.ainm); return BOOL; }
+        // E302 was reserved in 0.4 for a classification that cannot be true
+        // and had nothing to fire on, because any value might be anything.
+        // A sum is a closed statement of what a value may be, so asking
+        // whether a `Toradh` is an `Áit` is now answerable in advance — and
+        // answering it is the whole job of the copula (§26.3).
+        if (tA.k === 'suim' && tC.k === 'malairt' && !tA.malairti.has(tC.ainm)) {
+          this.bail.cuir('E302', e.cineal.ionad, tA.ainm, tC.ainm);
         }
         return BOOL;
       }
@@ -1115,13 +1314,25 @@ class Anailiseoir {
 
       case 'Má': {
         this.coinniall(e, scoip);
-        if (!e.eile) { this.bail.cuir('E507', e.ionad); this.bloc(e.ansin, scoip); return IASACHT; }
-        const a = this.bloc(e.ansin, scoip);
+        const caol = this.caolu(e, scoip);
+        if (!e.eile) {
+          this.bail.cuir('E507', e.ionad);
+          this.bloc(e.ansin, scoip, caol && caol.ansin);
+          return IASACHT;
+        }
+        const a = this.bloc(e.ansin, scoip, caol && caol.ansin);
         const b = e.eile.cineál === 'Má'
           ? this.slonn(e.eile, scoip)
-          : this.bloc(e.eile, scoip);
-        if (!comhionann(a, b)) this.bail.cuir('E201', e.eile.ionad, ainmCineail(a), ainmCineail(b));
-        return a.k === 'iasacht' ? b : a;
+          : this.bloc(e.eile, scoip, caol && caol.eile);
+        // The branches meet rather than match. One arm yielding `Ceart` and
+        // the other `Earráid` is a `Toradh`, not a type error — which is the
+        // same join the list literal uses, for the same reason.
+        const n = nasc(a, b, this.cinealacha);
+        if (!n) {
+          this.bail.cuir('E201', e.eile.ionad, ainmCineail(a), ainmCineail(b));
+          return a.k === 'iasacht' ? b : a;
+        }
+        return n;
       }
 
       default:

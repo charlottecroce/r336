@@ -1,0 +1,23 @@
+// E302 — aicmiú nach féidir a bheith fíor choíche.
+//
+// Cód eile a bhí curtha in áirithe ó 0.4 agus nach raibh aon rud aige le
+// lasadh air: d'fhéadfadh aon luach a bheith ina rud ar bith, mar sin ní
+// raibh aon cheist faoin gcopail nach bhféadfaí a fhreagairt ach ag am rite.
+//
+// Is dearbhú iata é suim faoi cad is féidir le luach a bheith. Mar sin is
+// féidir "an Alt é an Toradh seo?" a fhreagairt roimh ré — agus is é sin
+// obair na copaile ó thús (§26.3).
+
+suim Toradh {
+    Ceart { luach: Uimhir }
+    Easpa { cúis: Teaghrán }
+}
+
+suim Teachtaireacht {
+    Alt   { téacs: Teaghrán }
+    Beart { méid: Uimhir }
+}
+
+feidhm mícheart(t: Toradh) -> Bool {
+    t is Alt
+}

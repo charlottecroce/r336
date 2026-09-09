@@ -1,0 +1,33 @@
+// craobh.sb — an bhlaosc, ar deoraíocht.
+//
+// Tógann sí gach rud agus ní osclaíonn sí aon rud. Sin an patrún céanna a bhí
+// ag `bealaí.sb` i gcéim 0.7: is glas ar an mbosca é contae, ní teorainn ar an
+// mbóthar, mar sin téann luachanna áit ar bith.
+
+seasmhach imr = ó "./imreoir.sb"
+seasmhach fir = ó "./foireann.sb"
+seasmhach clu = ó "./cluiche.sb"
+seasmhach tor = ó "./toradh.sb"
+
+seasmhach ciarraí = Foireann {
+    ainm: "Ciarraí",
+    imreoirí: [Imreoir { ainm: "Ó Sé", scór: 12 }]
+}
+
+seasmhach gaillimh = Foireann {
+    ainm: "Gaillimh",
+    imreoirí: [Imreoir { ainm: "Ó Curraoin", scór: 9 }]
+}
+
+seasmhach cluichí: Liosta(Cluiche) = [
+    Cluiche { baile: ciarraí, cuairt: gaillimh },
+    Cluiche { baile: gaillimh, cuairt: gaillimh }
+]
+
+gníomh craol(c: Cluiche) {
+    scríobh tuairisc(toradhCluiche(c))
+}
+
+gníomh príomh() {
+    déan a chraol ar chluichí
+}

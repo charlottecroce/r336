@@ -1,0 +1,9 @@
+as Ciarraí
+
+struchtúr Imreoir as Ciarraí {
+    ainm: Teaghrán
+    scór: Uimhir
+}
+
+feidhm ainmImreora(imreoir: Imreoir) -> Teaghrán { ainm ó imreoir }
+feidhm scórImreora(imreoir: Imreoir) -> Uimhir { scór ó imreoir }

@@ -1,12 +1,12 @@
 {
   "name": "spicebag",
-  "version": "0.4.0",
+  "version": "0.8.0",
   "description": "Teanga ríomhchláraithe atá bunaithe ar ghramadach na Gaeilge — a programming language grounded in Irish grammar.",
   "bin": { "sbc": "./bin/sbc.js" },
   "main": "src/index.js",
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node test/run.js"
+    "test": "node test/run.js && node test/contae.js && node test/feidhmchlár.js && node test/suim.js"
   },
   "license": "MIT"
 }

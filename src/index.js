@@ -79,12 +79,18 @@ function duchasanna(anailiseoir) {
   const ctae = require('./contaetha');
   const cinealacha = [];
   for (const [ainm, t] of anailiseoir.cinealacha) {
-    if (t.k !== 'struchtúr') continue;
+    // A variant is not a placed type and must not be listed as one: it holds
+    // no county of its own, and printing it would claim a slot that the sum
+    // already holds under a different name (§26.2).
+    if (t.k !== 'struchtúr' && t.k !== 'suim') continue;
     cinealacha.push({ ainm, contae: t.contae || ctae.DEORAIOCHT });
   }
+  // No `iomaíocht` flag. A treaty between rivals cannot exist — E608 refuses
+  // it before the table is ever written to — so the field could never be true
+  // and was reporting on a state the compiler makes unreachable.
   const comhaontuithe = [...anailiseoir.comhaontuithe]
     .map((k) => k.split('\u0000'))
-    .map(([a, b]) => ({ a, b, iomaíocht: ctae.isIomaiocht(a, b) }));
+    .map(([a, b]) => ({ a, b }));
   return { contae: anailiseoir.contae, deoraíocht: ctae.DEORAIOCHT, cinealacha, comhaontuithe };
 }
 

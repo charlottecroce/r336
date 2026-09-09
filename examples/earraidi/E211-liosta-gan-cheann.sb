@@ -1,0 +1,11 @@
+// E211 — níl aon áit ag an liosta seo le dul.
+//
+// Bhí an cód seo curtha in áirithe ó chéim 0.4 agus ní raibh sé sroichte:
+// leathnaíodh liosta ilchineálach go `Liosta(Iasacht)` mar nach raibh aon
+// rud eile ann le leathnú chuige.
+//
+// Tá anois. Buaileann dhá mhalairt den tsuim chéanna le chéile ag an tsuim,
+// agus mar sin is earráid dhearbhaithe é gan aon bhualadh a bheith ann —
+// ní leathnú ciúin (§26.5).
+
+seasmhach measctha = [1, "a dó", 3]

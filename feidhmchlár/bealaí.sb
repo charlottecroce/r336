@@ -96,7 +96,7 @@ ag gníomh taispeáin(iarr: Iasacht, freag: Iasacht) {
     má aitheantas is Uimhir {
         seasmhach taifead = tar éis duineDeRéir ó shonraí(stór, aitheantas)
         render ó fhreag("duine", AmharcDuine {
-            teideal: teideal(taifead),
+            teideal: teideal(aimsigh(taifead)),
             duine: taifead,
             aimsíodh: tá taifead
         })
@@ -114,8 +114,17 @@ ag gníomh taispeáin(iarr: Iasacht, freag: Iasacht) {
 // `Iasacht` an tslí a chuirtear "b'fhéidir nach bhfuil sé ann" in iúl, agus
 // tá `Iasacht` ar deoraíocht. Titeann an teorainn idir curtha agus deoraithe
 // go díreach san áit a bhfuil na cineálacha suime ar iarraidh.
-feidhm teideal(taifead: Iasacht) -> Teaghrán {
-    má tá taifead { tuairisc(Duine { ainm: ainm ó thaifead, aois: aois ó thaifead }) } mura { "Gan aimsiú" }
+// Níl fágtha anseo ach an tiontú, agus is é sin obair na blaoisce ó thús: an
+// saol amuigh a léamh agus luach curtha a thógáil as (§24.3). D'imigh an
+// loighic — cad is teideal ann — go dtí `duine.sb`, mar a bhfuil an cineál.
+//
+// Ní fhéadfadh an tiontú seo bogadh anonn, agus is riail é sin seachas
+// timpiste: chuirfeadh E213 cosc ar `Iasacht` i réimse malairte, mar sin
+// caithfidh an tiontú tarlú ar an teorainn. Sin an rud a bhí uainn.
+feidhm aimsigh(taifead: Iasacht) -> Aimsiú {
+    má tá taifead {
+        Fuarthas { duine: Duine { ainm: ainm ó thaifead, aois: aois ó thaifead } }
+    } mura { Uireasa { } }
 }
 
 // `a liostaigh`, `a thaispeáin`: an briathar mar ainmfhocal. Gan an cháithnín

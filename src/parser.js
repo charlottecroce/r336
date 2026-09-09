@@ -202,6 +202,42 @@ class Parsalai {
     this.suil('KW', 'struchtúr');
     const ainm = this.suil('IDENT');
     const contae = this.seiceail('KW', 'as') ? this.parsailAsFrasa() : null;
+    const reimsi = this.parsailReimsi();
+    return { cineál: 'Struchtúr', ainm: ainm.luach, ionad: ainm.ionad, reimsi, contae };
+  }
+
+  /**
+   * `suim Toradh as Corcaigh { Ceart { duine: Duine } Earráid { … } }`
+   *
+   * A variant is a name with fields, and the fields are parsed by exactly the
+   * loop `struchtúr` uses — a variant body *is* a struct body, so there is no
+   * second record syntax in the language and nothing here to keep in step.
+   *
+   * Payloads are named rather than positional (`Ceart { duine: Duine }`, not
+   * `Ceart(Duine)`). Spicebag's only accessor is `ó` plus a member name and
+   * there is no tuple type, so a positional payload would have to invent a
+   * field name at the point of use; writing it is better than inventing it.
+   *
+   * `as` sits on the sum and never on a variant. The sum is the identity that
+   * claims a province; a variant is a name that identity goes by (§26.2).
+   */
+  parsailSuim() {
+    this.suil('KW', 'suim');
+    const ainm = this.suil('IDENT');
+    const contae = this.seiceail('KW', 'as') ? this.parsailAsFrasa() : null;
+    this.suil('NOD', '{');
+    const malairti = [];
+    while (!this.seiceail('NOD', '}')) {
+      const m = this.suil('IDENT');
+      malairti.push({ ainm: m.luach, ionad: m.ionad, reimsi: this.parsailReimsi() });
+      this.meaitseail('NOD', ',');
+    }
+    this.suil('NOD', '}');
+    return { cineál: 'Suim', ainm: ainm.luach, ionad: ainm.ionad, malairti, contae };
+  }
+
+  /** `{ ainm: Cineál, … }` — the record body, shared by struct and variant. */
+  parsailReimsi() {
     this.suil('NOD', '{');
     const reimsi = [];
     while (!this.seiceail('NOD', '}')) {
@@ -211,7 +247,7 @@ class Parsalai {
       this.meaitseail('NOD', ',');
     }
     this.suil('NOD', '}');
-    return { cineál: 'Struchtúr', ainm: ainm.luach, ionad: ainm.ionad, reimsi, contae };
+    return reimsi;
   }
 
   /**
@@ -282,6 +318,7 @@ class Parsalai {
     if (this.seiceail('KW', 'as')) return this.parsailContaeModuil();
     if (this.seiceail('KW', 'comhaontú')) return this.parsailComhaontu();
     if (this.seiceail('KW', 'struchtúr')) return this.parsailStruchtur();
+    if (this.seiceail('KW', 'suim')) return this.parsailSuim();
     if (this.seiceail('KW', 'feidhm') || this.seiceail('KW', 'gníomh')) return this.parsailBriathar(false);
     if (this.seiceail('KW', 'ag') && this.peek(1).cinéal === 'KW'
       && ['feidhm', 'gníomh'].includes(this.peek(1).luach)) {
@@ -399,8 +436,10 @@ class Parsalai {
     return clé;
   }
 
-  parsailComparaid() { return this.denartha(this.parsailSuim, ['==', '!=', '<', '>', '<=', '>=']); }
-  parsailSuim() { return this.denartha(this.parsailIolrach, ['+', '-']); }
+  parsailComparaid() { return this.denartha(this.parsailSuimiu, ['==', '!=', '<', '>', '<=', '>=']); }
+  // `suimiú` is the operation; `suim` is the type (§26). They were the same
+  // word here until 0.8, when the keyword arrived and took the plain name.
+  parsailSuimiu() { return this.denartha(this.parsailIolrach, ['+', '-']); }
   parsailIolrach() { return this.denartha(this.parsailAonartha, ['*', '/', '%']); }
 
   parsailAonartha() {

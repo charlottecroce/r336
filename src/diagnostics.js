@@ -116,12 +116,24 @@ const M = {
 
   E210: (op, ar, dheis) => `Ní féidir "${op}" a chur i bhfeidhm ar ${ar} agus ${dheis}.`,
 
-  // Curtha in áirithe go dtí go mbeidh cineálacha suime ann; leathnaítear
-  // liosta ilchineálach go Liosta(Iasacht) faoi láthair.
+  // Curtha in áirithe fós, agus ní mar a bhíothas ag súil. Buaileann dhá
+  // mhalairt den tsuim chéanna le chéile ag an tsuim ó 0.8 i leith, ach
+  // leathnaíonn liosta nach mbuaileann in aon áit go Liosta(Iasacht) mar a
+  // rinne sé riamh: is liosta paraiméadar dlisteanach é `[ainm, aois]` ag an
+  // teorainn, agus níor cheart suim a chumhdach air (§26.7).
   E211: (a, b) => `Ní mór an cineál céanna a bheith ag gach mír i liosta: ${a} agus ${b}.`,
 
   E212: (ainm, suil, fuarthas) =>
     `Tá ${suil} paraiméadar cineáil ag "${ainm}", ach fuarthas ${fuarthas}.`,
+
+  // §26.4 — ní ceadmhach `Iasacht` i réimse malairte.
+  //
+  // Dearbhaíonn suim go beacht cad is féidir le luach a bheith; deir
+  // `Iasacht` nach eol cén chatagóir í. Ualach de chatagóir anaithnid taobh
+  // istigh d'áireamh catagóirí: sin suim nár críochnaíodh a scríobh. Ceadaítear
+  // é fós i réimse struchtúir, mar nár mhaígh taifead riamh go n-áiríonn sé.
+  E213: (suim, malairt, reimse, cineal) =>
+    `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
 
   // ── 3xx: copail agus briathar substaintigh ────────────────────────────
   E301: () => `Ní mór gur cineál atá ar dheis na copaile "is".`,
@@ -207,8 +219,10 @@ const M = {
   // province that is gone, the county sitting in it, and the struct that put
   // it there. Naming only the county — which is what 0.6 did — is now wrong,
   // because the thing that was taken is not the county that was written.
+  // Ó 0.8 i leith is féidir gur suim atá san áititheoir, mar tá suim agus
+  // struchtúr san iomaíocht chéanna ar na ceithre shliotán (§26.2).
   E603: (cuige, contae, struchtur) =>
-    `Tá ${cuige} tógtha cheana ag an struchtúr "${struchtur}", atá as ${contae}. Ní bhíonn ach struchtúr amháin ag cúige: ceithre chineál churtha atá i gclár, agus is ionann contae a roghnú agus cúige a roghnú.`,
+    `Tá ${cuige} tógtha cheana ag an gcineál "${struchtur}", atá as ${contae}. Ní bhíonn ach cineál amháin ag cúige: ceithre chineál churtha atá i gclár, agus is ionann contae a roghnú agus cúige a roghnú.`,
 
   E604: () =>
     `Tá contae an mhodúil fógartha faoi dhó. Ní bhíonn téacs as dhá áit.`,

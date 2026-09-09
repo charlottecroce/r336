@@ -21,6 +21,7 @@ const EOCHAIRFHOCAIL = new Set([
   'feidhm',      // function — produces a nominal
   'gníomh',      // imperative — performs, produces nothing
   'struchtúr',   // struct
+  'suim',        // sum — a type that is one of several named alternatives
   'seasmhach',   // immutable binding
   'ó',           // possession / origin
   'as',          // provenance — as Corcaigh, as Dún na nGall

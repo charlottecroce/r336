@@ -62,6 +62,14 @@ class Ginteoir {
       // nobody reads would assert a guarantee the emitted code does not make.
       if (m.cineál === 'Contae' || m.cineál === 'Comhaontú') continue;
       if (m.cineál === 'Struchtúr') { this.struchtur(m); onnmhairi.push(`${m.ainm}$nua`); continue; }
+      if (m.cineál === 'Suim') {
+        // The sum itself emits nothing: it is a statement about which tags are
+        // possible, and a statement about possibility has no run-time shadow.
+        // Each variant gets the same tagging constructor a struct gets, so
+        // `__is` needs no new case and the backend learns no new concept.
+        for (const mal of m.malairti) { this.struchtur(mal); onnmhairi.push(`${mal.ainm}$nua`); }
+        continue;
+      }
       this.raiteas(m);
       if (m.cineál === 'Briathar' && m.jsAinm) onnmhairi.push(m.jsAinm);
       if (m.cineál === 'Ceangal' && m.ceangal) {
@@ -99,6 +107,10 @@ class Ginteoir {
     switch (r.cineál) {
       case 'Struchtúr':
         return this.struchtur(r);
+
+      case 'Suim':
+        for (const mal of r.malairti) this.struchtur(mal);
+        return;
 
       case 'Briathar': {
         const ps = r.params.map((p) => (p.ceangal ? p.ceangal.jsAinm : p.ainm)).join(', ');

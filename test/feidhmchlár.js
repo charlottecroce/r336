@@ -66,15 +66,33 @@ it('tiomsaíonn an feidhmchlár ar fad', () => {
   }
 });
 
-it('tá an croí curtha, agus níl ann ach cúige amháin', () => {
+it('tá an croí curtha, agus tá dhá chúige caite anois', () => {
+  // Bhí an tástáil seo ag dearbhú go raibh cúige amháin caite, agus ba é sin
+  // an teip a taifeadadh i §25.9: níor tháinig an brú i bhfeidhm riamh. Chaith
+  // `Aimsiú` an dara ceann i gcéim 0.8, mar níorbh fhéidir leis an tsuim a
+  // bheith i gcontae ar bith de chuid na Mumhan (§26.6).
   const d = duchasanna(tiomsaighComhad('duine.sb').anailiseoir);
   assert.strictEqual(d.contae, 'Corcaigh');
   const cuirthe = d.cinealacha.filter((t) => t.contae !== ctae.DEORAIOCHT);
-  assert.deepStrictEqual(cuirthe, [{ ainm: 'Duine', contae: 'Corcaigh' }]);
-  assert.strictEqual(ctae.cuigeDe('Corcaigh'), ctae.CUIGI.MUMHAIN);
-  // Trí chúige saor. Níor tháinig an brú i bhfeidhm anseo riamh (§25.9).
+  assert.deepStrictEqual(cuirthe, [
+    { ainm: 'Duine', contae: 'Corcaigh' },
+    { ainm: 'Aimsiú', contae: 'Gaillimh' },
+  ]);
   const gafa = new Set(cuirthe.map((t) => ctae.cuigeDe(t.contae)));
-  assert.strictEqual(gafa.size, 1, 'níor cheart ach cúige amháin a bheith tógtha');
+  assert.deepStrictEqual([...gafa], [ctae.CUIGI.MUMHAIN, ctae.CUIGI.CONNACHTA]);
+});
+
+it('ní fhéadfadh an tsuim a bheith san Mhumhain — sin an rogha a chosain rud', () => {
+  const olc = foinseDe('duine.sb').replace('suim Aimsiú as Gaillimh', 'suim Aimsiú as Ciarraí');
+  assert.notStrictEqual(olc, foinseDe('duine.sb'), 'níor éirigh leis an ionadú');
+  assert.ok(coidLeMalairt('duine.sb', olc, 'duine.sb').includes('E603'));
+});
+
+it('is E213 é an rón a chur isteach sa tsuim gan é a thiontú', () => {
+  // The rule that keeps the conversion on the boundary where it belongs.
+  const olc = foinseDe('duine.sb').replace('Fuarthas { duine: Duine }', 'Fuarthas { rón: Iasacht }');
+  assert.notStrictEqual(olc, foinseDe('duine.sb'), 'níor éirigh leis an ionadú');
+  assert.ok(coidLeMalairt('duine.sb', olc, 'duine.sb').includes('E213'));
 });
 
 it('fanann an bhlaosc ar deoraíocht', () => {
