@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Counties</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="guide.html">Guide</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="counties.html" class="at">Counties</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Counties</h1>
+  <p class="pagelede">A closed system of 32 counties and 4 provinces that
+  controls which files may open which types.</p>
+
+  <div class="slab">
+    <h2 class="slab-head">Declaring provenance</h2>
+    <div class="slab-body">
+      <pre class="code">as Corcaigh                          <span class="c">// once per file, at the top</span>
+struchtúr Duine as Corcaigh { … }    <span class="c">// once per struct or suim</span></pre>
+      <p>A file that never writes <code>as</code> defaults to
+      <code>deoraíocht</code> (exile). Declaring it twice in one file is
+      <a class="tag" href="errors.html">E604</a>. <code>as</code> demands the
+      base form of its complement through the same government machinery as
+      <code>ó</code>/<code>ar</code>/<code>a</code> - <code>as Chorcaigh</code>
+      is <a class="tag" href="errors.html">E103</a> with nothing special-cased
+      for <code>as</code> at all. Multi-word names (<code>Dún na nGall</code>,
+      <code>Baile Átha Cliath</code>) are read greedily against a fixed table;
+      a name that isn't one of the 32 is
+      <a class="tag" href="errors.html">E602</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Provinces are the actual limit</h2>
+    <div class="slab-body">
+      <p>32 counties, 4 provinces: Laighin, An Mhumhain, Connachta, Ulaidh. A
+      struct or sum claims its <em>province</em>, not just its county -
+      <code>struchtúr Duine as Corcaigh</code> closes every other county of
+      An Mhumhain (Ciarraí, Luimneach, An Clár, Port Láirge, Tiobraid Árann)
+      to any other placed type, for the rest of the module graph. One
+      struct-or-sum per province, globally. A second type trying to place in
+      an already-claimed province is <a class="tag" href="errors.html">E603</a>,
+      naming the province, the county sitting in it, and the type that put it
+      there. The claim travels with import - an imported type's province is
+      spent everywhere it's visible, not just in the file that declared it.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Exile</h2>
+    <div class="slab-body">
+      <p><code>deoraíocht</code> is what a value is from when nothing
+      declared a home: every primitive, <code>Iasacht</code>, and any struct
+      or sum with no <code>as</code>. It isn't a county and can't be written -
+      <code>as deoraíocht</code> is <a class="tag" href="errors.html">E605</a>
+      - it's the default rather than a destination.</p>
+      <p>Exile is deliberately asymmetric to a real county: it's
+      non-exclusive (any number of undeclared types coexist - the alternative
+      caps a program at four struct types, total), it can't sign a treaty (an
+      agreement needs two parties and exile isn't one), and it's nobody's
+      rival. Two exiled things trading with each other isn't a border
+      crossing at all, which is why every program written before this feature
+      existed still compiles unchanged.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">The border: what <code>ó</code> checks</h2>
+    <div class="slab-body">
+      <p>Construction, arguments, and returns all cross freely - a county is
+      a lock on the box, not a border on the road. Only <em>reading</em> a
+      field or member through <code>ó</code> is checked, and it's checked
+      against the accessing file's own county, not the value's - so a struct
+      can be built in one file and only opened in another that's allowed to.</p>
+      <p>Four cases, one comparison, because two things from nowhere are
+      still the same nowhere:</p>
+      <table class="listing">
+        <tr><th>Case</th><th>Result</th></tr>
+        <tr><td>same province</td><td>allowed</td></tr>
+        <tr><td>different province, treaty in force</td><td>allowed</td></tr>
+        <tr><td>different province, no treaty</td><td><a class="tag" href="errors.html">E601</a></td></tr>
+        <tr><td>either side in exile</td><td>allowed</td></tr>
+      </table>
+      <p>Each <code>ó</code> in a chain (<code>ainm ó sheoladh ó dhuine</code>)
+      is checked independently against its own complement, the same way each
+      one governs its own lenition.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Treaties</h2>
+    <div class="slab-body">
+      <pre class="code">comhaontú Corcaigh Gaillimh</pre>
+      <p>A bilateral agreement, in force for the whole file regardless of
+      where it's written - a treaty at the bottom licenses an access at the
+      top. Symmetric: <code>comhaontú A B</code> and <code>comhaontú B A</code>
+      name the same treaty, and the second writing is
+      <a class="tag" href="errors.html">E607</a>. Not transitive -
+      Corcaigh–Gaillimh plus Gaillimh–Aontroim does not give
+      Corcaigh–Aontroim; a transitive treaty would silently partition the 32
+      into blocs, which is the thing a treaty exists instead of.</p>
+      <p>File-scoped: a treaty doesn't travel in a module's exported
+      signature, because it's a property of a place and a file is a place,
+      not a value. A treaty with yourself is
+      <a class="tag" href="errors.html">E606</a>; naming exile is already
+      refused by <a class="tag" href="errors.html">E605</a> before it gets
+      here.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Rivalries: the one thing no treaty fixes</h2>
+    <div class="slab-body">
+      <p>A short fixed list of traditional rivalries - Corcaigh/Ciarraí,
+      Baile Átha Cliath/An Mhí, and a handful more, within provinces and
+      across them - sits <em>above</em> the border rule rather than inside
+      it. No treaty between rivals can ever exist
+      (<a class="tag" href="errors.html">E608</a>), and the veto overrides
+      even same-province access that would otherwise be free
+      (<a class="tag" href="errors.html">E609</a>): a file from Ciarraí can
+      never open a type placed in Corcaigh, treaty or not, province or not.</p>
+      <p>Exile has no history and is nobody's rival, so the veto never fires
+      when either side is exiled. The only way out is choosing a different
+      county - and therefore a different province - to be from; every pair of
+      provinces keeps at least one legal county pairing, so a rivalry costs
+      you the county you wanted, not the ability to reach a province at
+      all.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Why this exists</h2>
+    <div class="slab-body">
+      <p><code>as</code> itself is ordinary Irish grammar - the preposition
+      of provenance and belonging, <em>is as Corcaigh mé</em> - and it's
+      governed by the same machinery as everything else in the language. The
+      specific list of 32 names, the four-way grouping, and the rivalry table
+      are not a grammatical phenomenon; they're a deliberately strange
+      feature, then enforced with the same rigor as everything grounded in
+      real grammar. See the <a href="guide.html">Developer Guide</a> for
+      where this fits against the rest of the design.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>

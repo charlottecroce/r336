@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spicebag - Developer Guide</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="guide.html" class="at">Guide</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="counties.html">Counties</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Developer Guide</h1>
+  <p class="pagelede"></p>
+
+  <div class="slab slab--focus">
+    <h2 class="slab-head">Pipeline</h2>
+    <div class="slab-body">
+      <pre class="code">source  →  lexer  →  parser  →  analyzer  →  codegen  →  JS</pre>
+      <p>A file passes through those four stages. A project of more than one
+      file adds a module graph pass in front of them, because a module has to
+      be at least partly understood before the file that imports it can even
+      be parsed.</p>
+      <p>The lexer (<code>lexer.js</code>) does more than tokenize. Spicebag
+      word order is VSO. A statement that opens with a known imperative is a
+      command. <code>a &lt;briathar&gt;</code> only parses as a verbal noun if
+      <code>&lt;briathar&gt;</code> is a known verb. Both of those decisions
+      need a lexicon before the parser can make them. So the lexer runs a
+      pre-scan of the token stream first and builds two sets: <code>gniomhartha</code>
+      (every imperative) and <code>briathra</code> (every declared verb, of
+      either mood). This mirrors how a reader of Irish already knows which
+      words are verbs before they can parse VSO word order. A reader working
+      from another text's vocabulary has to read that text first, which is
+      exactly why a module's own lexicon has to exist before the file that
+      imports it is parsed.</p>
+      <p>The lexer also treats <code>tar éis</code> as one frozen token
+      rather than two separate words. Irish marks completed aspect with a
+      fixed prepositional phrase, and a reader of Irish reads it as one unit
+      too. For a <code>saor</code> declaration the pre-scan does extra work.
+      It derives the verb's autonomous surface form right there, using the
+      same conjugation rules described under Mood and aspect below, and adds
+      both the root and the derived form to the lexicon. The root goes in so
+      that commanding it by mistake still parses. It gets refused by name
+      later (<a class="tag" href="errors.html">E518</a>) instead of failing
+      to parse at all. Diagnosing a mistake is a better outcome than being
+      unable to read the program that contains it.</p>
+      <p>A multi-file project builds its module graph with <code>Tionscadal</code>
+      in <code>modúil.js</code>. Each module's dependencies are compiled
+      first, or at least reduced to a signature, because the imported lexicon
+      has to exist before the importing file can be parsed. The compiler
+      keeps a stack of paths currently being compiled and a cache of finished
+      ones, keyed by absolute path. A path still on the stack when it's
+      revisited is a circular import (<a class="tag" href="errors.html">E110</a>).
+      A path that never resolves to a file is
+      <a class="tag" href="errors.html">E109</a>. The filesystem itself is
+      injected as a small interface, <code>{ ann, léigh }</code>, so the same
+      pipeline runs against a real filesystem or against an in-memory map in
+      tests. Each compiled module is cached as <code>{ js, ast, anailiseoir,
+      siniu }</code>, and a dependant only ever needs the <code>siniu</code>
+      (signature) to be checked against, which is what lets the graph compile
+      bottom-up: leaves first, their signatures cached, then whatever imports
+      them.</p>
+      <p>The parser (<code>parser.js</code>) is recursive descent. Its AST
+      keeps grammatical categories instead of machine operations.
+      <code>ainm ó dhuine</code> becomes a possessive node with a
+      <code>ball</code> (member) and a <code>sealbhóir</code> (possessor). It
+      does not become a member-access node. <code>scríobh x</code> becomes a
+      command node, not a function call. Lowering to JavaScript shapes
+      happens only in codegen, nowhere earlier. One precedence decision is
+      worth naming on its own: <code>ó</code> binds tighter than a function
+      call. <code>beannacht ó dhuine(x)</code> applies the argument to the
+      whole noun phrase <code>beannacht ó dhuine</code>, which reads as a
+      method call, because in Irish <code>ó dhuine</code> is a constituent of
+      the phrase around it rather than something a following call could reach
+      past. The cost is that a call sitting inside a possessive chain needs
+      parentheses of its own: <code>ainm ó faigh(id)</code>.</p>
+      <p>The analyzer (<code>analyzer.js</code>) runs six passes over one
+      file's AST, always in the same order. Pass 0 brings in the imported
+      lexicon before anything local is declared, so a local name that
+      collides with an import is caught as an ordinary redeclaration rather
+      than needing its own rule. Pass 0b reads the file's own <code>as</code>
+      declaration, because nothing else can be judged against a county until
+      the accessing side has one. Pass 0c registers this file's treaties, so
+      an access anywhere in the file can rely on a treaty written anywhere
+      else in it, regardless of order. Pass A hoists every struct, sum, and
+      verb declaration, so a verb may call another verb that is declared
+      later in the file. Pass A2 resolves field types and verb signatures
+      once every name exists, so a call may syntactically precede the verb it
+      calls. Pass B walks top-level statements in the order they were
+      written. Pass C walks every verb body last, with the whole global scope
+      already in view. Splitting hoisting from body-checking this way is what
+      lets two verbs call each other regardless of which one appears first on
+      the page, with no separate forward-declaration syntax needed.</p>
+      <p>Within each of those passes, the analyzer does four jobs at once
+      rather than in four separate tree walks: ordinary type checking;
+      government (which grammatical form a syntactic slot demands of the
+      word filling it); agreement (does the surface form actually written
+      match that demand); and mood and aspect checking (may this verb be
+      mentioned here at all, is it being completed correctly). A single call
+      to <code>slonn()</code>, the expression-walking method, resolves all
+      four for every node it visits. That follows directly from the
+      linguistic model behind the language. Government and agreement are not
+      a system bolted onto a semantic core in Irish. They are one fact about
+      a word's environment, seen from two angles, and the analyzer treats
+      them that way.</p>
+      <p>Codegen (<code>codegen.js</code>) erases everything grammatical. By
+      the time it runs, lenition is already gone, because <code>dhuine</code>
+      was resolved to the lemma <code>duine</code> back in the analyzer. Mood
+      is gone, because an imperative is now just a plain function. Aspect is
+      gone, because <code>ag</code> became <code>async</code> and
+      <code>tar éis</code> became <code>await</code> while the analyzer was
+      still checking the file. A <code>má</code>/<code>mura</code> chain
+      compiles to a ternary when every branch is a single expression with
+      nothing to hoist, and falls back to an <code>if</code>/<code>else</code>
+      assigning into a hoisted temporary (<code>let __t0</code>) the moment
+      any branch contains its own statements. If codegen needed to know which
+      surface form the programmer actually wrote, the grammar would only be a
+      find-and-replace wearing a costume. Every feature ships a test that
+      asserts nothing grammatical leaks into the generated JavaScript, and
+      that check is treated as part of the feature, not an afterthought.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Government and agreement, the one idea everything follows</h2>
+    <div class="slab-body">
+      <p>Four operators demand a grammatical form of the word right after
+      them. One function checks all four.</p>
+      <table class="listing">
+        <tr><th>Operator</th><th>Demands</th><th>Example</th></tr>
+        <tr><td><code>ó</code></td><td>lenited</td><td><code>ainm ó dhuine</code></td></tr>
+        <tr><td><code>ar</code></td><td>lenited</td><td><code>cuir 3 ar chomhaireamh</code></td></tr>
+        <tr><td><code>a</code></td><td>lenited</td><td><code>a fhógair</code></td></tr>
+        <tr><td><code>as</code></td><td>base</td><td><code>as Corcaigh</code></td></tr>
+      </table>
+      <p>That function is <code>reitighFoirm</code>. It takes three things:
+      the surface form actually written, the grammatical form the position
+      demands, and a predicate asking whether a given lemma is known in
+      scope. It first works out the most likely lemma behind the surface
+      form, stripping a leading séimhiú if the word looks lenited. It checks
+      whether that lemma is known. Then it compares the surface form against
+      what the demanded form should look like for that specific lemma. A
+      mismatch is reported with the exact reason: lenited where the position
+      wants the base form, base where the position wants lenited, lenited
+      spelling of a word that structurally cannot lenite at all, or a form
+      that matches no known paradigm of that lemma. <code>ó</code>,
+      <code>ar</code>, and <code>a</code> all call this function asking for
+      the lenited form. <code>as</code> calls it asking for the base form.
+      That is the entire mechanism behind government in the language: four
+      call sites into one shared check, nothing more.</p>
+      <p>Only the nine consonants <code>b c d f g m p s t</code> can carry a
+      written séimhiú. It is spelled by prefixing <code>h</code>, with case
+      preserved: <code>duine</code> becomes <code>dhuine</code>,
+      <code>Duine</code> becomes <code>Dhuine</code>. Vowels and
+      <code>l n r h</code> cannot lenite at all. The base form is correct
+      after any of the operators above when the word has nowhere to go. That
+      is not an exception. It is the same rule applied to a word with an
+      empty mutation slot. <code>s</code> lenites before a vowel or
+      <code>l n r</code>, and resists it in <code>sc- sf- sm- sp- st-</code>
+      clusters.</p>
+      <p>A binding is one symbol-table entry with a paradigm attached to it.
+      It is never split into <code>duine</code> and <code>dhuine</code> as
+      two separate names. The surface form is checked against what the
+      position demands, and the <em>lemma</em> is what actually gets bound
+      and carried forward. Lenited where none is licensed is
+      <a class="tag" href="errors.html">E103</a>. Base form where lenition is
+      required is <a class="tag" href="errors.html">E102</a>. Lenited
+      spelling of a word that cannot lenite at all is
+      <a class="tag" href="errors.html">E104</a>. A form matching no paradigm
+      of a known lemma is <a class="tag" href="errors.html">E105</a>.
+      Declaring anything outside the base form is
+      <a class="tag" href="errors.html">E107</a>.</p>
+      <p>A member reached through a foreign origin, such as
+      <code>ó "some-package"</code> or <code>ó "file.js"</code>, keeps its
+      exact spelling and is never lenited. You don't get to rename someone
+      else's API just by importing it, so a borrowed name has no mutation
+      slot at all rather than an empty one.</p>
+      <p>Eclipsis (urú) gets a related but asymmetric treatment.
+      <code>foirmDe(lemma, FOIRM.URAITHE)</code> always throws, because no
+      syntactic slot in the language demands an eclipsed form of anything.
+      But an eclipsed surface form is still recognised on sight, purely so it
+      can be refused by name instead of falling through to "unbound
+      identifier." Writing <code>scríobh mbaile</code> is correct Irish for
+      the eclipsed form of <code>baile</code>. Reporting
+      <a class="tag" href="errors.html">E101</a> for it would be a worse
+      answer than <a class="tag" href="errors.html">E108</a>, which says
+      plainly that eclipsis is real Irish grammar with no programming meaning
+      assigned to it here. <code>--paraidím</code> prints every identifier's
+      eclipsed form too, labelled "gan bhrí" (without meaning), so the gap
+      stays visible instead of silent.</p>
+      <p>All of this mutation logic lives in one file, <code>morphology.js</code>,
+      that knows nothing about programming at all. It only answers questions
+      about Irish orthography: can this word lenite, what is its lenited
+      form, which lemma could this eclipsed form have come from. The
+      semantic layer asks it questions. It never asks the semantic layer
+      anything back. That separation is what keeps the boundary clean:
+      mutation is a property of a word, government is a property of a
+      syntactic position, and agreement is the check that joins the two.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Bindings, types, and state</h2>
+    <div class="slab-body">
+      <p><code>seasmhach</code> (immutable) and <code>sealadach</code>
+      (mutable) split the way Irish <code>is</code> and <code>bí</code>
+      split: essence against accident. A struct field is always a
+      <code>seasmhach</code> shape. Only a <code>sealadach</code> binding, or
+      a <code>sealadach</code> parameter, can change, and it changes with a
+      command rather than assignment:</p>
+      <pre class="code">cuir &lt;luach&gt; ar &lt;sprioc&gt;</pre>
+      <p><code>cuir</code> is a command. It is
+      <a class="tag" href="errors.html">E502</a> inside a <code>feidhm</code>
+      and <a class="tag" href="errors.html">E510</a> against a
+      <code>seasmhach</code> target. Its target lenites through the same
+      <code>ar</code> government used everywhere else. The target does not
+      have to be a bare binding either: the analyzer walks any possessive
+      chain back to its root binding and checks mutability there, so
+      <code>cuir luach ó ch + 1 ar luach ó ch</code> is legal on a field of a
+      <code>sealadach struchtúr</code> parameter, even though the field
+      itself is written in the ordinary immutable struct form.</p>
+      <p>Primitives: <code>Uimhir</code>, <code>Teaghrán</code>,
+      <code>Bool</code>, <code>Neamhní</code>, <code>Iasacht</code> (anything
+      crossing the JS boundary, untyped, and the reason the copula matters at
+      all: <code>x is Uimhir</code> is a real question against a borrowed
+      value, not a tautology), <code>Liosta(T)</code>. A <code>struchtúr</code>
+      is a record with typed, all-required fields.
+      <a class="tag" href="errors.html">E203</a> is an unknown field.
+      <a class="tag" href="errors.html">E204</a> is a missing one.</p>
+      <p>A list literal widens when its items disagree in type.
+      <code>[1, "a", 3]</code> has no common type, so it becomes
+      <code>Liosta(Iasacht)</code> rather than an error, because that is
+      exactly what <code>Iasacht</code> is for: a category the compiler is
+      deliberately declining to track. This widening also covers a driver's
+      variadic parameter list, such as <code>[ainm, aois]</code> passed
+      through to a SQL query, which is legitimately heterogeneous and has no
+      sum type it should belong to. Two variants of the same sum, though,
+      meet at the sum instead of widening all the way to <code>Iasacht</code>.
+      <code>[Ceart { luach: 1 }, Easpa { cúis: "x" }]</code> types as
+      <code>Liosta(Toradh)</code>, because both arms share an actual common
+      type once sum types exist. The same join decides the type of a
+      <code>má</code>/<code>mura</code> chain used as an expression: one arm
+      producing <code>Ceart</code> and the other producing <code>Easpa</code>
+      types as <code>Toradh</code>, not as a mismatch. Two branches that
+      share no supertype at all are what
+      <a class="tag" href="errors.html">E211</a> is reserved for. No real
+      program reaches it: the one case that looked like a fit turned out to
+      be the heterogeneous parameter list above, so the code stays reserved
+      rather than firing on legitimate code.</p>
+      <p><code>suim</code> declares a closed choice between named variants,
+      each one a struct body under its own name.
+      <code>Ceart { duine: Duine }</code> is the same literal syntax a struct
+      already had, with no new grammar written for it. A variant field typed
+      <code>Iasacht</code> is <a class="tag" href="errors.html">E213</a>: a
+      sum is a closed statement of what a value may be, and a payload of
+      unknown category inside it is a sum that has not finished being
+      written. A struct field can still be <code>Iasacht</code>, because a
+      record never claimed to enumerate anything. A sum with fewer than two
+      variants is <a class="tag" href="errors.html">E214</a>, because a
+      choice needs at least two things to choose between.</p>
+      <pre class="code">más Ceart toradh { ainm ó dhuine ó thoradh } mura { cúis ó thoradh }</pre>
+      <p><code>más</code> narrows. Inside the affirmative branch, the value
+      is treated as that variant. Inside the negative branch, but only when
+      the sum has exactly two variants, the value is treated as the other
+      one, because "not Ceart" only names something real when there is
+      exactly one alternative for it to be. With three variants or more, the
+      negative branch keeps the whole sum type and the program has to ask
+      again. That is a permanent limit rather than a gap waiting to be
+      filled: naming the complement of one variant among several would need
+      anonymous unions, and the language does not have them.</p>
+      <p>Narrowing is recognised by shape, not by a symbol-table lookup, the
+      same way the parser tells a copular clause apart from an ordinary
+      condition in the first place. A copular clause is a particle, a
+      predicate, and a subject with no linking verb between them, so
+      <code>más Ceart toradh</code> reads as two juxtaposed words after the
+      particle. Two juxtaposed words are otherwise illegal here, so seeing
+      that shape is enough on its own to recognise it, with no lookup needed
+      to decide what kind of clause it is. The analyzer only narrows when the
+      recognised subject is a plain identifier bound to a <code>seasmhach</code>
+      value of sum type, and only when the named variant genuinely belongs to
+      that sum. A <code>sealadach</code> binding never narrows, because it
+      could be reassigned inside the very branch the narrowing would apply
+      to, and a narrowing that a later <code>cuir</code> can invalidate was
+      never true in the first place.</p>
+      <p><code>is</code> classifies. <code>tá</code> and <code>bhfuil</code>
+      ask whether something is present. Neither ever substitutes for the
+      other. <code>bí</code>'s written form must agree with the particle
+      governing its clause: <code>tá</code> after <code>má</code>,
+      <code>bhfuil</code> after <code>mura</code>. Getting the form backwards
+      is <a class="tag" href="errors.html">E512</a>. The meaning never
+      changes, only the shape does. The copula fuses with its particle the
+      same way: <code>má</code> plus <code>is</code> becomes
+      <code>más</code>, and <code>mura</code> plus <code>is</code> becomes
+      <code>mura</code> or <code>murab</code> before a vowel. Writing them
+      apart, or choosing the wrong allomorph, is
+      <a class="tag" href="errors.html">E517</a>. Whichever particle governs
+      a condition is tracked as compiler state for exactly the length of that
+      condition and then restored afterward, so a copula nested inside the
+      subject of an outer condition is never accidentally checked against
+      the outer particle instead of its own.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Mood and aspect: verbs have a grammatical type</h2>
+    <div class="slab-body">
+      <p>Every verb is one of three moods, and mood is part of the verb's
+      <em>type</em>. It is not a flag bolted onto some other type
+      underneath.</p>
+      <pre class="code">feidhm(Uimhir) -&gt; Uimhir     <span class="c">// indicative: mentioned, called with parens</span>
+gníomh(Teaghrán)              <span class="c">// imperative: obeyed, bare command, no result</span>
+ag gníomh(Iasacht)             <span class="c">// imperative, ongoing — see aspect below</span></pre>
+      <p>A <code>gníomh</code> is only ever obeyed, never mentioned. Its bare
+      name, or calling it with parentheses, is
+      <a class="tag" href="errors.html">E501</a>. Its type never matches a
+      <code>feidhm</code> parameter, and it cannot declare a return type at
+      all (<a class="tag" href="errors.html">E404</a>). A command written
+      inside a <code>feidhm</code> is
+      <a class="tag" href="errors.html">E502</a>: the indicative states
+      things, the imperative does them, and those are different jobs. A
+      value produced but never used inside a <code>feidhm</code> body is
+      <a class="tag" href="errors.html">E503</a>.</p>
+      <p>Because mood and aspect are part of a verb's type, a higher-order
+      parameter can demand a specific one. <code>gníomh faoiDhó(g: gníomh(Teaghrán),
+      xs: Liosta(Teaghrán))</code> only accepts an imperative of that exact
+      shape. Passing a <code>feidhm</code> there instead, even one whose
+      parameter list matches, is a type mismatch
+      (<a class="tag" href="errors.html">E201</a>). The verb-type grammar
+      mirrors an ordinary declaration with the name abstracted away, because
+      that is exactly what a type is.</p>
+      <p><code>a &lt;briathar&gt;</code> nominalises a declared verb so it
+      can be passed where a value is expected:
+      <code>déan a fhógair ar dhaoine</code>. Without <code>a</code> that is
+      <a class="tag" href="errors.html">E501</a>. Two identifiers written
+      side by side are not otherwise a legal expression in Spicebag, which is
+      what lets this be recognised by shape rather than by a keyword. When
+      the parser sees the identifier <code>a</code> immediately followed by
+      another identifier, it checks whether that second word, delenited if
+      it looks lenited, is a known verb. If it is, the pair becomes a
+      verbal noun. If it is not, <code>a</code> simply falls back to being an
+      ordinary identifier, which is why <code>seasmhach a = 3</code> still
+      compiles and <code>scríobh a</code> still works afterward. <code>a</code>
+      was deliberately never made a keyword: two bare identifiers together
+      are otherwise meaningless, so the shape of the input carries the
+      decision instead of a lookup table. <code>a</code> before something
+      that genuinely is not a verb is
+      <a class="tag" href="errors.html">E513</a>.</p>
+      <pre class="code">déan a fhógair ar dhaoine</pre>
+      <p><code>déan … ar …</code> is the one place in the language that
+      infers anything. It checks the verb's single parameter type against
+      the collection's element type, then runs the verb once per element.
+      This always compiles to a plain <code>for…of</code> loop, never to
+      <code>Array.prototype.forEach</code>, because Spicebag has no closures
+      to hand a callback and because an ongoing verb has to be awaited once
+      per iteration, in order, which a callback-based iterator cannot express
+      cleanly. If the verb passed to <code>déan</code> is itself <code>ag</code>,
+      the whole command becomes ongoing, the loop body gets an
+      <code>await</code>, and the surrounding verb must itself be <code>ag</code>
+      or the analyzer reports <a class="tag" href="errors.html">E504</a>
+      exactly as it would for any other <code>tar éis</code> used outside an
+      ongoing verb. <code>déan</code> and <code>cuir</code> are the only two
+      built-ins that ever take an <code>ar</code> phrase. Any user-declared
+      verb taking one anyway is <a class="tag" href="errors.html">E515</a>,
+      and calling <code>déan</code> without one is
+      <a class="tag" href="errors.html">E514</a>.</p>
+      <p>Aspect is orthogonal to mood. <code>ag</code> marks a verb as
+      ongoing and compiles to <code>async</code>. <code>tar éis &lt;glao&gt;</code>
+      completes an ongoing call and yields its result, compiling to
+      <code>await</code>. The result of calling an <code>ag</code> verb is
+      not a value until it has been completed. Using it directly is
+      <a class="tag" href="errors.html">E505</a>. <code>tar éis</code> only
+      works inside a verb itself marked <code>ag</code>
+      (<a class="tag" href="errors.html">E504</a> otherwise), and only on
+      something that is genuinely ongoing
+      (<a class="tag" href="errors.html">E508</a> otherwise). A command given
+      to an ongoing verb is completed automatically, but the calling verb
+      must itself be <code>ag</code> for that to be legal.</p>
+      <p>The third mood, <code>saor</code> (autonomous), has no agent to
+      command at all. Its declaration names the root, and the compiler
+      derives the autonomous surface form by conjugating that root, the same
+      way it derives a lenited form. A monosyllabic root like
+      <code>scríobh</code> or <code>cuir</code> is first conjugation: the
+      ending is <code>-tar</code> after a broad stem and <code>-tear</code>
+      after a slender one, decided by the stem's last vowel. A stem ending in
+      <code>-th</code> or <code>-gh</code> absorbs the ending's leading
+      sound rather than doubling it, so <code>caith</code> becomes
+      <code>caitear</code>, not <code>caithtear</code>. A polysyllabic root
+      ending in <code>-(a)igh</code>, such as <code>ceannaigh</code>, is
+      second conjugation, and takes <code>-aítear</code> or
+      <code>-ítear</code> once the <code>-igh</code> is stripped. A smaller
+      class of second-conjugation roots syncopates: the unstressed vowel of
+      the final syllable drops before the vowel-initial ending is attached,
+      so <code>oscail</code> becomes <code>oscl-</code> first and then
+      <code>osclaítear</code>, and <code>fógair</code> becomes
+      <code>fógr-</code> first and then <code>fógraítear</code>. Whether the
+      resulting stem counts as broad or slender is judged after syncopation,
+      not before, because syncopation is exactly what changes it. A short
+      table of Irish's eleven genuinely irregular verbs, including
+      <code>bí</code>, <code>faigh</code>, <code>abair</code>, and
+      <code>tabhair</code>, is checked before any of these rules run at
+      all.</p>
+      <pre class="code">saor liostaigh(mír: Teaghrán) { scríobh mír }
+<span class="c">// …</span>
+liostaítear "arán"      <span class="c">// the only legal way to say it</span></pre>
+      <p>The root itself can never be commanded
+      (<a class="tag" href="errors.html">E518</a>, the mirror image of
+      E501), because the imperative root speaks to an agent and the
+      autonomous has none. The past autonomous is derived the same way, but
+      it exists purely to be recognised and refused by name
+      (<a class="tag" href="errors.html">E519</a>). Spicebag has no tense
+      anywhere, and reporting "unbound identifier" for a form that is
+      correct Irish would be a worse answer than naming the form and saying
+      plainly that there is no past tense here to write it in.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Modules and the boundary</h2>
+    <div class="slab-body">
+      <p><code>ó "./file.sb"</code> and <code>ó "some-package"</code> are the
+      same relation, origin, with different consequences depending on what's
+      on the far side. A <code>.sb</code> path is native: type, mood, and
+      aspect all survive the crossing untouched, reached through the
+      ordinary <code>ó</code> relation like any local possession. Anything
+      else is <code>Iasacht</code>: untyped, never lenited, its category
+      knowable only at runtime with <code>is</code>.</p>
+      <p>A signature, built by <code>siniu()</code>, lists every top-level
+      binding a module exports that it did not itself re-export from
+      somewhere else, along with its kind (value, <code>feidhm</code>, or
+      <code>gníomh</code>), its type, and whether it is <code>sealadach</code>.
+      It also carries the module's own county, purely so that
+      <code>--graf</code> can print it later. Nothing on the importing side
+      ever reads that county, because reading a module's vocabulary is not
+      the same as trading with it.</p>
+      <p>Codegen gives each imported module a short alias, <code>__m0</code>,
+      <code>__m1</code>, and so on, and requires it once at the top of the
+      file. An ordinary borrowed value binds as <code>const</code>. A
+      <code>sealadach</code> export is handled differently: it is exposed
+      through <code>Object.defineProperty</code> with a getter, so the
+      importer always reads the exporting module's current value rather than
+      a snapshot taken at import time. That live binding is what lets a
+      module-level <code>stór</code> variable, assigned once inside a
+      <code>tosaigh</code> action, be read correctly by every other file
+      that imported the module before <code>tosaigh</code> ever ran.</p>
+      <p>An imported <code>gníomh</code> joins the importing file's own
+      vocabulary directly and is called unqualified, as a bare command:
+      <code>fáiltigh "Cáit"</code>. It cannot take a possessor, because a
+      command is not a noun phrase.
+      <code>fáiltigh ó fhoclóir("Cáit")</code> is
+      <a class="tag" href="errors.html">E516</a>. The design notes describe
+      this as the same thing Irish does with a borrowed verb: nobody says
+      "the borrowed verb fáiltigh," people just say fáiltigh, natively
+      conjugated and folded straight into the vocabulary. An imported value
+      or <code>feidhm</code> is reached the ordinary possessive way instead:
+      <code>beannaigh ó fhoclóir("Oisín")</code>.</p>
+      <p>The same lemma exported unqualified by two different imported
+      modules is ambiguous, since there is no qualifier to disambiguate it
+      with. That is <a class="tag" href="errors.html">E106</a>, and the fix
+      is to rename one of them. A local declaration that collides with an
+      import is the ordinary <a class="tag" href="errors.html">E208</a>,
+      with no special case written for imports at all.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Provenance</h2>
+    <div class="slab-body">
+      <p><code>as &lt;contae&gt;</code> places a module, or a struct or sum
+      type, in one of 32 Irish counties grouped into four provinces. It
+      controls which files may read a placed type's fields through
+      <code>ó</code>. Two rules sit on top of ordinary type checking rather
+      than being woven into it. Construction, passing arguments, and
+      returning values are never checked against county at all: a placed
+      value can travel anywhere in a program. Only reading a member through
+      <code>ó</code> is checked, and only against the county of the file
+      doing the reading, not the value's own county. That single choice is
+      what lets a module declared in exile (no <code>as</code> at all) build
+      placed structs out of raw primitives it was handed and pass them on
+      untouched, without ever being allowed to open one itself.</p>
+      <p>This is a deliberately strange feature layered on top of everything
+      described above rather than mixed into it, and it has its own page
+      with the rest of the mechanic: exile, treaties, and the fixed list of
+      rivalries no treaty can lift. See <a href="counties.html">Counties</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Diagnostics architecture</h2>
+    <div class="slab-body">
+      <p>Diagnostics are collected, not thrown one at a time. A
+      <code>Bailitheoir</code> (<code>diagnostics.js</code>) accumulates
+      every problem found during a compile into a list. The pipeline only
+      throws once, wrapping the whole list in a single bundle, after the
+      analyzer has walked as much of the file as it safely can. That is why
+      one bad file can report several unrelated problems from a single run
+      instead of stopping dead at the first mistake it finds.</p>
+      <p>Every diagnostic is a stable numeric code.
+      <code>earraid(cod, ionad, ...args)</code> looks the code up in a table
+      of message-building functions and attaches the source position where
+      it fired. The code is the contract that tests and tooling are allowed
+      to depend on. The Irish wording behind it is explicitly not part of
+      that contract: the project's own notes call for the wording to be
+      reviewed by a fluent speaker and treat it as something that can still
+      change without breaking anything.</p>
+      <table class="listing">
+        <tr><th>Range</th><th>Subject</th></tr>
+        <tr><td>1xx</td><td>morphology: mutation, form, resolution, modules</td></tr>
+        <tr><td>2xx</td><td>types</td></tr>
+        <tr><td>3xx</td><td>the copula and <code>bí</code></td></tr>
+        <tr><td>4xx</td><td>lexing and parsing</td></tr>
+        <tr><td>5xx</td><td>mood, aspect, the copula's form, the autonomous verb</td></tr>
+        <tr><td>6xx</td><td>provenance: province, county, exile, treaty</td></tr>
+      </table>
+      <p>Two codes are reserved on purpose: each has a message and
+      deliberately no way to fire.
+      <a class="tag" href="errors.html">E211</a> was made reachable in one
+      release and made unreachable again in the very same release, once a
+      real program showed that the case it was meant to catch was actually a
+      legitimate heterogeneous parameter list rather than a mistake.
+      E506 described a <code>má</code>-as-expression failure the backend no
+      longer produces, once multi-statement branches started being hoisted
+      into a temporary instead of failing outright. A reserved code that
+      later acquires a real test case is treated as a bug in the reservation,
+      not a green light to let it start firing.</p>
+      <p>Even the diagnostic text is Irish, and it follows its own grammar
+      rather than a second copy of it.
+      <a class="tag" href="errors.html">E201</a>'s message runs its
+      expected-type phrase through the same h-prefixation rule that governs
+      ordinary program text before a vowel-initial word (<code>le hUimhir</code>,
+      not <code>le Uimhir</code>), using the language's own morphology helper
+      rather than duplicating the rule inside the diagnostics file.</p>
+      <p>Every diagnostic has a matching case file under
+      <code>examples/earraidi/</code>, written to fail with exactly that code
+      and no other. A dedicated test walks the table in both directions:
+      every code has a case, and every case fails with only the one code its
+      filename claims. That pairing is enforced mechanically instead of kept
+      as a convention, because it used to drift. Twenty-three of sixty codes
+      had no case file at all the first time anyone counted.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Tooling and tests</h2>
+    <div class="slab-body">
+      <p>The CLI (<code>bin/sbc.js</code>) runs the same pipeline five
+      different ways. With no flag it compiles a file, or every
+      <code>.sb</code> file under a directory, to sibling <code>.js</code>
+      files. <code>--rith</code> compiles and runs the result, awaiting an
+      exported <code>príomh</code> if the file declares one.
+      <code>--amharc</code> prints the generated JavaScript without writing
+      it. <code>--crann</code> prints the abstract syntax tree.
+      <code>--paraidím</code> prints every grammatical form of every
+      top-level binding, including the copula's own paradigm laid out
+      against a real consonant-initial and vowel-initial type name pulled
+      from the file itself, so the allomorph rules are visible against
+      actual data rather than a placeholder. <code>--graf</code> prints the
+      module graph together with each type's province, the treaties in
+      force, and which counties this particular file could never reach even
+      with a treaty.</p>
+      <p>The test suite is organised along the same seams as the compiler
+      rather than by file. <code>test/run.js</code> covers morphology,
+      types, and the core grammar. <code>test/contae.js</code> covers
+      provenance on its own. <code>test/suim.js</code> covers sum types.
+      <code>test/feidhmchlár.js</code> compiles the real example application
+      straight off disk, because it is the one suite exercising real files
+      rather than inline strings, and it exists specifically to catch the
+      day someone "simplifies" <code>bealaí.sb</code> by reading a field
+      directly instead of going through the accessor that keeps the province
+      boundary honest. <code>test/earraidi.js</code> is the diagnostics
+      corpus check described above. Negative tests, ones that are supposed
+      to fail with one specific code, are treated as the most valuable tests
+      in the suite rather than an afterthought added once the happy path
+      works.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Design discipline</h2>
+    <div class="slab-body">
+      <p>Every unusual piece of syntax has to answer six questions before
+      it's accepted into the language: what actual Irish grammatical
+      phenomenon inspired it, what relationship that phenomenon expresses in
+      Irish, what programming relationship resembles it, whether the analogy
+      still holds up when used repeatedly rather than just once, whether the
+      compiler actually needs to understand the grammar to implement the
+      feature, and whether the feature earns its own complexity. A proposal
+      that fails this test gets written up and rejected on the record rather
+      than quietly dropped and forgotten. Rejection is treated as a normal
+      and expected outcome of the process, not a failure of it.</p>
+      <p>Two features are named exceptions rather than hidden ones. The
+      county system is a deliberately strange, rigorously enforced bit:
+      <code>as</code> itself is real Irish government, but the specific list
+      of 32 names and the rivalry table are not a linguistic phenomenon at
+      all, and the project says so plainly rather than dressing them up as
+      grammar after the fact. Sum types are treated as ordinary engineering
+      in the same spirit, with only their eliminator, the copula, actually
+      claimed as grounded in Irish.</p>
+      <p>A handful of invariants are meant to hold everywhere, and they are
+      checked by tests rather than left as intentions. The backend never
+      sees a mutation form, a county, a province, or a sum's own name. No
+      driver-specific vocabulary, such as <code>sql</code>,
+      <code>sqlite</code>, or <code>prisma</code>, appears anywhere in the
+      front end. Every grammatical government relation routes through one
+      function. The eclipsed slot stays permanently empty. Every AST node
+      and internal identifier in the compiler is named in Irish, not
+      English.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>
