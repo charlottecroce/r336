@@ -1,9 +1,9 @@
-// modh.sb — an modh ordaitheach i gcoinne an mhodh tháscaigh (§17).
+// modh.r336 — an modh ordaitheach i gcoinne an mhodh tháscaigh (§17).
 //
 // Sa Ghaeilge is é fréamh an bhriathair an modh ordaitheach: "scríobh!",
 // "déan!", "fan!". Ní ainmní é ordú, ní ghlacann sé le hainmní, agus tagann
 // sé ar dtús san abairt. Sin an fáth go dtugtar orduithe gan lúibíní i
-// Spicebag agus nach féidir iad a úsáid mar shlonn.
+// R336 agus nach féidir iad a úsáid mar shlonn.
 //
 //   feidhm  → luaitear rud : tugann sí ainmní ar ais
 //   gníomh  → déantar rud  : ní thugann sé aon rud ar ais

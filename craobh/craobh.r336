@@ -1,13 +1,13 @@
-// craobh.sb — an bhlaosc, ar deoraíocht.
+// craobh.r336 — an bhlaosc, ar deoraíocht.
 //
 // Tógann sí gach rud agus ní osclaíonn sí aon rud. Sin an patrún céanna a bhí
-// ag `bealaí.sb` i gcéim 0.7: is glas ar an mbosca é contae, ní teorainn ar an
+// ag `bealaí.r336` i gcéim 0.7: is glas ar an mbosca é contae, ní teorainn ar an
 // mbóthar, mar sin téann luachanna áit ar bith.
 
-imr seasmhach = ó "./imreoir.sb"
-fir seasmhach = ó "./foireann.sb"
-clu seasmhach = ó "./cluiche.sb"
-tor seasmhach = ó "./toradh.sb"
+imr seasmhach = ó "./imreoir.r336"
+fir seasmhach = ó "./foireann.r336"
+clu seasmhach = ó "./cluiche.r336"
+tor seasmhach = ó "./toradh.r336"
 
 ciarraí seasmhach = Foireann {
     ainm: "Ciarraí",

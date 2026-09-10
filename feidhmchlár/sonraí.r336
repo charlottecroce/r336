@@ -1,7 +1,7 @@
-// sonraí.sb — an ciseal sonraí (Céim 6).
+// sonraí.r336 — an ciseal sonraí (Céim 6).
 //
 // Ní eol don mhodúl seo cad is SQLite ann. Labhraíonn sé le teibíocht Stór
-// Spicebag amháin, agus is ag an teibíocht sin atá an tiománaí.
+// R336 amháin, agus is ag an teibíocht sin atá an tiománaí.
 //
 // Tabhair faoi deara an scaradh idir modh:
 //   ceistigh → cuireann sí ceist agus tugann sí freagra : feidhm
@@ -11,7 +11,7 @@
 // go dtí go gcuirtear i gcrích í le "tar éis".
 //
 // Ó chéim 0.5 i leith téann an scaradh sin trasna na teorann idir modúil:
-// feiceann bealaí.sb gur gníomh é `cuirDuine`, agus ní luach.
+// feiceann bealaí.r336 gur gníomh é `cuirDuine`, agus ní luach.
 
 stórlann seasmhach = ó "../rt/stór.js"
 

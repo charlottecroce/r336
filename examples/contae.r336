@@ -1,4 +1,4 @@
-// contae.sb — an bhlaosc ar deoraíocht.
+// contae.r336 — an bhlaosc ar deoraíocht.
 //
 // Tá trí rud le feiceáil anseo agus ní ghlacann aon cheann acu le
 // heochairfhocal nua:
@@ -21,7 +21,7 @@
 // fhéadfadh: tá sé ar deoraíocht, agus ní dhéanann an deoraíocht comhaontú.
 // Sin an chúis a bhfuil `ainmDe` agus `clúdach` sa chomhad eile.
 
-croí seasmhach = ó "./contae-croí.sb"
+croí seasmhach = ó "./contae-croí.r336"
 
 struchtúr Iontráil {
     ainm: Teaghrán

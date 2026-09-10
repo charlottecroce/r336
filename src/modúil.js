@@ -3,7 +3,7 @@
 /*
  * modúil.js — the module graph.
  *
- * This is a compiler problem rather than a language one: `ó "./sonraí.sb"` was
+ * This is a compiler problem rather than a language one: `ó "./sonraí.r336"` was
  * already the right syntax (§6), and nothing here adds a keyword. What it adds
  * is that the thing on the far side of the preposition is now *known*.
  *
@@ -28,8 +28,8 @@ const { anailisigh } = require('./analyzer');
 const { gin } = require('./codegen');
 const { earraid, Cnuasach } = require('./diagnostics');
 
-/** Only a `.sb` path is a Spicebag module. Everything else is borrowed. */
-const isSpicebag = (foinse) => foinse.endsWith('.sb');
+/** Only a `.r336` path is a R336 module. Everything else is borrowed. */
+const isR336 = (foinse) => foinse.endsWith('.r336');
 
 /** A relative specifier is relative to the importing file, as in Node. */
 function reitigh(foinse, ofillteán) {
@@ -80,7 +80,7 @@ class Tionscadal {
       const modúil = new Map();
       const fillteán = path.dirname(abs);
       for (const b of bunuis(toks)) {
-        if (!isSpicebag(b.foinse) || modúil.has(b.foinse)) continue;
+        if (!isR336(b.foinse) || modúil.has(b.foinse)) continue;
         const spleách = reitigh(b.foinse, fillteán);
         const { siniu } = this.tiomsaigh(spleách);
         modúil.set(b.foinse, { ...siniu, ionad: b.ionad });
@@ -98,13 +98,13 @@ class Tionscadal {
     }
   }
 
-  /** Compile a module and write every `.sb` it depends on to a sibling `.js`. */
+  /** Compile a module and write every `.r336` it depends on to a sibling `.js`. */
   scriobh(conair) {
     const t = this.tiomsaigh(conair);
     for (const [abs, m] of this.taisce) {
-      fs.writeFileSync(abs.replace(/\.sb$/, '.js'), m.js);
+      fs.writeFileSync(abs.replace(/\.r336$/, '.js'), m.js);
     }
-    return { ...t, amach: path.resolve(conair).replace(/\.sb$/, '.js') };
+    return { ...t, amach: path.resolve(conair).replace(/\.r336$/, '.js') };
   }
 }
 
@@ -119,4 +119,4 @@ function lexeanIompórtálacha(modúil) {
   return { gniomhartha, briathra };
 }
 
-module.exports = { Tionscadal, lexeanIompórtálacha, isSpicebag, reitigh };
+module.exports = { Tionscadal, lexeanIompórtálacha, isR336, reitigh };

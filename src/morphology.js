@@ -220,7 +220,7 @@ const foirmBhriathartha = (rialu) => PARAIDIM_BI[rialu];
  *
  * The second is computed and never demanded, exactly as `uraigh` is computed
  * and never demanded (§12). Four of the seven cells have no syntactic slot in
- * Spicebag, because the language has no question, no bare negation and no
+ * R336, because the language has no question, no bare negation and no
  * subordinate assertion. `foirmChopail` throws for those, `paraidimChopail`
  * prints them, and `--paraidím` labels them *gan bhrí, §31*.
  */
@@ -436,7 +436,7 @@ const SAOR_CAITE_MIREGULTA = Object.freeze({
  * The *past* autonomous — `moladh`, `scríobhadh`, `liostaíodh`, `fuarthas`.
  *
  * Computed for one reason only: so that writing it can be refused with a
- * message that names what it is. Spicebag has no tense anywhere, which is the
+ * message that names what it is. R336 has no tense anywhere, which is the
  * same ground on which §31 kept `ba` out of the copula's table — a cell for a
  * distinction the language cannot express would claim more than it can do.
  * But a reader of Irish will write `liostaíodh` for "it was listed", and an
@@ -444,7 +444,7 @@ const SAOR_CAITE_MIREGULTA = Object.freeze({
  * is no past here".
  *
  * `fuarthas` is in the table above, and it is the form that made `Fuarthas` an
- * unsafe variant name in `feidhmchlár/duine.sb` before 0.9 renamed it.
+ * unsafe variant name in `feidhmchlár/duine.r336` before 0.9 renamed it.
  *
  * Returns null where the regular rule does not reach — the monosyllabic verbs
  * in -igh (`léigh` → `léadh`, `nigh` → `níodh`) are genuinely irregular here
@@ -527,7 +527,7 @@ const ainmInscne = (i) => (i === INSCNE.BAIN ? 'baininscneach' : 'firinscneach')
  * The genitive is not here and cannot be. Irish reverses the rule in the
  * genitive singular — *hata an fhir* lenites the masculine, *doras na scoile*
  * leaves the feminine bare — and that chiasmus is the most distinctive thing
- * about the system. Spicebag has no genitive construction at all: `ainm ó
+ * about the system. R336 has no genitive construction at all: `ainm ó
  * dhuine` is a prepositional phrase, not *ainm an duine*. So there is no slot
  * the reversed rule could attach to, and its absence is forced rather than
  * chosen (§40.6).

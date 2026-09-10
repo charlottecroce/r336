@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spicebag - Developer Guide</title>
+<title>R336 - Developer Guide</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="sheet">
   <header>
-    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="sitename"><a href="index.html">R336</a></p>
     <p class="tagline">language reference</p>
     <nav class="mainnav">
       <a href="index.html">Start</a>
@@ -37,7 +37,7 @@
       file adds a module graph pass in front of them, because a module has to
       be at least partly understood before the file that imports it can even
       be parsed.</p>
-      <p>The lexer (<code>lexer.js</code>) does more than tokenize. Spicebag
+      <p>The lexer (<code>lexer.js</code>) does more than tokenize. R336
       word order is VSO. A statement that opens with a known imperative is a
       command. <code>a &lt;briathar&gt;</code> only parses as a verbal noun if
       <code>&lt;briathar&gt;</code> is a known verb. Both of those decisions
@@ -348,7 +348,7 @@ ag gníomh(Iasacht)             <span class="c">// imperative, ongoing — see a
       can be passed where a value is expected:
       <code>déan a fhógair ar dhaoine</code>. Without <code>a</code> that is
       <a class="tag" href="errors.html">E501</a>. Two identifiers written
-      side by side are not otherwise a legal expression in Spicebag, which is
+      side by side are not otherwise a legal expression in R336, which is
       what lets this be recognised by shape rather than by a keyword. When
       the parser sees the identifier <code>a</code> immediately followed by
       another identifier, it checks whether that second word, delenited if
@@ -366,7 +366,7 @@ ag gníomh(Iasacht)             <span class="c">// imperative, ongoing — see a
       infers anything. It checks the verb's single parameter type against
       the collection's element type, then runs the verb once per element.
       This always compiles to a plain <code>for…of</code> loop, never to
-      <code>Array.prototype.forEach</code>, because Spicebag has no closures
+      <code>Array.prototype.forEach</code>, because R336 has no closures
       to hand a callback and because an ongoing verb has to be awaited once
       per iteration, in order, which a callback-based iterator cannot express
       cleanly. If the verb passed to <code>déan</code> is itself <code>ag</code>,
@@ -423,7 +423,7 @@ liostaítear "arán"      <span class="c">// the only legal way to say it</span>
       E501), because the imperative root speaks to an agent and the
       autonomous has none. The past autonomous is derived the same way, but
       it exists purely to be recognised and refused by name
-      (<a class="tag" href="errors.html">E519</a>). Spicebag has no tense
+      (<a class="tag" href="errors.html">E519</a>). R336 has no tense
       anywhere, and reporting "unbound identifier" for a form that is
       correct Irish would be a worse answer than naming the form and saying
       plainly that there is no past tense here to write it in.</p>
@@ -433,9 +433,9 @@ liostaítear "arán"      <span class="c">// the only legal way to say it</span>
   <div class="slab">
     <h2 class="slab-head">Modules and the boundary</h2>
     <div class="slab-body">
-      <p><code>ó "./file.sb"</code> and <code>ó "some-package"</code> are the
+      <p><code>ó "./file.r336"</code> and <code>ó "some-package"</code> are the
       same relation, origin, with different consequences depending on what's
-      on the far side. A <code>.sb</code> path is native: type, mood, and
+      on the far side. A <code>.r336</code> path is native: type, mood, and
       aspect all survive the crossing untouched, reached through the
       ordinary <code>ó</code> relation like any local possession. Anything
       else is <code>Iasacht</code>: untyped, never lenited, its category
@@ -558,9 +558,9 @@ liostaítear "arán"      <span class="c">// the only legal way to say it</span>
   <div class="slab">
     <h2 class="slab-head">Tooling and tests</h2>
     <div class="slab-body">
-      <p>The CLI (<code>bin/sbc.js</code>) runs the same pipeline five
+      <p>The CLI (<code>bin/r336c.js</code>) runs the same pipeline five
       different ways. With no flag it compiles a file, or every
-      <code>.sb</code> file under a directory, to sibling <code>.js</code>
+      <code>.r336</code> file under a directory, to sibling <code>.js</code>
       files. <code>--rith</code> compiles and runs the result, awaiting an
       exported <code>príomh</code> if the file declares one.
       <code>--amharc</code> prints the generated JavaScript without writing
@@ -580,7 +580,7 @@ liostaítear "arán"      <span class="c">// the only legal way to say it</span>
       <code>test/feidhmchlár.js</code> compiles the real example application
       straight off disk, because it is the one suite exercising real files
       rather than inline strings, and it exists specifically to catch the
-      day someone "simplifies" <code>bealaí.sb</code> by reading a field
+      day someone "simplifies" <code>bealaí.r336</code> by reading a field
       directly instead of going through the accessor that keeps the province
       boundary honest. <code>test/earraidi.js</code> is the diagnostics
       corpus check described above. Negative tests, ones that are supposed

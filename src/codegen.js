@@ -19,7 +19,7 @@
  * form was written, the distinction would be decoration.
  */
 
-const REAMHRA = `// arna ghiniúint ag an tiomsaitheoir Spicebag — ná cuir eagar air
+const REAMHRA = `// arna ghiniúint ag an tiomsaitheoir R336 — ná cuir eagar air
 "use strict";
 function __is(luach, cineál) {
   switch (cineál) {
@@ -38,8 +38,8 @@ function __bí(luach) { return luach !== undefined && luach !== null; }
 function scríobh(luach) { console.log(luach); }
 `;
 
-/** `ó "./sonraí.sb"` refers to the module, which on disk is the compiled .js. */
-const conair = (s) => (s.endsWith('.sb') ? s.slice(0, -3) + '.js' : s);
+/** `ó "./sonraí.r336"` refers to the module, which on disk is the compiled .js. */
+const conair = (s) => (s.replace(/\.r336$/, '.js'));
 
 class Ginteoir {
   constructor() { this.amach = []; this.leibhéal = 0; this.uimhirShealadach = 0; }
@@ -136,7 +136,7 @@ class Ginteoir {
       case 'Ordú': {
         // `déan a fhógair ar dhaoine`. A `for…of` rather than `forEach`,
         // because an ongoing verb has to be awaited in sequence — commands are
-        // sequential by nature — and because Spicebag has no closure to hand
+        // sequential by nature — and because R336 has no closure to hand
         // a callback anyway.
         if (r.iteraid) {
           const g = this.slonn(r.argointi[0]);
@@ -217,7 +217,7 @@ class Ginteoir {
         if (e.ionsuite === 'fad') return `${sealbh}.length`;
         if (e.ionsuite === 'folamh') return `(${sealbh}.length === 0)`;
         if (e.ionsuite === 'céad') return `${sealbh}[0]`;
-        if (e.modhSpicebag) return `((...a) => ${e.modhSpicebag.jsAinm}(${sealbh}, ...a))`;
+        if (e.modhR336) return `((...a) => ${e.modhR336.jsAinm}(${sealbh}, ...a))`;
         return `${sealbh}.${e.ball.lemma}`;
       }
 
@@ -225,8 +225,8 @@ class Ginteoir {
         const args = e.argointi.map((a) => this.slonn(a));
         const f = e.feidhm;
         // Static dispatch: the analyzer knew the possessor's category.
-        if (f.cineál === 'Sealbhach' && f.modhSpicebag) {
-          return `${f.modhSpicebag.jsAinm}(${[this.slonn(f.sealbhoir), ...args].join(', ')})`;
+        if (f.cineál === 'Sealbhach' && f.modhR336) {
+          return `${f.modhR336.jsAinm}(${[this.slonn(f.sealbhoir), ...args].join(', ')})`;
         }
         return `${this.slonn(f)}(${args.join(', ')})`;
       }

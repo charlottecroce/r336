@@ -1,4 +1,4 @@
-// feidhmchlár/duine.sb — an croí curtha (céim 0.7).
+// feidhmchlár/duine.r336 — an croí curtha (céim 0.7).
 //
 // Ní bhaineann an comhad seo leis an JavaScript ar chor ar bith, agus ní
 // fhéadfadh: tá `Iasacht` ar deoraíocht, agus ní dhéanann an deoraíocht
@@ -15,7 +15,7 @@
 // RABHADH DON LÉITHEOIR. Ní raibh `óg`, `beannacht` ná `tuairisc` sa
 // bhfeidhmchlár roimhe seo. Scríobh mé iad. Ní aistriú loighce atá anseo ach
 // loighic nua, mar ní raibh loighic ar bith ann le haistriú: ní dhearna
-// `bealaí.sb` ach rónna a chur ar aghaidh chuig EJS, agus níor léadh `aois`
+// `bealaí.r336` ach rónna a chur ar aghaidh chuig EJS, agus níor léadh `aois`
 // riamh. Tá difríocht idir "d'oibrigh an teorainn" agus "bhí rud ar bith ann
 // le cur ina haghaidh", agus níor cheart an dá rud a mheascadh.
 
@@ -28,7 +28,7 @@ struchtúr Duine as Corcaigh {
 
 // An dá thrasnú. Ní "getters" iad seo — is iad an t-aon bhealach atá ag an
 // mblaosc chun teacht ar réimse, agus glaotar orthu i `cuirSíol` thíos i
-// mbealaí.sb, áit a mbeadh `ainm ó dhuine` ina E601.
+// mbealaí.r336, áit a mbeadh `ainm ó dhuine` ina E601.
 feidhm ainmDe(duine: Duine) -> Teaghrán {
     ainm ó dhuine
 }
@@ -50,7 +50,7 @@ feidhm beannacht ó Dhuine(féin) -> Teaghrán {
     "Dia duit, " + ainm ó fhéin
 }
 
-// AN TAISTEAL, §26.6. Bhí `teideal` i mbealaí.sb, ar deoraíocht, agus ní
+// AN TAISTEAL, §26.6. Bhí `teideal` i mbealaí.r336, ar deoraíocht, agus ní
 // fhéadfadh sé bogadh: ghlac sé le `Iasacht`, mar ba `Iasacht` é rón nach
 // bhfuil ann, agus tá `Iasacht` ar deoraíocht. Sin an rud a thaifead §25.9 —
 // thit an teorainn idir curtha agus deoraithe san áit a raibh na cineálacha
@@ -89,7 +89,7 @@ feidhm tuairisc(duine: Duine) -> Teaghrán {
 }
 
 // Corp na lúibe. Tiomáintear an lúb as an deoraíocht — `déan a chéim ar
-// dhaoine` i mbealaí.sb — agus ritheann an corp anseo, san áit. Tagann
+// dhaoine` i mbealaí.r336 — agus ritheann an corp anseo, san áit. Tagann
 // `céim` isteach san fhoclóir gan cháiliú, mar a thagann briathar iasachta i
 // nGaeilge (§19.2), mar sin ní fheiceann an t-údar go bhfuil teorainn ann ar
 // chor ar bith. Sin an chuid is fearr de.

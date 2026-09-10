@@ -1,4 +1,4 @@
-// arna ghiniúint ag an tiomsaitheoir Spicebag — ná cuir eagar air
+// arna ghiniúint ag an tiomsaitheoir R336 — ná cuir eagar air
 "use strict";
 function __is(luach, cineál) {
   switch (cineál) {

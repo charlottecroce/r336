@@ -1,10 +1,10 @@
 {
-    "name": "spicebag",
+    "name": "r336",
     "version": "0.4.0",
     "description": "app",
     "engines": { "node": ">=22" },
     "scripts": {
-      "tosaigh": "node ../bin/sbc.js bealaí.sb && node freastalaí.js"
+      "tosaigh": "node ../bin/r336c.js bealaí.r336 && node freastalaí.js"
     },
     "license": "MIT"
   }

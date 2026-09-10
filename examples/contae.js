@@ -16,22 +16,16 @@ function __is(luach, cineál) {
 function __bí(luach) { return luach !== undefined && luach !== null; }
 function scríobh(luach) { console.log(luach); }
 
-function fógair(t) {
-  scríobh(t);
-}
-function faoiDhó(g, liosta) {
-  for (const __t0 of liosta) g(__t0);
-  for (const __t1 of liosta) g(__t1);
-}
-function dúbail(u) {
-  return (u + u);
-}
-function cuirIbhFeidhm(f, u) {
-  return f(u);
+const __m0 = require("./contae-croí.js");
+const croí = require("./contae-croí.js");
+function Iontráil$nua(réimsí) { return Object.assign({ __cineál: "Iontráil" }, réimsí); }
+function próiseáil(iontráil) {
+  __m0.fógair({ __cineál: "Imreoir", ainm: iontráil.ainm, aois: iontráil.aois });
 }
 function príomh() {
-  faoiDhó(fógair, ["a", "b"]);
-  scríobh(cuirIbhFeidhm(dúbail, 21));
+  const amh = [{ __cineál: "Iontráil", ainm: "Cáit", aois: 19 }, { __cineál: "Iontráil", ainm: "Séamus", aois: 34 }];
+  for (const __t0 of amh) próiseáil(__t0);
+  scríobh(__m0.clúdach({ __cineál: "Foireann", ainm: "Na Piarsaigh" }));
 }
 
-module.exports = { fógair, faoiDhó, dúbail, cuirIbhFeidhm, príomh };
+module.exports = { croí, Iontráil$nua, próiseáil, príomh };

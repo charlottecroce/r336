@@ -16,22 +16,19 @@ function __is(luach, cineál) {
 function __bí(luach) { return luach !== undefined && luach !== null; }
 function scríobh(luach) { console.log(luach); }
 
-function fógair(t) {
-  scríobh(t);
+function Imreoir$nua(réimsí) { return Object.assign({ __cineál: "Imreoir" }, réimsí); }
+function Foireann$nua(réimsí) { return Object.assign({ __cineál: "Foireann" }, réimsí); }
+function ainmDe(imreoir) {
+  return imreoir.ainm;
 }
-function faoiDhó(g, liosta) {
-  for (const __t0 of liosta) g(__t0);
-  for (const __t1 of liosta) g(__t1);
+function óg(imreoir) {
+  return (imreoir.aois < 21);
 }
-function dúbail(u) {
-  return (u + u);
+function clúdach(foireann) {
+  return ("Foireann: " + foireann.ainm);
 }
-function cuirIbhFeidhm(f, u) {
-  return f(u);
-}
-function príomh() {
-  faoiDhó(fógair, ["a", "b"]);
-  scríobh(cuirIbhFeidhm(dúbail, 21));
+function fógair(imreoir) {
+  scríobh(ainmDe(imreoir));
 }
 
-module.exports = { fógair, faoiDhó, dúbail, cuirIbhFeidhm, príomh };
+module.exports = { Imreoir$nua, Foireann$nua, ainmDe, óg, clúdach, fógair };

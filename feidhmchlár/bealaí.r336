@@ -1,7 +1,7 @@
-// bealaí.sb — loighic agus clárú na mbealaí (Céim 4 agus 5), agus an bhlaosc
+// bealaí.r336 — loighic agus clárú na mbealaí (Céim 4 agus 5), agus an bhlaosc
 // ar deoraíocht (Céim 0.7).
 //
-// Fanann Express agus EJS mar atá. Ó chéim 0.4 i leith is i Spicebag a
+// Fanann Express agus EJS mar atá. Ó chéim 0.4 i leith is i R336 a
 // chláraítear na bealaí freisin, agus ní dhéanann JavaScript ach an tosú.
 //
 // Trí ghné a tháinig isteach i gcéim 0.4:
@@ -30,8 +30,8 @@
 //      bhfuil `ainmDe` agus `aoisDe` ann thall. Ní seirbhísigh iad: is iad an
 //      trasnú.
 
-croí seasmhach     = ó "./duine.sb"
-sonraí seasmhach   = ó "./sonraí.sb"
+croí seasmhach     = ó "./duine.r336"
+sonraí seasmhach   = ó "./sonraí.r336"
 bun seasmhach      = ó "../rt/bunúsach.js"
 freastal seasmhach = ó "../rt/freastal.js"
 
@@ -77,7 +77,7 @@ ag gníomh síolaigh() {
     rónna seasmhach: Liosta(Iasacht) = tar éis gachDuine ó shonraí(stór)
     má folamh ó rónna { déan a chuirSíol ar dhaoine }
     // An lúb á tiomáint as an deoraíocht, an corp á rith san áit. `céim` a
-    // tháinig ó "./duine.sb" agus níl cáiliú ar bith air.
+    // tháinig ó "./duine.r336" agus níl cáiliú ar bith air.
     déan a chéim ar dhaoine
 }
 
@@ -116,7 +116,7 @@ ag saor taispeáin(iarr: Iasacht, freag: Iasacht) {
 // go díreach san áit a bhfuil na cineálacha suime ar iarraidh.
 // Níl fágtha anseo ach an tiontú, agus is é sin obair na blaoisce ó thús: an
 // saol amuigh a léamh agus luach curtha a thógáil as (§24.3). D'imigh an
-// loighic — cad is teideal ann — go dtí `duine.sb`, mar a bhfuil an cineál.
+// loighic — cad is teideal ann — go dtí `duine.r336`, mar a bhfuil an cineál.
 //
 // Ní fhéadfadh an tiontú seo bogadh anonn, agus is riail é sin seachas
 // timpiste: chuirfeadh E213 cosc ar `Iasacht` i réimse malairte, mar sin
@@ -131,14 +131,14 @@ feidhm aimsigh(taifead: Iasacht) -> Aimsiú {
 // seo bheadh E501 ann — ní ainmní é ordú.
 //
 // Ó 0.10 is briathra saora iad an dá cheann (§37), agus sin an rud ceart:
-// glaonn Express orthu, agus ní ghlaonn Spicebag orthu riamh. Ní ordú é
+// glaonn Express orthu, agus ní ghlaonn R336 orthu riamh. Ní ordú é
 // `bealach ó fhreastal(…)` a thugtar dóibh ach clárú — cuirtear in aithne
 // don saol lasmuigh iad, agus déantar iad ansin, ag déantóir nach féidir a
 // ainmniú anseo.
 //
 // Tá dhá rud á bhforfheidhmiú anois nach raibh: ní féidir `liostaigh iarr,
 // freag` a scríobh in aon áit sa mhodúl seo (E518), agus ní féidir ceachtar
-// acu a thabhairt do bhriathar Spicebag ar bith, mar dhéanfadh sin déantóir
+// acu a thabhairt do bhriathar R336 ar bith, mar dhéanfadh sin déantóir
 // de. Níl ach `Iasacht` fágtha mar cheann scríbe, agus is í an teorainn í.
 gníomh cláraigh(app: Iasacht) {
     bealach ó fhreastal(app, "/", a liostaigh)

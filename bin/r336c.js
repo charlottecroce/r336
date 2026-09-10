@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const {
-  comhaidSb, paraidimi, paraidimChopail, duchasanna, Tionscadal, Earraid, Cnuasach,
+  comhaidR336, paraidimi, paraidimChopail, duchasanna, Tionscadal, Earraid, Cnuasach,
 } = require('../src/index');
 const ctae = require('../src/contaetha');
 
@@ -13,20 +13,20 @@ const bratacha = new Set(args.filter((a) => a.startsWith('--')));
 const spriocanna = args.filter((a) => !a.startsWith('--'));
 
 if (!spriocanna.length) {
-  console.error(`sbc - tiomsaitheoir Spicebag
+  console.error(`r336c - tiomsaitheoir R336
 
-  sbc <comhad.sb>              tiomsaigh agus scríobh <comhad>.js
-  sbc <fillteán>               tiomsaigh gach .sb faoin bhfillteán
-  sbc <comhad.sb> --rith       tiomsaigh agus rith
-  sbc <comhad.sb> --amharc     taispeáin an JavaScript gan é a scríobh
-  sbc <comhad.sb> --paraidím   taispeáin foirmeacha gramadaí na gceangal
-  sbc <comhad.sb> --crann      taispeáin an crann teibí (AST)
-  sbc <comhad.sb> --graf       taispeáin na modúil, na cúigí, agus dúchas gach cineáil`);
+  r336c <comhad.r336>              tiomsaigh agus scríobh <comhad>.js
+  r336c <fillteán>               tiomsaigh gach .r336 faoin bhfillteán
+  r336c <comhad.r336> --rith       tiomsaigh agus rith
+  r336c <comhad.r336> --amharc     taispeáin an JavaScript gan é a scríobh
+  r336c <comhad.r336> --paraidím   taispeáin foirmeacha gramadaí na gceangal
+  r336c <comhad.r336> --crann      taispeáin an crann teibí (AST)
+  r336c <comhad.r336> --graf       taispeáin na modúil, na cúigí, agus dúchas gach cineáil`);
   process.exit(1);
 }
 
 const comhaid = spriocanna.flatMap((s) =>
-  (fs.existsSync(s) && fs.statSync(s).isDirectory() ? comhaidSb(s) : [s]));
+  (fs.existsSync(s) && fs.statSync(s).isDirectory() ? comhaidR336(s) : [s]));
 
 // One project across every target, so a shared dependency is compiled once and
 // so compilation order follows the graph rather than whatever readdirSync
@@ -106,7 +106,7 @@ async function príomh() {
       const { js, ast, anailiseoir } = tionscadal.tiomsaigh(c);
       if (bratacha.has('--crann')) {
         console.log(JSON.stringify(ast, (k, v) =>
-          (['ceangal', 'scoip', 'cineálSocraithe', 'modhSpicebag', 'ailiasanna', 'siniu'].includes(k)
+          (['ceangal', 'scoip', 'cineálSocraithe', 'modhR336', 'ailiasanna', 'siniu'].includes(k)
             ? undefined : v), 2));
       } else if (bratacha.has('--amharc')) {
         console.log(js);

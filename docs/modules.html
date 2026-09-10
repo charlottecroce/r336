@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spicebag - Modules</title>
+<title>R336 - Modules</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="sheet">
   <header>
-    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="sitename"><a href="index.html">R336</a></p>
     <p class="tagline">language reference</p>
     <nav class="mainnav">
       <a href="index.html">Start</a>
@@ -31,17 +31,17 @@
   <div class="slab">
     <h2 class="slab-head">Importing</h2>
     <div class="slab-body">
-      <pre class="code">foclóir seasmhach = ó "./foclóir.sb"   <span class="c">// native Spicebag module</span>
+      <pre class="code">foclóir seasmhach = ó "./foclóir.r336"   <span class="c">// native R336 module</span>
 e seasmhach       = ó "express"        <span class="c">// npm package</span>
 p seasmhach       = ó "node:path"      <span class="c">// node builtin</span></pre>
       <p>A relative specifier resolves relative to the importing file, as in
-      Node. A <code>.sb</code> path is a native module; anything else is
+      Node. A <code>.r336</code> path is a native module; anything else is
       foreign.</p>
     </div>
   </div>
 
   <div class="slab">
-    <h2 class="slab-head">Native (.sb) modules</h2>
+    <h2 class="slab-head">Native (.r336) modules</h2>
     <div class="slab-body">
       <pre class="code">scríobh BEANNACHT ó fhoclóir
 scríobh beannaigh ó fhoclóir("Oisín")
@@ -62,7 +62,7 @@ fáiltigh "Aoife"</pre>
     <h2 class="slab-head">Foreign modules</h2>
     <div class="slab-body">
       <pre class="code">R seasmhach = Router ó "express"</pre>
-      <p>Everything reached from a non-<code>.sb</code> origin is
+      <p>Everything reached from a non-<code>.r336</code> origin is
       <code>Iasacht</code>. A foreign member keeps its exact borrowed
       spelling - it is never lenited, and its category is only known by
       asking <code>is</code> at runtime.</p>

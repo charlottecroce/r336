@@ -11,7 +11,7 @@ const mf = require('./morphology');
 const { Earraid, Cnuasach } = require('./diagnostics');
 
 /**
- * .sb → JS, for one string of source.
+ * .r336 → JS, for one string of source.
  *
  * `comhthéacs.modúil` is a Map from the written origin to that module's
  * signature. Left out, it is empty, and every import is an `Iasacht` exactly
@@ -35,19 +35,19 @@ function tiomsaighComhad(conair, tionscadal = null) {
   return (tionscadal || new Tionscadal()).scriobh(conair);
 }
 
-/** Compile every .sb under a directory, skipping node_modules. */
-function comhaidSb(fillteán) {
+/** Compile every .r336 under a directory, skipping node_modules. */
+function comhaidR336(fillteán) {
   const amach = [];
   for (const iontráil of fs.readdirSync(fillteán, { withFileTypes: true })) {
     if (iontráil.name === 'node_modules' || iontráil.name.startsWith('.')) continue;
     const p = path.join(fillteán, iontráil.name);
-    if (iontráil.isDirectory()) amach.push(...comhaidSb(p));
-    else if (iontráil.name.endsWith('.sb')) amach.push(p);
+    if (iontráil.isDirectory()) amach.push(...comhaidR336(p));
+    else if (iontráil.name.endsWith('.r336')) amach.push(p);
   }
   return amach;
 }
 
-/** Every grammatical form of every top-level binding, for `sbc --paraidím`. */
+/** Every grammatical form of every top-level binding, for `r336c --paraidím`. */
 function paraidimi(anailiseoir) {
   const amach = [];
   for (const c of anailiseoir.domhanda.clar.values()) {
@@ -63,7 +63,7 @@ function paraidimi(anailiseoir) {
       cúis: c.paraidim.cuis,
       urúFéideartha: c.paraidim.uruFéideartha,
       // §37 — present for autonomous verbs only. The past is carried too, and
-      // is printed labelled, because Spicebag has no tense and a form that is
+      // is printed labelled, because R336 has no tense and a form that is
       // refused is worth showing next to the one that is demanded.
       saor: (c.cineal && c.cineal.saor) || null,
       saorCaite: (c.cineal && c.cineal.saorCaite) || null,
@@ -81,7 +81,7 @@ function paraidimi(anailiseoir) {
 }
 
 /**
- * The copula's paradigm, for `sbc --paraidím` (§31).
+ * The copula's paradigm, for `r336c --paraidím` (§31).
  *
  * Shown against two real type names from the file rather than a placeholder,
  * because both of the copula's allomorph rules are conditioned on the first
@@ -106,7 +106,7 @@ function paraidimChopail(anailiseoir) {
 
 /**
  * Provenance of the module and of every type it knows, plus the treaties in
- * force, for `sbc --graf`.
+ * force, for `r336c --graf`.
  *
  * Read off the analyzer rather than the emitted code, because there is nothing
  * about provenance in the emitted code — no `__contae` and no county name. The
@@ -132,6 +132,6 @@ function duchasanna(anailiseoir) {
 }
 
 module.exports = {
-  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, paraidimChopail, duchasanna, Tionscadal,
+  tiomsaigh, tiomsaighComhad, comhaidR336, paraidimi, paraidimChopail, duchasanna, Tionscadal,
   Earraid, Cnuasach, morphology: mf,
 };

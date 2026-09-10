@@ -1,22 +1,22 @@
 'use strict';
 
 /*
- * rt/stór.js — teibíocht bunachair sonraí Spicebag.
+ * rt/stór.js — teibíocht bunachair sonraí R336.
  *
- * Phase 6 of the spec says the database layer must be Spicebag's own
+ * Phase 6 of the spec says the database layer must be R336's own
  * abstraction sitting over SQLite, not a set of Prisma-shaped language
  * features. So this module owns the whole interface, and nothing above it
  * knows what a driver is:
  *
- *     Spicebag  →  Stór  →  tiománaí  →  SQLite
+ *     R336  →  Stór  →  tiománaí  →  SQLite
  *
  * The interface is promise-returning even though `node:sqlite` is synchronous.
  * That is deliberate: a driver over a socket cannot be synchronous, so the
  * abstraction must be async or it will only ever fit the one driver it was
- * written against. On the Spicebag side that shows up as `ag` / `tar éis`,
+ * written against. On the R336 side that shows up as `ag` / `tar éis`,
  * which is exactly the progressive/perfect distinction those markers carry.
  *
- * Presented to Spicebag as `Iasacht`, reached with the ordinary `ó` relation:
+ * Presented to R336 as `Iasacht`, reached with the ordinary `ó` relation:
  *
  *     seasmhach stórlann = ó "../rt/stór.js"
  *     seasmhach stór     = tar éis oscail ó stórlann(":memory:")
@@ -49,7 +49,7 @@ class Stór {
     this.conair = conair;
   }
 
-  /** Read. A query asks a question, so on the Spicebag side it is a feidhm. */
+  /** Read. A query asks a question, so on the R336 side it is a feidhm. */
   async ceistigh(sql, params = []) {
     return this.tiománaí.gach(this.db, sql, params).map(rónNormalaithe);
   }
@@ -65,7 +65,7 @@ class Stór {
 }
 
 /**
- * node:sqlite hands back null-prototype rows. Spicebag reads members through
+ * node:sqlite hands back null-prototype rows. R336 reads members through
  * `ó`, which compiles to a property read, so a plain object is what we want.
  */
 function rónNormalaithe(rón) {

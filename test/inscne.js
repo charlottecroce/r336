@@ -25,7 +25,7 @@ const tastail = [];
 const it = (ainm, fn) => tastail.push([ainm, fn]);
 
 function coid(src) {
-  try { tiomsaigh(src, 'tástáil.sb'); return []; }
+  try { tiomsaigh(src, 'tástáil.r336'); return []; }
   catch (e) {
     if (e instanceof Cnuasach) return [...new Set(e.earraidi.map((x) => x.cod))];
     // Some faults are thrown rather than collected — the parser cannot carry
@@ -34,7 +34,7 @@ function coid(src) {
     throw e;
   }
 }
-const jsDe = (src) => tiomsaigh(src, 'tástáil.sb').js;
+const jsDe = (src) => tiomsaigh(src, 'tástáil.r336').js;
 
 const EARRAID = 'struchtúr Earráid {\n    cúis: Teaghrán\n}\n';
 const ROINN = `${EARRAID}feidhm roinn(a: Uimhir, b: Uimhir) -> Uimhir ar Earráid {\n`
@@ -127,7 +127,7 @@ it('leanann an aidiacht a hainmfhocal', () => {
 });
 
 it('fógraíonn foirm na haidiachta an inscne, gan eochairfhocal nua', () => {
-  const { anailiseoir } = tiomsaigh('duine seasmhach = 3\naois sheasmhach = 4', 'tástáil.sb');
+  const { anailiseoir } = tiomsaigh('duine seasmhach = 3\naois sheasmhach = 4', 'tástáil.r336');
   assert.strictEqual(anailiseoir.inscni.get('duine').inscne, mf.INSCNE.FIR);
   assert.strictEqual(anailiseoir.inscni.get('aois').inscne, mf.INSCNE.BAIN);
 });
@@ -140,7 +140,7 @@ it('seiceálann fógra inscne cineáil é féin (E526)', () => {
 });
 
 it('tá an fógra inscne roghnach ar chineál, agus firinscneach mura bhfuil (§40.7)', () => {
-  const { anailiseoir } = tiomsaigh('struchtúr Duine { ainm: Teaghrán }', 'tástáil.sb');
+  const { anailiseoir } = tiomsaigh('struchtúr Duine { ainm: Teaghrán }', 'tástáil.r336');
   assert.strictEqual(anailiseoir.cinealacha.get('Duine').inscne, mf.INSCNE.FIR);
 });
 

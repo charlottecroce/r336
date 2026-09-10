@@ -1,4 +1,4 @@
-// staid.sb — seasmhach i gcoinne sealadach, agus "cuir … ar …".
+// staid.r336 — seasmhach i gcoinne sealadach, agus "cuir … ar …".
 //
 // Is é an scaradh céanna atá idir `is` agus `bí` an scaradh atá idir an dá
 // chineál ceangail (§13, §14):
@@ -56,7 +56,7 @@ feidhm focal(u: Uimhir) -> Teaghrán {
     }
 }
 
-// The natural use of `mura` with a condition is plain negation: Spicebag has
+// The natural use of `mura` with a condition is plain negation: R336 has
 // no `!` operator, because Irish negates with a particle, not an operator.
 gníomh tuairiscigh(cuntas: Cuntas) {
     mura saibhir ó chuntas() {

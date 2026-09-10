@@ -1,7 +1,7 @@
-// liosta.sb — an liosta ilchineálach, agus an bualadh ag an tsuim (§26.5,
+// liosta.r336 — an liosta ilchineálach, agus an bualadh ag an tsuim (§26.5,
 // §26.7).
 //
-// Bhí comhad `earraidi/E211-liosta-gan-cheann.sb` anseo go dtí 0.9, agus
+// Bhí comhad `earraidi/E211-liosta-gan-cheann.r336` anseo go dtí 0.9, agus
 // theip air d'aon ghnó. Rinneadh E211 fíor i gcéim 0.8 agus díshealbhaíodh
 // arís é sa chéim chéanna nuair a tiomsaíodh clár fíor ina choinne (§26.7):
 // is liosta paraiméadar dlisteanach é `[ainm, aois]` ag an teorainn, agus níl
