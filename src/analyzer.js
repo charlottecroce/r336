@@ -47,7 +47,7 @@ const liosta = (mir) => ({ k: 'liosta', ainm: 'Liosta', mir });
 const arSiul = (inner) => ({ k: 'arSiúl', inner });
 
 /**
- * A Spicebag module reached through `ó`. Not `Iasacht`: the possessor is a
+ * A R336 module reached through `ó`. Not `Iasacht`: the possessor is a
  * text written in this language, so its members keep their types, their mood
  * and their aspect. The relation is unchanged — the possessor is just better
  * known than it used to be.
@@ -490,7 +490,7 @@ class Anailiseoir {
   /**
    * The county a possessor carries, or `null` if provenance does not apply.
    *
-   * A struct instance and an `Iasacht` are things you hold. A Spicebag module,
+   * A struct instance and an `Iasacht` are things you hold. A R336 module,
    * a list and a primitive are not, and their exemption is a decision rather
    * than an accident of where the check sits (§24.3): a `modúl` is a text you
    * have read, not a thing you own, and reading vocabulary out of a text is
@@ -498,7 +498,7 @@ class Anailiseoir {
    * collapse into each other and `ó` ends up doing two jobs.
    *
    * A JavaScript module is deliberately *not* exempt, and the line falls
-   * exactly where 0.5 put it. `ó "./sonraí.sb"` is a `modúl`, because the
+   * exactly where 0.5 put it. `ó "./sonraí.r336"` is a `modúl`, because the
    * compiler has read it; `ó "express"` is an `Iasacht`, because it has not.
    * The first is a text, the second is a borrowed thing, and a borrowed thing
    * is in exile like every other borrowed thing.
@@ -1361,7 +1361,7 @@ class Anailiseoir {
         // Two variants of one sum meet at the sum, which is new in 0.8 and is
         // what a list of results needs. What has no meeting point still widens
         // to `Liosta(Iasacht)`, and E211 stays unreachable — see §26.7. The
-        // reason is `[ainm, aois]` in `sonraí.sb`: a driver's parameter list is
+        // reason is `[ainm, aois]` in `sonraí.r336`: a driver's parameter list is
         // legitimately heterogeneous and no sum can or should cover it.
         return liosta(acc || IASACHT);
       }
@@ -1487,7 +1487,7 @@ class Anailiseoir {
         // than declared on the category. Receiver drops out of the arity.
         const md = tS.modhanna.get(res.lemma);
         if (md.modh === 'ordaitheach') { this.bail.cuir('E501', e.ball.ionad, res.lemma); return IASACHT; }
-        e.modhSpicebag = md;
+        e.modhR336 = md;
         return { ...md.cineal, params: md.cineal.params.slice(1) };
       }
 

@@ -1,4 +1,4 @@
-// arna ghiniúint ag an tiomsaitheoir Spicebag — ná cuir eagar air
+// arna ghiniúint ag an tiomsaitheoir R336 — ná cuir eagar air
 "use strict";
 function __is(luach, cineál) {
   switch (cineál) {
@@ -21,6 +21,8 @@ const duine = { __cineál: "Duine", ainm: "Charlotte" };
 if (__is(duine, "Duine")) {
   scríobh(("Is duine é: " + duine.ainm));
 }
+const isDuine = __is(duine, "Duine");
+scríobh(isDuine);
 if (__bí(duine)) {
   scríobh("Tá duine ann.");
 }
@@ -31,5 +33,15 @@ const aois = 20;
 if (__is(aois, "Uimhir")) {
   scríobh("Is uimhir í an aois.");
 }
+function Áit$nua(réimsí) { return Object.assign({ __cineál: "Áit" }, réimsí); }
+const áit = { __cineál: "Áit", logainm: "Cill Chainnigh" };
+function ganDuine(a) {
+  return (!(__is(a, "Duine")) ? "Ní duine í an áit." : "?");
+}
+function ganAit(d) {
+  return (!(__is(d, "Áit")) ? "Ní háit é an duine." : "?");
+}
+scríobh(ganDuine(áit));
+scríobh(ganAit(duine));
 
-module.exports = { Duine$nua, duine, aois };
+module.exports = { Duine$nua, duine, isDuine, aois, Áit$nua, áit, ganDuine, ganAit };

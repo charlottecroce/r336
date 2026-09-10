@@ -1,0 +1,69 @@
+// inscne.r336 — inscne ghramadaí mar thúsach séimhithe (§40).
+//
+// AN T-IOMPÚ. Dhiúltaigh §36 don inscne, agus bhí an ceart aige. Theastaigh
+// `aige` in aghaidh `aici` ón úinéireacht chun sealbhóir amháin a aithint
+// thar cheann eile — is é sin catagóir ghramadaí ag iompar ábhair a raibh an
+// clár ag brath air, agus is é an cinneadh a rinneadh ná an dearadh a
+// dhiúltú seachas an riail a lagú.
+//
+// Ceist eile ar fad atá anseo. Ní iompraíonn an inscne brí ar bith sa chomhad
+// seo. Ní dhéanann sí ach foirm a éileamh: séimhítear an aidiacht i ndiaidh
+// ainmfhocail bhaininscnigh sa tuiseal ainmneach agus ní shéimhítear i
+// ndiaidh cinn fhirinscnigh. Is é sin an cineál céanna fírice le `tá` in
+// aghaidh `bhfuil` (§14) agus le `mura` in aghaidh `murab` (§31): focal
+// amháin, dhá chruth, agus is é an suíomh a roghnaíonn eatarthu agus ní hí
+// an bhrí. Seasann §36 mar a bhí — is éard atá anseo ná an cheist nár
+// cuireadh riamh.
+//
+// AN T-ORD FOCAIL. Leanann aidiacht a hainmfhocal sa Ghaeilge: `fear mór`,
+// `bean mhór`, `duine seasmhach`, `aois sheasmhach`. Bhí `seasmhach duine`
+// á scríobh ag an teanga seo go dtí 0.11, agus ba Bhéarla é sin i bhfocail
+// Ghaeilge — an locht céanna a cheartaigh §31.4 sa chopail, agus ceartaítear
+// ar an gcaoi chéanna é.
+
+
+
+// AINMNEACHA CINEÁIL. Is ainmfhocal Gaeilge ainm cineáil agus tá inscne
+// aige, ach níl aon aidiacht ina dhiaidh in aon áit sa teanga, mar sin
+// caithfear í a rá. Aidiacht atá san fhógra féin, agus réitíonn sí: dá
+// scríobhfaí `Aois baininscneach` bheadh sé ag rá "baininscneach" san
+// fhoirm fhirinscneach, agus is E526 é sin.
+//
+// Tá an fógra roghnach, agus is toradh é sin seachas áis. Níl aon suíomh sa
+// teanga a éilíonn réiteach le hinscne cineáil fós — féach §40.7 — agus
+// bheadh sé ina shearmanas é a éileamh ar rud nach léann aon riail.
+struchtúr Duine firinscneach {
+    ainm: Teaghrán
+}
+
+struchtúr Aois bhaininscneach {
+    luach: Uimhir
+}
+
+// CEANGAIL. Níl aon chomhréir nua anseo ar chor ar bith, agus is é sin an
+// chuid is fearr de. Iompraíonn gach ceangal aidiacht cheana — `seasmhach`
+// nó `sealadach` — agus réitíonn aidiacht cheana. Mar sin *is é* an fógra é:
+// insíonn foirm na haidiachta inscne an ainmfhocail, agus ní theastaíonn
+// eochairfhocal ar bith chun é a rá.
+duine seasmhach = Duine { ainm: "Cáit" }
+aois sheasmhach = Aois { luach: 20 }
+
+// Agus an ceann sealadach, leis an aidiacht chéanna sa dá fhoirm.
+comhaireamh sealadach: Uimhir = 0
+tuairisc shealadach: Teaghrán = ""
+
+// AIDIACHT NACH FÉIDIR A SHÉIMHIÚ. Níl `x` ina ainmfhocal Gaeilge ar chor ar
+// bith, mar sin níl aon inscne le fáil ann agus is firinscneach é de réir
+// réamhshocraithe. Ní eisceacht é sin: is í an riail í, curtha i bhfeidhm ar
+// fhocal nach bhfuil aon slot aige (§5).
+x seasmhach = 3
+
+feidhm cur(a: Uimhir, b: Uimhir) -> Uimhir { a + b }
+
+gníomh príomh() {
+    cuir cur(comhaireamh, luach ó aois) ar chomhaireamh
+    cuir ainm ó dhuine ar thuairisc
+    scríobh tuairisc
+    scríobh comhaireamh
+    scríobh x
+}

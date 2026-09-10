@@ -1,0 +1,98 @@
+// feidhmchlár/duine.r336 — an croí curtha (céim 0.7).
+//
+// Ní bhaineann an comhad seo leis an JavaScript ar chor ar bith, agus ní
+// fhéadfadh: tá `Iasacht` ar deoraíocht, agus ní dhéanann an deoraíocht
+// trádáil le duine ar bith. Níl aon `ó "…"` anseo agus ní bheidh. Sin an brú
+// atá i gceist leis an gcóras contaetha (§24.3), agus is é seo an chéad áit
+// sa stór a bhraitheann é.
+//
+// AN ROGHA. Corcaigh, agus níor chosain sí faic. Níl ach aon chineál curtha
+// amháin san fheidhmchlár seo, mar sin níl aon iomaitheoir le seachaint agus
+// níl aon chomhaontú le pleanáil. Tá trí chúige de na ceithre cinn saor
+// fós. Is toradh é sin agus tá sé scríofa síos i §25.9 seachas a bheith
+// fágtha ina thost.
+//
+// RABHADH DON LÉITHEOIR. Ní raibh `óg`, `beannacht` ná `tuairisc` sa
+// bhfeidhmchlár roimhe seo. Scríobh mé iad. Ní aistriú loighce atá anseo ach
+// loighic nua, mar ní raibh loighic ar bith ann le haistriú: ní dhearna
+// `bealaí.r336` ach rónna a chur ar aghaidh chuig EJS, agus níor léadh `aois`
+// riamh. Tá difríocht idir "d'oibrigh an teorainn" agus "bhí rud ar bith ann
+// le cur ina haghaidh", agus níor cheart an dá rud a mheascadh.
+
+as Corcaigh
+
+struchtúr Duine as Corcaigh {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+// An dá thrasnú. Ní "getters" iad seo — is iad an t-aon bhealach atá ag an
+// mblaosc chun teacht ar réimse, agus glaotar orthu i `cuirSíol` thíos i
+// mbealaí.r336, áit a mbeadh `ainm ó dhuine` ina E601.
+feidhm ainmDe(duine: Duine) -> Teaghrán {
+    ainm ó dhuine
+}
+
+feidhm aoisDe(duine: Duine) -> Uimhir {
+    aois ó dhuine
+}
+
+// An t-aon eolas faoi Dhuine nach réimse é. Is anseo atá a áit: níl aon
+// bhealach ag an mblaosc é a ríomh, mar ní osclaíonn sí an bosca.
+feidhm óg(duine: Duine) -> Bool {
+    aois ó dhuine < 18
+}
+
+// Modh, agus ní féidir glaoch air ó áit ar bith eile. Is `ó` é glao modha,
+// agus is é `ó` an teorainn (§25.9). Mar sin fanann an modh istigh agus is
+// briathar lom a nochtar.
+feidhm beannacht ó Dhuine(féin) -> Teaghrán {
+    "Dia duit, " + ainm ó fhéin
+}
+
+// AN TAISTEAL, §26.6. Bhí `teideal` i mbealaí.r336, ar deoraíocht, agus ní
+// fhéadfadh sé bogadh: ghlac sé le `Iasacht`, mar ba `Iasacht` é rón nach
+// bhfuil ann, agus tá `Iasacht` ar deoraíocht. Sin an rud a thaifead §25.9 —
+// thit an teorainn idir curtha agus deoraithe san áit a raibh na cineálacha
+// suime ar iarraidh.
+//
+// Anois deir `Aimsiú` an rud céanna gan `Iasacht` a lua, agus is féidir leis
+// an loighic teacht abhaile.
+//
+// AN DARA CÚIGE, agus is é seo an chéad uair a chosain rogha rud éigin san
+// fheidhmchlár seo. Tá An Mhumhain caite ag `Duine` cheana, mar sin ní
+// fhéadfadh an tsuim a bheith in aon chontae de chuid na Mumhan (E603).
+// Connachta a thóg sí, agus ó tharla gur cúige eile é teastaíonn conradh chun
+// í a oscailt as an gcomhad seo. Dhá shliotán de na ceithre cinn imithe ar
+// chineál amháin loighce.
+comhaontú Corcaigh Gaillimh
+
+suim Aimsiú as Gaillimh {
+    Aimsithe { duine: Duine }
+    Uireasa  { }
+}
+
+// `Aimsithe` — an aidiacht bhriathartha, ní an fhoirm shaor. Ba `Fuarthas` a
+// bhí anseo go dtí 0.9, agus is é sin aimsir chaite shaor `faigh`: dá
+// gcoinneofaí é, bheadh éileamh curtha ar an bhfoirm shaor mar ainmfhocal
+// sula bhfuil sí tógtha mar mhodh ar chor ar bith (Cuid 9). Ainmníonn
+// aidiacht bhriathartha staid, agus is staid í seo.
+//
+// `Uireasa` gan réimse ar bith: níl aon rud le rá faoi rud nach bhfuil ann.
+// Ba `Iasacht` é seo, agus ba shin an fáth nár fhéad sé bogadh.
+feidhm teideal(aimsiú: Aimsiú) -> Teaghrán {
+    más Aimsithe aimsiú { tuairisc(duine ó aimsiú) } mura { "Gan aimsiú" }
+}
+
+feidhm tuairisc(duine: Duine) -> Teaghrán {
+    má óg(duine) { beannacht ó dhuine() + " (faoi aois)" } mura { beannacht ó dhuine() }
+}
+
+// Corp na lúibe. Tiomáintear an lúb as an deoraíocht — `déan a chéim ar
+// dhaoine` i mbealaí.r336 — agus ritheann an corp anseo, san áit. Tagann
+// `céim` isteach san fhoclóir gan cháiliú, mar a thagann briathar iasachta i
+// nGaeilge (§19.2), mar sin ní fheiceann an t-údar go bhfuil teorainn ann ar
+// chor ar bith. Sin an chuid is fearr de.
+gníomh céim(duine: Duine) {
+    scríobh tuairisc(duine)
+}

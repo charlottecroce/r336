@@ -46,7 +46,7 @@ function coidUile() {
 function casanna() {
   const amach = [];
   for (const ainm of fs.readdirSync(FILL).sort()) {
-    if (!ainm.endsWith('.sb')) continue;
+    if (!ainm.endsWith('.r336')) continue;
     const céad = fs.readFileSync(path.join(FILL, ainm), 'utf8').split('\n')[0];
     const m = /^\/\/ (E\d{3}) —/.exec(céad);
     if (m) amach.push({ cod: m[1], comhad: ainm });

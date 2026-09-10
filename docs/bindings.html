@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spicebag - Bindings &amp; Types</title>
+<title>R336 - Bindings &amp; Types</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="sheet">
   <header>
-    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="sitename"><a href="index.html">R336</a></p>
     <p class="tagline">language reference</p>
     <nav class="mainnav">
       <a href="index.html">Start</a>
@@ -51,7 +51,7 @@ x seasmhach: Uimhir = 5      <span class="c">// explicit type</span></pre>
     <div class="slab-body">
       <p>Irish nouns are masculine or feminine, the gender is largely
       arbitrary, and in the nominative it shows as lenition of a following
-      adjective: <em>fear mór</em> but <em>bean mhór</em>. Spicebag's
+      adjective: <em>fear mór</em> but <em>bean mhór</em>. R336's
       identifiers are Irish nouns, so they have gender too.</p>
       <pre class="code">duine seasmhach = Duine { ainm: "Cáit" }     <span class="c">// masculine</span>
 aois sheasmhach = Aois { luach: 20 }         <span class="c">// feminine</span>
@@ -77,7 +77,7 @@ tuairisc shealadach: Teaghrán = ""           <span class="c">// feminine</span>
       <a class="tag" href="errors.html">E201</a> - two types differing only in
       gender are the same type - and it never survives into the emitted
       JavaScript.</p>
-      <pre class="code">sbc comhad.sb --paraidím
+      <pre class="code">r336c comhad.r336 --paraidím
 
   <span class="c">lemma          inscne  aidiacht     … (type, forms, source elided)</span>
   duine          fir     seasmhach    …

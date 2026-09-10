@@ -1,0 +1,17 @@
+as Muineachán
+
+fir seasmhach = ó "./foireann.r336"
+
+comhaontú Muineachán Baile Átha Cliath
+
+// An ceathrú cineál curtha, agus is suim í. Tá sí san iomaíocht ar na cheithre
+// shliotán chéanna leis na struchtúir: Ulaidh atá á thógáil aici, agus nuair a
+// bhí sí tógtha ní raibh aon áit fágtha i gclár.
+suim Toradh as Muineachán {
+    Bua      { buaiteoir: Foireann, corrlach: Uimhir }
+    Comhscór { scór: Uimhir }
+}
+
+feidhm tuairisc(toradh: Toradh) -> Teaghrán {
+    más Bua toradh { ainmFoirne(buaiteoir ó thoradh) } mura { "Comhscór" }
+}

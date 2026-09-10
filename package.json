@@ -1,9 +1,9 @@
 {
-  "name": "spicebag",
+  "name": "r336",
   "version": "0.11.0",
   "description": "A programming language grounded in Irish grammar. Compiles to JavaScript.",
   "main": "src/index.js",
-  "bin": { "sbc": "bin/sbc.js" },
+  "bin": { "r336c": "bin/r336c.js" },
   "engines": { "node": ">=22" },
 "scripts": {
   "test": "node test/run.js && node test/contae.js && node test/feidhmchlár.js && node test/suim.js && node test/inscne.js && node test/earraidi.js",

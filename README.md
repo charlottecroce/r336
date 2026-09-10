@@ -1,6 +1,6 @@
-# SB
+# R336
 
-A programming language grounded in Irish grammar. Source files are `.sb`; the compiler emits JavaScript and runs on Node ≥ 22.
+A programming language grounded in Irish grammar. Source files are `.r336`; the compiler emits JavaScript and runs on Node ≥ 22.
 
 ```
 suim Toradh as Gaillimh {

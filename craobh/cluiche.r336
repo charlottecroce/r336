@@ -1,0 +1,37 @@
+as Gaillimh
+
+// Caithfear `imreoir.r336` a iompórtáil go díreach: taistealaíonn cineálacha
+// tríd an ath-onnmhairiú ach ní thaistealaíonn briathra, mar is stór focal é
+// briathar agus caithfidh an léitheoir an téacs a bheith léite aige (§19.2).
+imr seasmhach = ó "./imreoir.r336"
+fir seasmhach = ó "./foireann.r336"
+tor seasmhach = ó "./toradh.r336"
+
+// Ní roghnaíodh an dá chonradh seo — b'éigean iad. Is é seo an t-aon chomhad a
+// fhéadann `Imreoir` agus `Foireann` araon a oscailt, mar go bhfuil
+// seanaighneas idir Ciarraí agus Baile Átha Cliath agus níl aon cheann acu in
+// aighneas le Gaillimh.
+comhaontú Gaillimh Ciarraí
+comhaontú Gaillimh Baile Átha Cliath
+
+struchtúr Cluiche as Gaillimh {
+    baile: Foireann
+    cuairt: Foireann
+}
+
+feidhm scórFoirne(f: Foireann) -> Uimhir {
+    // Ní féidir é seo a scríobh i `foireann.r336`. Sin an fáth a bhfuil sé anseo.
+    scórLiosta(painéal(f))
+}
+
+feidhm scórLiosta(xs: Liosta(Imreoir)) -> Uimhir {
+    má folamh ó xs { 0 } mura { scórImreora(céad ó xs) }
+}
+
+feidhm toradhCluiche(c: Cluiche) -> Toradh {
+    má scórFoirne(baile ó ch) > scórFoirne(cuairt ó ch) {
+        Bua { buaiteoir: baile ó ch, corrlach: scórFoirne(baile ó ch) - scórFoirne(cuairt ó ch) }
+    } mura {
+        Comhscór { scór: scórFoirne(baile ó ch) }
+    }
+}

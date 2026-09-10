@@ -1,0 +1,43 @@
+// sonraí.r336 — an ciseal sonraí (Céim 6).
+//
+// Ní eol don mhodúl seo cad is SQLite ann. Labhraíonn sé le teibíocht Stór
+// R336 amháin, agus is ag an teibíocht sin atá an tiománaí.
+//
+// Tabhair faoi deara an scaradh idir modh:
+//   ceistigh → cuireann sí ceist agus tugann sí freagra : feidhm
+//   cuir     → tugtar ordú di agus ní thugann sí faic   : gníomh
+//
+// Agus an scaradh idir aspect: tá gach oibríocht bunachair "ar siúl" (`ag`)
+// go dtí go gcuirtear i gcrích í le "tar éis".
+//
+// Ó chéim 0.5 i leith téann an scaradh sin trasna na teorann idir modúil:
+// feiceann bealaí.r336 gur gníomh é `cuirDuine`, agus ní luach.
+
+stórlann seasmhach = ó "../rt/stór.js"
+
+SCÉIM seasmhach = "CREATE TABLE IF NOT EXISTS daoine (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ainm TEXT NOT NULL,
+    aois INTEGER NOT NULL
+)"
+
+ag feidhm oscailStór(conair: Teaghrán) -> Iasacht {
+    tar éis oscail ó stórlann(conair)
+}
+
+ag gníomh cruthaighScéim(stór: Iasacht) {
+    tar éis scéim ó stór(SCÉIM)
+}
+
+ag feidhm gachDuine(stór: Iasacht) -> Liosta(Iasacht) {
+    tar éis ceistigh ó stór("SELECT id, ainm, aois FROM daoine ORDER BY ainm", [])
+}
+
+ag feidhm duineDeRéir(stór: Iasacht, aitheantas: Uimhir) -> Iasacht {
+    rónna seasmhach: Liosta(Iasacht) = tar éis ceistigh ó stór("SELECT id, ainm, aois FROM daoine WHERE id = ?", [aitheantas])
+    céad ó rónna
+}
+
+ag gníomh cuirDuine(stór: Iasacht, ainm: Teaghrán, aois: Uimhir) {
+    tar éis feidhmigh ó stór("INSERT INTO daoine (ainm, aois) VALUES (?, ?)", [ainm, aois])
+}

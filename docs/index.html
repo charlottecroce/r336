@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spicebag - Start</title>
+<title>R336 - Start</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="sheet">
   <header>
-    <p class="sitename"><a href="index.html">Spicebag</a></p>
+    <p class="sitename"><a href="index.html">R336</a></p>
     <p class="tagline">language reference</p>
     <nav class="mainnav">
       <a href="index.html" class="at">Start</a>
@@ -26,32 +26,32 @@
   </header>
 
   <h1 class="pagehead">Start</h1>
-  <p class="pagelede">A .sb file compiles to JavaScript. Node 22+ is required.</p>
+  <p class="pagelede">A .r336 file compiles to JavaScript. Node 22+ is required.</p>
 
   <div class="slab">
     <h2 class="slab-head">Compiler</h2>
     <div class="slab-body">
-      <p>The compiler is <code>bin/sbc.js</code>.</p>
+      <p>The compiler is <code>bin/r336c.js</code>.</p>
       <pre class="code"><span class="c"># compile a file to file.js</span>
-node bin/sbc.js beannacht.sb
+node bin/r336c.js beannacht.r336
 
-<span class="c"># compile every .sb file under a directory</span>
-node bin/sbc.js feidhmchlár
+<span class="c"># compile every .r336 file under a directory</span>
+node bin/r336c.js feidhmchlár
 
 <span class="c"># compile and run, awaiting príomh() if it exists</span>
-node bin/sbc.js beannacht.sb --rith
+node bin/r336c.js beannacht.r336 --rith
 
 <span class="c"># print the generated JavaScript, don't write it</span>
-node bin/sbc.js beannacht.sb --amharc
+node bin/r336c.js beannacht.r336 --amharc
 
 <span class="c"># print every grammatical form of each top-level binding</span>
-node bin/sbc.js beannacht.sb --paraidím
+node bin/r336c.js beannacht.r336 --paraidím
 
 <span class="c"># print the AST</span>
-node bin/sbc.js beannacht.sb --crann
+node bin/r336c.js beannacht.r336 --crann
 
 <span class="c"># print the module dependency graph</span>
-node bin/sbc.js beannacht.sb --graf</pre>
+node bin/r336c.js beannacht.r336 --graf</pre>
     </div>
   </div>
 

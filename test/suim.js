@@ -18,7 +18,7 @@ let pas = 0, teip = 0;
 
 /** Every diagnostic code a source raises, in order. */
 function coid(src) {
-  try { tiomsaigh(src, 'tástáil.sb'); return []; }
+  try { tiomsaigh(src, 'tástáil.r336'); return []; }
   catch (e) {
     if (e instanceof Cnuasach) return e.earraidi.map((x) => x.cod);
     throw e;
@@ -26,11 +26,11 @@ function coid(src) {
 }
 
 function earraidiDe(src) {
-  try { tiomsaigh(src, 'tástáil.sb'); return []; }
+  try { tiomsaigh(src, 'tástáil.r336'); return []; }
   catch (e) { if (e instanceof Cnuasach) return e.earraidi; throw e; }
 }
 
-const jsDe = (src) => tiomsaigh(src, 'tástáil.sb').js;
+const jsDe = (src) => tiomsaigh(src, 'tástáil.r336').js;
 
 /** Run a compiled program and collect what it wrote. */
 async function rith(src) {
@@ -53,7 +53,7 @@ function tionscadalBreige(comhaid) {
   return new Tionscadal({ ann: (c) => map.has(c), léigh: (c) => map.get(c) });
 }
 
-function coidTionscadal(comhaid, príomh = 'príomh.sb') {
+function coidTionscadal(comhaid, príomh = 'príomh.r336') {
   try { tionscadalBreige(comhaid).tiomsaigh(path.resolve('/sb', príomh)); return []; }
   catch (e) { if (e instanceof Cnuasach) return e.earraidi.map((x) => x.cod); throw e; }
 }
@@ -171,7 +171,7 @@ it('téann dhá mhalairt den tsuim chéanna le chéile i liosta', () => {
 });
 
 it('leathnaíonn liosta nach mbuaileann in aon áit fós — agus is gá sin', () => {
-  // The reversal, §26.7. `[ainm, aois]` in sonraí.sb is a driver's parameter
+  // The reversal, §26.7. `[ainm, aois]` in sonraí.r336 is a driver's parameter
   // list: legitimately heterogeneous, and no sum can or should cover it. So
   // E211 stays reserved and the 0.8 brief's prediction was wrong.
   assert.deepStrictEqual(coid('xs seasmhach = [1, "a"]'), []);
@@ -262,8 +262,8 @@ it('is E609 é ualach i gcontae a bhfuil seanaighneas leis', () => {
 it('trasnaíonn suim agus a malairtí an teorainn', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'toradh.sb': 'suim T {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
-      'príomh.sb': 'm seasmhach = ó "./toradh.sb"\n'
+      'toradh.r336': 'suim T {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
+      'príomh.r336': 'm seasmhach = ó "./toradh.r336"\n'
         + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }',
     }),
     []);
@@ -272,8 +272,8 @@ it('trasnaíonn suim agus a malairtí an teorainn', () => {
 it('taistealaíonn éileamh cúige na suime leis an iompórtáil (E603)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'toradh.sb': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
-      'príomh.sb': 'm seasmhach = ó "./toradh.sb"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
+      'toradh.r336': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
+      'príomh.r336': 'm seasmhach = ó "./toradh.r336"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
     }),
     ['E603']);
 });
@@ -283,8 +283,8 @@ it('ní éilíonn malairt iompórtáilte cúige di féin', () => {
   // report E603 against itself. It does not.
   assert.deepStrictEqual(
     coidTionscadal({
-      'toradh.sb': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
-      'príomh.sb': 'as Corcaigh\nm seasmhach = ó "./toradh.sb"\n'
+      'toradh.r336': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
+      'príomh.r336': 'as Corcaigh\nm seasmhach = ó "./toradh.r336"\n'
         + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }',
     }),
     []);

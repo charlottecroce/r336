@@ -12,7 +12,7 @@ const it = (ainm, fn) => tastail.push([ainm, fn]);
 
 /** Compile + run, capturing scríobh output. Awaits `príomh` if exported. */
 async function rith(src) {
-  const { js } = tiomsaigh(src, 'tástáil.sb');
+  const { js } = tiomsaigh(src, 'tástáil.r336');
   const amach = [];
   const ctx = vm.createContext({
     console: { log: (x) => amach.push(String(x)) },
@@ -26,7 +26,7 @@ async function rith(src) {
 
 /** Compile and return the set of error codes raised. */
 function coid(src) {
-  try { tiomsaigh(src, 'tástáil.sb'); return []; }
+  try { tiomsaigh(src, 'tástáil.r336'); return []; }
   catch (e) {
     if (e instanceof Cnuasach) return e.earraidi.map((x) => x.cod);
     if (e instanceof Earraid) return [e.cod];
@@ -34,7 +34,7 @@ function coid(src) {
   }
 }
 
-const jsDe = (src) => tiomsaigh(src, 'tástáil.sb').js;
+const jsDe = (src) => tiomsaigh(src, 'tástáil.r336').js;
 
 // ══ 1. Moirfeolaíocht ═════════════════════════════════════════════════
 it('séimhiú ar na naoi gconsan', () => {
@@ -304,8 +304,8 @@ it('`ó "modúl"` a ghineann require', () => {
   assert.ok(js.includes('require("express").Router'));
 });
 
-it('athscríobhtar .sb go .js i gconairí', () => {
-  assert.ok(jsDe('s seasmhach = ó "./sonraí.sb"').includes('require("./sonraí.js")'));
+it('athscríobhtar .r336 go .js i gconairí', () => {
+  assert.ok(jsDe('s seasmhach = ó "./sonraí.r336"').includes('require("./sonraí.js")'));
 });
 
 it('is Iasacht gach rud a thagann trasna na teorann', async () => {
@@ -439,7 +439,7 @@ it('níl aon ghné teanga a bhaineann le tiománaí ar leith (Céim 6)', () => {
 });
 
 // ══ 11. Céim 4/5: an feidhmchlár ══════════════════════════════════════
-it('freastalaíonn an feidhmchlár ar bhealaí Spicebag', async function () {
+it('freastalaíonn an feidhmchlár ar bhealaí R336', async function () {
   let tóg;
   try { tóg = require('../feidhmchlár/freastalaí.js').tóg; }
   catch { console.log('    (ar lár: npm install san fheidhmchlár)'); return; }
@@ -479,14 +479,14 @@ function tionscadalBreige(comhaid) {
 }
 
 /** Compile a module set and run the entry module's `príomh`. */
-async function rithTionscadal(comhaid, tosach = 'príomh.sb') {
+async function rithTionscadal(comhaid, tosach = 'príomh.r336') {
   const t = tionscadalBreige(comhaid);
   const amach = [];
   const modúil = new Map();
   const bréagRequire = (conair) => {
     const abs = path.resolve('/sb', conair);
     if (modúil.has(abs)) return modúil.get(abs);
-    const m = t.tiomsaigh(abs.replace(/\.js$/, '.sb'));
+    const m = t.tiomsaigh(abs.replace(/\.js$/, '.r336'));
     const ctx = vm.createContext({
       console: { log: (x) => amach.push(String(x)) },
       module: { exports: {} },
@@ -496,13 +496,13 @@ async function rithTionscadal(comhaid, tosach = 'príomh.sb') {
     modúil.set(abs, ctx.module.exports);
     return ctx.module.exports;
   };
-  const barr = bréagRequire(tosach.replace(/\.sb$/, '.js'));
+  const barr = bréagRequire(tosach.replace(/\.r336$/, '.js'));
   if (typeof barr.príomh === 'function') await barr.príomh();
   return amach;
 }
 
 /** Error codes from compiling a module set. */
-function coidTionscadal(comhaid, tosach = 'príomh.sb') {
+function coidTionscadal(comhaid, tosach = 'príomh.r336') {
   try { tionscadalBreige(comhaid).tiomsaigh(path.resolve('/sb', tosach)); return []; }
   catch (e) {
     if (e instanceof Cnuasach) return e.earraidi.map((x) => x.cod);
@@ -518,8 +518,8 @@ gníomh fáiltigh(ainm: Teaghrán) { scríobh beannaigh(ainm) }
 
 // ══ 15. An teorainn idir modúil (DEARADH.md §19) ═════════════════════════════════
 it('maireann cineál, modh agus aspect trasna na teorann', () => {
-  const t = tionscadalBreige({ 'a.sb': FOCLOIR });
-  const { siniu } = t.tiomsaigh('/sb/a.sb');
+  const t = tionscadalBreige({ 'a.r336': FOCLOIR });
+  const { siniu } = t.tiomsaigh('/sb/a.r336');
   assert.strictEqual(siniu.onnmhairi.get('beannaigh').kind, 'feidhm');
   assert.strictEqual(siniu.onnmhairi.get('fáiltigh').kind, 'gníomh');
   assert.strictEqual(siniu.onnmhairi.get('BEANNACHT').kind, 'luach');
@@ -529,28 +529,28 @@ it('maireann cineál, modh agus aspect trasna na teorann', () => {
 it('is ordú é ordú iasachta, gan cháiliú', async () => {
   assert.deepStrictEqual(
     await rithTionscadal({
-      'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'f seasmhach = ó "./foclóir.sb"\ngníomh príomh() { fáiltigh "Cáit" }',
+      'foclóir.r336': FOCLOIR,
+      'príomh.r336': 'f seasmhach = ó "./foclóir.r336"\ngníomh príomh() { fáiltigh "Cáit" }',
     }),
     ['Dia duit, Cáit']);
 });
 
 it('rialaíonn `ó` sealbhóir modúil fós', async () => {
   const comhaid = {
-    'foclóir.sb': FOCLOIR,
-    'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\n'
+    'foclóir.r336': FOCLOIR,
+    'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\n'
       + 'gníomh príomh() { scríobh BEANNACHT ó fhoclóir  scríobh beannaigh ó fhoclóir("Oisín") }',
   };
   assert.deepStrictEqual(await rithTionscadal(comhaid), ['Dia duit', 'Dia duit, Oisín']);
-  const olc = { ...comhaid, 'príomh.sb': comhaid['príomh.sb'].replace(/ó fhoclóir/g, 'ó foclóir') };
+  const olc = { ...comhaid, 'príomh.r336': comhaid['príomh.r336'].replace(/ó fhoclóir/g, 'ó foclóir') };
   assert.deepStrictEqual(coidTionscadal(olc), ['E102', 'E102']);
 });
 
 it('ní ainmní é ordú iasachta ach oiread (E501)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\n'
+      'foclóir.r336': FOCLOIR,
+      'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\n'
         + 'gníomh príomh() { g seasmhach = fáiltigh ó fhoclóir  scríobh g }',
     }),
     ['E501']);
@@ -559,8 +559,8 @@ it('ní ainmní é ordú iasachta ach oiread (E501)', () => {
 it('ní ghlacann ordú le sealbhóir (E516)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\ngníomh príomh() { fáiltigh ó fhoclóir("Cáit") }',
+      'foclóir.r336': FOCLOIR,
+      'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\ngníomh príomh() { fáiltigh ó fhoclóir("Cáit") }',
     }),
     ['E516']);
 });
@@ -568,8 +568,8 @@ it('ní ghlacann ordú le sealbhóir (E516)', () => {
 it('tagann struchtúir iasachta isteach mar chineálacha', async () => {
   assert.deepStrictEqual(
     await rithTionscadal({
-      'cineál.sb': 'struchtúr Duine { ainm: Teaghrán }\nfeidhm nua(a: Teaghrán) -> Duine { Duine { ainm: a } }',
-      'príomh.sb': 'c seasmhach = ó "./cineál.sb"\n'
+      'cineál.r336': 'struchtúr Duine { ainm: Teaghrán }\nfeidhm nua(a: Teaghrán) -> Duine { Duine { ainm: a } }',
+      'príomh.r336': 'c seasmhach = ó "./cineál.r336"\n'
         + 'feidhm ainmDe(d: Duine) -> Teaghrán { ainm ó dh }\n'
         + 'gníomh príomh() { scríobh ainmDe(nua("Cáit")) }',
     }),
@@ -582,14 +582,14 @@ it('téann ball dúchasach trí chomhaontú, murab ionann agus ball iasachta', (
   assert.deepStrictEqual(coid('R seasmhach = Router ó "express"'), []);
   assert.deepStrictEqual(
     coidTionscadal({
-      'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'x seasmhach = bheannaigh ó "./foclóir.sb"',
+      'foclóir.r336': FOCLOIR,
+      'príomh.r336': 'x seasmhach = bheannaigh ó "./foclóir.r336"',
     }),
     ['E103']);
   assert.deepStrictEqual(
     coidTionscadal({
-      'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'x seasmhach = nachAnn ó "./foclóir.sb"',
+      'foclóir.r336': FOCLOIR,
+      'príomh.r336': 'x seasmhach = nachAnn ó "./foclóir.r336"',
     }),
     ['E203']);
 });
@@ -597,8 +597,8 @@ it('téann ball dúchasach trí chomhaontú, murab ionann agus ball iasachta', (
 it('is E208 é ceangal áitiúil a bhuaileann le hiompórtáil', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\ngníomh fáiltigh(x: Teaghrán) { scríobh x }',
+      'foclóir.r336': FOCLOIR,
+      'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\ngníomh fáiltigh(x: Teaghrán) { scríobh x }',
     }),
     ['E208']);
 });
@@ -606,29 +606,29 @@ it('is E208 é ceangal áitiúil a bhuaileann le hiompórtáil', () => {
 it('dhá mhodúl, an lemma céanna (E106)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'a.sb': 'gníomh fógair(t: Teaghrán) { scríobh t }',
-      'b.sb': 'gníomh fógair(t: Teaghrán) { scríobh t }',
-      'príomh.sb': 'a seasmhach = ó "./a.sb"\nb seasmhach = ó "./b.sb"',
+      'a.r336': 'gníomh fógair(t: Teaghrán) { scríobh t }',
+      'b.r336': 'gníomh fógair(t: Teaghrán) { scríobh t }',
+      'príomh.r336': 'a seasmhach = ó "./a.r336"\nb seasmhach = ó "./b.r336"',
     }),
     ['E106']);
 });
 
 it('modúl ar iarraidh (E109) agus timthriall (E110)', () => {
   assert.deepStrictEqual(
-    coidTionscadal({ 'príomh.sb': 'x seasmhach = ó "./níl-ann.sb"' }),
+    coidTionscadal({ 'príomh.r336': 'x seasmhach = ó "./níl-ann.r336"' }),
     ['E109']);
   assert.deepStrictEqual(
     coidTionscadal({
-      'a.sb': 'b seasmhach = ó "./b.sb"\nfeidhm f() -> Uimhir { 1 }',
-      'b.sb': 'a seasmhach = ó "./a.sb"\nfeidhm g() -> Uimhir { 2 }',
-      'príomh.sb': 'a seasmhach = ó "./a.sb"',
+      'a.r336': 'b seasmhach = ó "./b.r336"\nfeidhm f() -> Uimhir { 1 }',
+      'b.r336': 'a seasmhach = ó "./a.r336"\nfeidhm g() -> Uimhir { 2 }',
+      'príomh.r336': 'a seasmhach = ó "./a.r336"',
     }),
     ['E110']);
 });
 
 it('is Iasacht fós é modúl JavaScript', () => {
   // Nothing about the graph reaches a foreign origin: `ó "express"` is
-  // unchanged, and a .js path is not a Spicebag module.
+  // unchanged, and a .js path is not a R336 module.
   const js = jsDe('e seasmhach = ó "express"\nR seasmhach = Router ó "express"');
   assert.ok(js.includes('require("express").Router'));
   assert.deepStrictEqual(coid('p seasmhach = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), []);
@@ -637,7 +637,7 @@ it('is Iasacht fós é modúl JavaScript', () => {
 it('gan tionscadal, is Iasacht gach iompórtáil — iompar 0.4', () => {
   // The single-source entry point is unchanged, which is why the 0.4 suite
   // still passes without touching a line of it.
-  assert.deepStrictEqual(coid('s seasmhach = ó "./sonraí.sb"\nscríobh aonrud ó s'), []);
+  assert.deepStrictEqual(coid('s seasmhach = ó "./sonraí.r336"\nscríobh aonrud ó s'), []);
 });
 
 // ══ 16. Cineál an bhriathair (DEARADH.md §20) ════════════════════════════════════
@@ -746,12 +746,12 @@ it('atriallann `déan` ar Iasacht freisin', async () => {
 // ══ 18. Ní fheiceann an chúlchríoch gramadach ═════════════════════════
 it('ní shroicheann foirm ghramadaí an t-aschur, fiú trasna modúl', async () => {
   const t = tionscadalBreige({
-    'foclóir.sb': 'gníomh fógair(duine: Teaghrán) { scríobh duine }',
-    'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\n'
+    'foclóir.r336': 'gníomh fógair(duine: Teaghrán) { scríobh duine }',
+    'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\n'
       + 'gníomh príomh() { daoine seasmhach: Liosta(Teaghrán) = ["a"]\n'
       + '  scríobh fad ó dhaoine\n  déan a fhógair ar dhaoine }',
   });
-  const { js } = t.tiomsaigh('/sb/príomh.sb');
+  const { js } = t.tiomsaigh('/sb/príomh.r336');
   for (const foirm of ['dhaoine', 'fhoclóir', 'fhógair', 'bhfuil']) {
     assert.ok(!js.includes(foirm), `${foirm} sa JavaScript`);
   }
@@ -977,7 +977,7 @@ it('is féidir briathar saor a ainmniú le "a"', () => {
     + 'gníomh cláraigh(app: Iasacht) { bealach ó fhreastal(app, "/", a liostaigh) }'), []);
 });
 
-it('ní féidir briathar saor a thabhairt do bhriathar Spicebag', () => {
+it('ní féidir briathar saor a thabhairt do bhriathar R336', () => {
   // An toradh is tábhachtaí sa ghné. Dá nglacfadh gníomh leis, d\'fhéadfadh
   // sé glaoch air — agus dhéanfadh sin déantóir de rud nach bhfuil déantóir
   // aige. Níl fágtha mar cheann scríbe ach `Iasacht`, agus is í an teorainn í.

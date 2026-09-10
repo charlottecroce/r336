@@ -17,7 +17,7 @@
  * bith: fágann sí gach aidiacht ina bunfhoirm, is é sin le rá go bhfógraíonn
  * sí gach ainm mar fhocal firinscneach. Ní féidir léi a fháil amach gur
  * baininscneach é `aois`, agus ní dhéanfaidh sí buille faoi thuairim air.
- * Rith `sbc <comhad> --paraidím` ina diaidh: tá colún inscne ann anois, agus
+ * Rith `r336c <comhad> --paraidím` ina diaidh: tá colún inscne ann anois, agus
  * is é an liosta sin an obair atá fágtha do dhuine.
  *
  * Dhá riail faoin méid nach n-athraítear:
@@ -27,9 +27,9 @@
  *      thráchtaireacht. Fágtar gach rud i ndiaidh `//` agus gach rud istigh i
  *      mbloc `/* … *​/` mar atá.
  *
- *   2. Athscríobhtar foinse Spicebag atá istigh i dteaghráin JavaScript.
+ *   2. Athscríobhtar foinse R336 atá istigh i dteaghráin JavaScript.
  *      Tá thart ar thrí oiread níos mó fógraí i `test/*.js` ná mar atá sna
- *      comhaid `.sb`, agus is ann a bheadh botún i bhfolach. Tabhair faoi
+ *      comhaid `.r336`, agus is ann a bheadh botún i bhfolach. Tabhair faoi
  *      deara go bhfuil `\n` roimh eochairfhocal ina theorainn fhocail chomh
  *      maith: `'…\nseasmhach x = 3'` — sin an cás a chaill an chéad leagan
  *      den uirlis seo, agus sin an fáth a bhfuil sé luaite anseo.

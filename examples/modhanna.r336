@@ -1,0 +1,30 @@
+// modhanna.r336 — modhanna mar fheidhmeanna a bhaineann le catagóir.
+//
+// `feidhm ainm ó Dhuine(féin)` — an fheidhm a thagann ó Dhuine. Séimhítear
+// `Duine` mar go séimhíonn `ó`, díreach mar a dhéantar i slonn: is é an t-aon
+// riail amháin é, in áit dhá riail (§5 den tsonraíocht ceartaithe).
+
+struchtúr Duine {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+feidhm beannacht ó Dhuine(féin) -> Teaghrán {
+    "Dia duit, " + ainm ó fhéin
+}
+
+feidhm aosta ó Dhuine(féin) -> Bool {
+    aois ó fhéin >= 18
+}
+
+// Modh a bhfuil argóintí aige chomh maith leis an bhfaighteoir.
+feidhm aoisAmachAnseo ó Dhuine(féin, blianta: Uimhir) -> Uimhir {
+    aois ó fhéin + blianta
+}
+
+duine seasmhach = Duine { ainm: "Charlotte", aois: 20 }
+
+// Ag an suíomh glaoch, an gaol céanna: `beannacht ó dhuine`.
+scríobh beannacht ó dhuine()
+scríobh aosta ó dhuine()
+scríobh aoisAmachAnseo ó dhuine(5)

@@ -263,7 +263,7 @@ class Parsalai {
    * second record syntax in the language and nothing here to keep in step.
    *
    * Payloads are named rather than positional (`Ceart { duine: Duine }`, not
-   * `Ceart(Duine)`). Spicebag's only accessor is `ó` plus a member name and
+   * `Ceart(Duine)`). R336's only accessor is `ó` plus a member name and
    * there is no tuple type, so a positional payload would have to invent a
    * field name at the point of use; writing it is better than inventing it.
    *

@@ -1,0 +1,32 @@
+// saor.r336 — an briathar saor, an tríú modh (§37).
+//
+//   feidhm   luaitear rud     — táscach: tugann sé luach ar ais
+//   gníomh   déantar rud      — ordaitheach: labhraíonn sé le déantóir
+//   saor     déantar é        — saor: níl aon déantóir ann le hainmniú
+//
+// Níl an fhoirm shaor ina fhoirm chéasta. Ní féidir "ag X" a chur léi ar chor
+// ar bith: ní hé nach luaitear an déantóir, ach nach féidir é a lua. Sin an
+// rud a chuireann an modh in iúl, agus sin an méid a fhorfheidhmíonn an
+// tiomsaitheoir.
+
+// An fhógra. Is í an fhréamh — an fhoirm ordaitheach — an fhoirm luaite, mar
+// is í i gcónaí: `liostaigh`.
+saor liostaigh(mír: Teaghrán) {
+    scríobh "· " + mír
+}
+
+saor fógair(teachtaireacht: Teaghrán) {
+    scríobh "! " + teachtaireacht
+}
+
+// An ráiteas. NÍ hí an fhréamh a scríobhtar anseo ach an fhoirm shaor, agus
+// déanann an tiomsaitheoir í: `liostaigh` → `liostaítear` (dara réimniú),
+// `fógair` → `fógraítear` (dara réimniú, coimriú: fógair → fógr-).
+//
+// `liostaigh mír` — sin ordú, agus is E518 é: níl aon duine ann le hordú a
+// thabhairt dó.
+gníomh príomh() {
+    liostaítear "arán"
+    liostaítear "im"
+    fógraítear "tá an liosta déanta"
+}

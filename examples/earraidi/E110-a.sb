@@ -1,3 +1,0 @@
-// E110 — timthriall: braitheann a ar b, agus b ar a.
-b seasmhach = ó "./E110-b.sb"
-feidhm f() -> Uimhir { 1 }

@@ -9,7 +9,7 @@
  * léann comhaid fhíora ón diosca. Ní tástáil aonaid í. Is í an cheist atá á
  * cur ná an bhfanann an scaradh idir an bhlaosc agus an croí ina sheasamh
  * nuair a athraíonn duine an feidhmchlár, agus is é an chéad rud a
- * bhrisfidh ná go gcuirfear `ainm ó dhuine` i mbealaí.sb toisc gur fusa é.
+ * bhrisfidh ná go gcuirfear `ainm ó dhuine` i mbealaí.r336 toisc gur fusa é.
  *
  * Trí chineál éilimh:
  *   1. Tiomsaíonn an feidhmchlár, agus tá an dúchas mar a bhíothas ag súil.
@@ -42,7 +42,7 @@ function tiomsaighComhad(c) {
  * project takes its filesystem by injection, which is what makes this
  * possible (§19.5).
  */
-function coidLeMalairt(comhadMalairt, foinseNua, tosach = 'bealaí.sb') {
+function coidLeMalairt(comhadMalairt, foinseNua, tosach = 'bealaí.r336') {
   const fs = require('fs');
   const abs = conair(comhadMalairt);
   const t = new Tionscadal({
@@ -61,7 +61,7 @@ const foinseDe = (c) => require('fs').readFileSync(conair(c), 'utf8');
 
 // ══ 1. Tiomsaíonn sé, agus tá an dúchas mar a bhíothas ag súil ═══════
 it('tiomsaíonn an feidhmchlár ar fad', () => {
-  for (const c of ['duine.sb', 'sonraí.sb', 'bealaí.sb']) {
+  for (const c of ['duine.r336', 'sonraí.r336', 'bealaí.r336']) {
     assert.doesNotThrow(() => tiomsaighComhad(c), c);
   }
 });
@@ -71,7 +71,7 @@ it('tá an croí curtha, agus tá dhá chúige caite anois', () => {
   // an teip a taifeadadh i §25.9: níor tháinig an brú i bhfeidhm riamh. Chaith
   // `Aimsiú` an dara ceann i gcéim 0.8, mar níorbh fhéidir leis an tsuim a
   // bheith i gcontae ar bith de chuid na Mumhan (§26.6).
-  const d = duchasanna(tiomsaighComhad('duine.sb').anailiseoir);
+  const d = duchasanna(tiomsaighComhad('duine.r336').anailiseoir);
   assert.strictEqual(d.contae, 'Corcaigh');
   const cuirthe = d.cinealacha.filter((t) => t.contae !== ctae.DEORAIOCHT);
   assert.deepStrictEqual(cuirthe, [
@@ -83,20 +83,20 @@ it('tá an croí curtha, agus tá dhá chúige caite anois', () => {
 });
 
 it('ní fhéadfadh an tsuim a bheith san Mhumhain — sin an rogha a chosain rud', () => {
-  const olc = foinseDe('duine.sb').replace('suim Aimsiú as Gaillimh', 'suim Aimsiú as Ciarraí');
-  assert.notStrictEqual(olc, foinseDe('duine.sb'), 'níor éirigh leis an ionadú');
-  assert.ok(coidLeMalairt('duine.sb', olc, 'duine.sb').includes('E603'));
+  const olc = foinseDe('duine.r336').replace('suim Aimsiú as Gaillimh', 'suim Aimsiú as Ciarraí');
+  assert.notStrictEqual(olc, foinseDe('duine.r336'), 'níor éirigh leis an ionadú');
+  assert.ok(coidLeMalairt('duine.r336', olc, 'duine.r336').includes('E603'));
 });
 
 it('is E213 é an rón a chur isteach sa tsuim gan é a thiontú', () => {
   // The rule that keeps the conversion on the boundary where it belongs.
-  const olc = foinseDe('duine.sb').replace('Aimsithe { duine: Duine }', 'Aimsithe { rón: Iasacht }');
-  assert.notStrictEqual(olc, foinseDe('duine.sb'), 'níor éirigh leis an ionadú');
-  assert.ok(coidLeMalairt('duine.sb', olc, 'duine.sb').includes('E213'));
+  const olc = foinseDe('duine.r336').replace('Aimsithe { duine: Duine }', 'Aimsithe { rón: Iasacht }');
+  assert.notStrictEqual(olc, foinseDe('duine.r336'), 'níor éirigh leis an ionadú');
+  assert.ok(coidLeMalairt('duine.r336', olc, 'duine.r336').includes('E213'));
 });
 
 it('fanann an bhlaosc ar deoraíocht', () => {
-  for (const c of ['bealaí.sb', 'sonraí.sb']) {
+  for (const c of ['bealaí.r336', 'sonraí.r336']) {
     assert.strictEqual(duchasanna(tiomsaighComhad(c).anailiseoir).contae,
       ctae.DEORAIOCHT, c);
   }
@@ -106,14 +106,14 @@ it('ní bhaineann an croí leis an JavaScript ar chor ar bith', () => {
   // Ask the compiler, not the text. The file is mostly prose about not
   // importing anything, and a substring check cannot tell the difference
   // between an import and a sentence saying there is none.
-  const { js, ast } = tiomsaighComhad('duine.sb');
+  const { js, ast } = tiomsaighComhad('duine.r336');
   assert.strictEqual((ast.ailiasanna || new Map()).size, 0, 'tá modúl iompórtáilte sa chroí');
   assert.ok(!js.includes('require('), 'tá require sa JS');
 });
 
 // ══ 2. Ní shroicheann an dúchas an chúlchríoch ═══════════════════════
 it('níl contae, cúige ná comhaontú sa JavaScript', () => {
-  for (const c of ['duine.sb', 'bealaí.sb']) {
+  for (const c of ['duine.r336', 'bealaí.r336']) {
     const { js } = tiomsaighComhad(c);
     for (const focal of ['Corcaigh', 'An Mhumhain', 'cúige', 'contae',
       '__contae', '__cúige', 'deoraíocht', 'comhaontú']) {
@@ -123,7 +123,7 @@ it('níl contae, cúige ná comhaontú sa JavaScript', () => {
 });
 
 it('maireann an cruthú 0.5: ní fheictear séimhiú ná modh sa JS ach oiread', () => {
-  const { js } = tiomsaighComhad('bealaí.sb');
+  const { js } = tiomsaighComhad('bealaí.r336');
   for (const focal of ['dhuine', 'dhaoine', 'chéim', 'chuirSíol', 'bhfuil']) {
     assert.ok(!js.includes(focal), `${focal} sa JS`);
   }
@@ -134,44 +134,44 @@ it('is E601 é an bhlaosc ag oscailt an bhosca', () => {
   // The thing someone will actually do: skip the accessor because `ainm ó
   // dhuine` is shorter. If this ever stops being an error the separation is
   // gone and the suite should say so loudly.
-  const olc = foinseDe('bealaí.sb')
+  const olc = foinseDe('bealaí.r336')
     .replace('cuirDuine stór, ainmDe(duine), aoisDe(duine)',
       'cuirDuine stór, ainm ó dhuine, aois ó dhuine');
-  assert.notStrictEqual(olc, foinseDe('bealaí.sb'), 'níor éirigh leis an ionadú');
-  assert.deepStrictEqual(coidLeMalairt('bealaí.sb', olc), ['E601', 'E601']);
+  assert.notStrictEqual(olc, foinseDe('bealaí.r336'), 'níor éirigh leis an ionadú');
+  assert.deepStrictEqual(coidLeMalairt('bealaí.r336', olc), ['E601', 'E601']);
 });
 
 it('is E601 é an croí ag lorg an JavaScript', () => {
   // Placing a module severs it from JavaScript permanently. This is the
   // pressure the whole feature exists to apply (§24.3).
-  const olc = foinseDe('duine.sb').replace('as Corcaigh\n',
+  const olc = foinseDe('duine.r336').replace('as Corcaigh\n',
     'as Corcaigh\nbun seasmhach = ó "../rt/bunúsach.js"\n');
   assert.deepStrictEqual(
-    coidLeMalairt('duine.sb', `${olc}\nfeidhm f() -> Teaghrán { uimhir ó bhun }`,
-      'duine.sb'),
+    coidLeMalairt('duine.r336', `${olc}\nfeidhm f() -> Teaghrán { uimhir ó bhun }`,
+      'duine.r336'),
     ['E601']);
 });
 
 it('is E603 é an dara cineál san Mhumhain', () => {
   // Declaring `Duine as Corcaigh` closed Ciarraí, Luimneach, An Clár, Port
   // Láirge and Tiobraid Árann for the whole graph, including this file.
-  const olc = `${foinseDe('duine.sb')}\nstruchtúr Áit as Ciarraí {\n    ainm: Teaghrán\n}`;
-  assert.deepStrictEqual(coidLeMalairt('duine.sb', olc, 'duine.sb'), ['E603']);
+  const olc = `${foinseDe('duine.r336')}\nstruchtúr Áit as Ciarraí {\n    ainm: Teaghrán\n}`;
+  assert.deepStrictEqual(coidLeMalairt('duine.r336', olc, 'duine.r336'), ['E603']);
 });
 
 it('tá an t-éileamh domhanda: ní féidir leis an mblaosc An Mhumhain a thógáil', () => {
-  const olc = `${foinseDe('bealaí.sb')}\nstruchtúr Áit as Luimneach {\n    ainm: Teaghrán\n}`;
-  assert.deepStrictEqual(coidLeMalairt('bealaí.sb', olc), ['E603']);
+  const olc = `${foinseDe('bealaí.r336')}\nstruchtúr Áit as Luimneach {\n    ainm: Teaghrán\n}`;
+  assert.deepStrictEqual(coidLeMalairt('bealaí.r336', olc), ['E603']);
 });
 
 it('is E609 é an cineál a chur i gcontae le seanaighneas', () => {
   // The file can no longer open its own type, in its own province, with no
-  // remedy. Only `duine.sb` has an `ó` on a `Duine` at all — the shell
+  // remedy. Only `duine.r336` has an `ó` on a `Duine` at all — the shell
   // constructs and calls, which is why the veto has nothing to bite there.
-  const bun = foinseDe('duine.sb');
+  const bun = foinseDe('duine.r336');
   const olc = bun.replace('struchtúr Duine as Corcaigh', 'struchtúr Duine as Ciarraí');
   assert.notStrictEqual(olc, bun, 'níor éirigh leis an ionadú');
-  const coid = coidLeMalairt('duine.sb', olc, 'duine.sb');
+  const coid = coidLeMalairt('duine.r336', olc, 'duine.r336');
   assert.ok(coid.length >= 4, JSON.stringify(coid));
   assert.ok(coid.every((c) => c === 'E609'), JSON.stringify(coid));
 });
@@ -180,7 +180,7 @@ it('is E609 é an cineál a chur i gcontae le seanaighneas', () => {
 // ══ §37 — na lámhálaithe mar bhriathra saora ══════════════════════════
 
 it('is briathra saora iad an dá bhealach', () => {
-  const src = foinseDe('bealaí.sb');
+  const src = foinseDe('bealaí.r336');
   assert.ok(src.includes('ag saor liostaigh('), 'liostaigh');
   assert.ok(src.includes('ag saor taispeáin('), 'taispeáin');
   // Agus cláraítear fós iad ar an tslí chéanna: is é an t-ainmniú an t-aon
@@ -190,14 +190,14 @@ it('is briathra saora iad an dá bhealach', () => {
 });
 
 it('ní féidir lámhálaí a ordú sa mhodúl a fhógraíonn é (E518)', () => {
-  const olc = foinseDe('bealaí.sb')
+  const olc = foinseDe('bealaí.r336')
     .replace('bealach ó fhreastal(app, "/", a liostaigh)', 'liostaigh app, app');
-  assert.notStrictEqual(olc, foinseDe('bealaí.sb'), 'níor éirigh leis an ionadú');
-  assert.ok(coidLeMalairt('bealaí.sb', olc, 'bealaí.sb').includes('E518'));
+  assert.notStrictEqual(olc, foinseDe('bealaí.r336'), 'níor éirigh leis an ionadú');
+  assert.ok(coidLeMalairt('bealaí.r336', olc, 'bealaí.r336').includes('E518'));
 });
 
 it('ní shroicheann an modh saor an JavaScript', () => {
-  const { js } = tiomsaighComhad('bealaí.sb');
+  const { js } = tiomsaighComhad('bealaí.r336');
   for (const f of ['saor', 'liostaítear', 'taispeántar', 'liostaíodh']) {
     assert.ok(!js.includes(f), `${f} sa JavaScript`);
   }
