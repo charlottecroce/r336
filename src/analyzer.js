@@ -73,11 +73,12 @@ function ainmCineail(t) {
     case 'feidhm': {
       // Render a verb type the way it is written, so a mismatch reads as the
       // declaration the caller should have made.
-      const ceann = (t.leanunach ? 'ag ' : '') + (t.modh === 'ordaitheach' ? 'gníomh' : 'feidhm');
+      const MODH = { ordaitheach: 'gníomh', saor: 'saor', táscach: 'feidhm' };
+      const ceann = (t.leanunach ? 'ag ' : '') + (MODH[t.modh] || 'feidhm');
       const ps = (t.params || []).map(ainmCineail).join(', ');
-      return t.modh === 'ordaitheach'
-        ? `${ceann}(${ps})`
-        : `${ceann}(${ps}) -> ${ainmCineail(t.toradh)}`;
+      return t.modh === 'táscach'
+        ? `${ceann}(${ps}) -> ${ainmCineail(t.toradh)}`
+        : `${ceann}(${ps})`;
     }
     default: return t.ainm || '?';
   }
@@ -231,6 +232,11 @@ class Anailiseoir {
     // Which form of the substantive verb the surrounding clause selects.
     // Independent unless a particle governs the clause.
     this.rialuBriathair = mf.RIALU_BRIATHAIR.NEAMHSPLEACH;
+    this.copailMhir = null;             // the particle governing the copula (§31)
+    // surface → { lemma, foirm } for every autonomous verb in scope, present
+    // and past. Built at declaration and at import; the Ordú path looks a
+    // written form up here before it looks it up as an identifier (§37).
+    this.saorFoirmeacha = new Map();
     this.tusaigh();
   }
 
@@ -249,7 +255,7 @@ class Anailiseoir {
      * done to; with a plural object the action distributes over its members,
      * which is what a loop is.
      *
-     * Nothing new in the grammar. `déan` is a bare imperative root (§17);
+     * Nothing new in the grammar. `déan` is a bare imperative root (§4);
      * `a fhógair` is the nominalising particle already in the language (§13);
      * `ar` is the preposition already governing `cuir … ar …` (§12), and it
      * lenites here through the same code path. The only addition is the
@@ -308,6 +314,13 @@ class Anailiseoir {
         c.jsAinm = `${ailias}.${onn.jsAinm || lemma}`;
         c.foinse = foinse;
         this.domhanda.cuir(c);
+        // A borrowed autonomous verb is stated the same way a native one is.
+        if (onn.cineal && onn.cineal.saor) {
+          this.saorFoirmeacha.set(onn.cineal.saor, { lemma, aimsir: 'láithreach' });
+          if (onn.cineal.saorCaite) {
+            this.saorFoirmeacha.set(onn.cineal.saorCaite, { lemma, aimsir: 'caite' });
+          }
+        }
       }
     }
   }
@@ -332,6 +345,16 @@ class Anailiseoir {
     for (const [lemma, onn] of onnmhairi) {
       if (onn.kind === 'gníomh') { gniomhartha.add(lemma); briathra.add(lemma); }
       else if (onn.kind === 'feidhm') briathra.add(lemma);
+      // An imported autonomous verb brings its forms with it, as a borrowed
+      // verb brings its conjugation (§19.2). They are re-derived rather than
+      // carried, because the lemma is the thing that was exported and the
+      // form is a fact about the lemma.
+      if (onn.cineal && onn.cineal.saor) {
+        gniomhartha.add(onn.cineal.saor); briathra.add(onn.cineal.saor);
+        if (onn.cineal.saorCaite) {
+          gniomhartha.add(onn.cineal.saorCaite); briathra.add(onn.cineal.saorCaite);
+        }
+      }
     }
     // The module's own county rides in the signature so `--graf` can print it.
     // Nothing consults it from the far side: a county is a property of a
@@ -363,6 +386,34 @@ class Anailiseoir {
       return { earraid: ['E102', surface, ceart, oibreoir || 'ó'] };
     }
     return { earraid: ['E105', surface, lemma, ceart] };
+  }
+
+  /**
+   * The copula's agreement check, and the twin of the `Substaint` one (§31).
+   *
+   * `bí` alternates independent/dependent and is checked against
+   * `rialuBriathair`; the copula fuses with its particle and is checked
+   * against `copailMhir`. The demanded form is a function of two things and
+   * both are grammatical: which particle governs the clause, and the first
+   * letter of the type named after it.
+   *
+   *   más Ceart toradh      má   + is,  consonant → más
+   *   murab Easpa toradh    mura + is,  vowel     → murab
+   *   is Ceart              nothing governs it    → the independent form
+   */
+  foirmChopaile(e, mhir) {
+    if (!mhir) {
+      // Ungoverned, so the independent form, which is the only one the
+      // parser can produce here. Nothing to check.
+      return;
+    }
+    const rialu = mhir.diultach ? mf.RIALU_COPAIL.MURA : mf.RIALU_COPAIL.MA;
+    const ceart = mf.foirmChopail(rialu, e.cineal.ainm);
+    // A separate `is` after the particle is the pre-0.9 word order. It is not
+    // a wrong allomorph but a missing fusion, so it is named as it was
+    // written rather than as a single word.
+    const scriofa = e.faoiMhir ? mhir.scriofa : `${mhir.scriofa} … is`;
+    if (scriofa !== ceart) this.bail.cuir('E517', e.ionad, scriofa, ceart);
   }
 
   /** File a resolution failure, remapping "unbound" to the caller's code. */
@@ -670,6 +721,12 @@ class Anailiseoir {
     const contae = this.reitighContae(m.contae);
     this.eiligh(m.ainm, contae, m.contae ? m.contae.ionad : m.ionad);
 
+    // §26.8 — a sum enumerates a choice, so it needs something to choose
+    // between. Reported and then carried on with: the declaration is still
+    // usable enough to check the rest of the file against, and stopping here
+    // would hide every later error behind this one.
+    if (m.malairti.length < 2) this.bail.cuir('E214', m.ionad, m.ainm, m.malairti.length);
+
     const t = { k: 'suim', ainm: m.ainm, contae, malairti: new Map() };
     this.cinealacha.set(m.ainm, t);
     for (const mal of m.malairti) {
@@ -742,8 +799,22 @@ class Anailiseoir {
     }
 
     if (this.domhanda.faighAitiuil(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
+
+    // §37 — the autonomous. Its forms are derived here, once, from the lemma,
+    // because that is where the lemma is known to be a verb.
+    if (m.modh === 'saor') {
+      const cead = mf.inShaor(m.ainm);
+      if (!cead.ok) { this.bail.cuir('E521', m.ionad, m.ainm, cead.cuis); return; }
+      cineal.saor = mf.foirmShaor(m.ainm);
+      cineal.saorCaite = mf.foirmShaorChaite(m.ainm);
+      this.saorFoirmeacha.set(cineal.saor, { lemma: m.ainm, aimsir: 'láithreach' });
+      if (cineal.saorCaite) {
+        this.saorFoirmeacha.set(cineal.saorCaite, { lemma: m.ainm, aimsir: 'caite' });
+      }
+    }
+
     m.jsAinm = jsAinm(m.ainm);
-    this.domhanda.cuir(new Ceangal(m.ainm, cineal, m.modh === 'ordaitheach' ? 'gníomh' : 'feidhm'));
+    this.domhanda.cuir(new Ceangal(m.ainm, cineal, m.modh === 'táscach' ? 'feidhm' : 'gníomh'));
   }
 
   socraighSiniu(m) {
@@ -879,12 +950,26 @@ class Anailiseoir {
       // An imperative is obeyed, never mentioned.
       case 'Ordú': {
         if (this.ctx.modh === 'táscach') this.bail.cuir('E502', r.ionad, r.ainm);
-        const res = this.reitighFoirm(r.ainm, FOIRM.BUN, (l) => !!scoip.faigh(l), null);
+        // An autonomous form is not a lemma and never will be, so it is
+        // resolved through its own table before the ordinary identifier path
+        // gets a chance to call it undefined.
+        const saorAinm = this.saorFoirmeacha.get(r.ainm);
+        const lorg = saorAinm ? saorAinm.lemma : r.ainm;
+        const res = this.reitighFoirm(lorg, FOIRM.BUN, (l) => !!scoip.faigh(l), null);
         if (res.earraid) { this.teip(res, r.ionad); return; }
         const c = scoip.faigh(res.lemma);
         if (c.kind !== 'gníomh') {
           this.bail.cuir('E207', r.ionad, ainmCineail(c.cineal)); return;
         }
+        // §37 — the form agreement, and the same shape as E512 and E517: what
+        // was written against what this position demands.
+        if (c.cineal.saor && r.ainm !== c.cineal.saor) {
+          if (r.ainm === res.lemma) this.bail.cuir('E518', r.ionad, res.lemma, c.cineal.saor);
+          else this.bail.cuir('E519', r.ionad, r.ainm, c.cineal.saor, res.lemma);
+          return;
+        }
+        // The converse: an ordinary imperative written in an autonomous shape
+        // resolved to nothing, so it is already E101 and needs no code here.
         r.ceangal = c;
 
         // Verb government of prepositions: the verb says which phrase, if any,
@@ -963,11 +1048,26 @@ class Anailiseoir {
   coinniall(r, scoip) {
     if (!r.coinniall) return;
     const roimhe = this.rialuBriathair;
+    const roimheC = this.copailMhir;
     this.rialuBriathair = r.diultach
       ? mf.RIALU_BRIATHAIR.SPLEACH
       : mf.RIALU_BRIATHAIR.NEAMHSPLEACH;
+    // The particle governs the copula the same way it governs `bí`, so it is
+    // published the same way: set for the condition, restored after it (§31).
+    this.copailMhir = r.copail
+      ? { scriofa: r.copail, diultach: r.diultach, ionad: r.ionad }
+      : null;
     const c = this.luach(r.coinniall, scoip);
+    this.copailMhir = roimheC;
     this.rialuBriathair = roimhe;
+
+    // A fused particle with nothing to classify. `más` is `má` + the copula,
+    // so writing it in front of an ordinary condition claims a classification
+    // that is not there; the fix is to unfuse it.
+    const fusta = r.copail === 'más' || r.copail === 'murab';
+    if (fusta && (!r.coinniall || r.coinniall.cineál !== 'Copail')) {
+      this.bail.cuir('E517', r.ionad, r.copail, r.diultach ? 'mura' : 'má');
+    }
     if (!comhionann(c, BOOL)) this.bail.cuir('E201', r.coinniall.ionad, 'Bool', ainmCineail(c));
   }
 
@@ -1264,7 +1364,13 @@ class Anailiseoir {
       // §13 — the copula: identification / classification. The right operand
       // is a category, never a value, so this is not `==` with Irish paint.
       case 'Copail': {
+        // Taken and cleared before descending, so that a copula nested inside
+        // the subject is not checked against the outer particle.
+        const mhir = this.copailMhir;
+        this.copailMhir = null;
         const tA = this.luach(e.abhar, scoip);
+        this.copailMhir = mhir;
+        this.foirmChopaile(e, mhir);
         const tC = this.cinealacha.get(e.cineal.ainm);
         if (!tC) { this.bail.cuir('E202', e.cineal.ionad, e.cineal.ainm); return BOOL; }
         // E302 was reserved in 0.4 for a classification that cannot be true
@@ -1277,6 +1383,8 @@ class Anailiseoir {
         }
         return BOOL;
       }
+
+
 
       // §14 — the substantive verb: existence / presence, never category.
       // Its *form* agrees with the particle governing the clause, exactly as

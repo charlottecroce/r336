@@ -175,6 +175,290 @@ const PARAIDIM_BI = Object.freeze({
 const foirmBhriathartha = (rialu) => PARAIDIM_BI[rialu];
 
 /**
+ * The copula `is`. Céim 0.9, §31.
+ *
+ * The second paradigm in this file, and the first evidence that the design
+ * generalises past initial mutation. It has the same shape as `bí` above: one
+ * word, several forms, the form chosen by the environment and never by the
+ * meaning. What differs is that `bí`'s alternation is independent/dependent,
+ * while the copula's is a *fusion* — the governing particle and the copula
+ * are written as one word:
+ *
+ *   is Duine é          the copula heading its own assertion  → independent
+ *   má + is  → más      the realis particle swallows it
+ *   mura + is → mura    the irrealis particle swallows it
+ *            → murab      … and takes -b before a vowel
+ *
+ * Two allomorph rules live here and nowhere else, both conditioned on the
+ * first letter of the *following* word, which is why the caller has to pass
+ * it in:
+ *
+ *   mura → murab  before a vowel   (mura Ceart, murab Easpa)
+ *   ní   → ní h-  before a vowel   (ní Ceart, ní hEaspa)
+ *
+ * The second is computed and never demanded, exactly as `uraigh` is computed
+ * and never demanded (§12). Four of the seven cells have no syntactic slot in
+ * Spicebag, because the language has no question, no bare negation and no
+ * subordinate assertion. `foirmChopail` throws for those, `paraidimChopail`
+ * prints them, and `--paraidím` labels them *gan bhrí, §31*.
+ */
+const RIALU_COPAIL = Object.freeze({
+  BUN: 'bun',                            // is    — independent
+  MA: 'má',                              // más   — under the realis particle
+  MURA: 'mura',                          // mura / murab — under the irrealis
+  DIULTACH: 'diúltach',                  // ní    — no slot: no bare negation
+  CEISTEACH: 'ceisteach',                // an    — no slot: no question
+  CEISTEACH_DIULTACH: 'ceisteach diúltach', // nach — no slot, likewise
+  FAISNEISEACH: 'faisnéiseach',          // gur   — no slot: no `go` clause
+});
+
+/** The cells a syntactic position actually demands. */
+const COPAIL_BEO = Object.freeze([
+  RIALU_COPAIL.BUN, RIALU_COPAIL.MA, RIALU_COPAIL.MURA,
+]);
+
+/**
+ * The surface form of the copula under `rialu`, before the word `focal`.
+ *
+ * `focal` is the predicate — the type name — because the two allomorph rules
+ * are both regressive: the copula's shape depends on what comes after it, not
+ * on what comes before. Passing the predicate is therefore not a convenience,
+ * it is the rule.
+ */
+function foirmChopail(rialu, focal = '') {
+  switch (rialu) {
+    case RIALU_COPAIL.BUN: return 'is';
+    case RIALU_COPAIL.MA: return 'más';
+    case RIALU_COPAIL.MURA: return isGuta(focal[0]) ? 'murab' : 'mura';
+    case RIALU_COPAIL.DIULTACH:
+    case RIALU_COPAIL.CEISTEACH:
+    case RIALU_COPAIL.CEISTEACH_DIULTACH:
+    case RIALU_COPAIL.FAISNEISEACH:
+      // §31 stands, on the §12 pattern: the form is real Irish and is
+      // computed below for display, but no slot in the language demands it.
+      throw new Error(`copail: níl brí ríomhchláraithe sannta don fhoirm "${rialu}" (§31)`);
+    default:
+      throw new Error(`rialú copaile anaithnid: ${rialu}`);
+  }
+}
+
+/**
+ * The whole present paradigm before `focal`, for `--paraidím` and for tests.
+ * `beo` marks the three cells a position can demand; the rest are shown the
+ * way an eclipsed form is shown, so that the reader can see what the language
+ * is declining to use.
+ */
+function paraidimChopail(focal = 'Cineál') {
+  const guta = isGuta(focal[0]);
+  const R = RIALU_COPAIL;
+  return [
+    { rialu: R.BUN, foirm: 'is', frasa: `is ${focal}`, beo: true },
+    { rialu: R.MA, foirm: 'más', frasa: `más ${focal}`, beo: true },
+    { rialu: R.MURA, foirm: guta ? 'murab' : 'mura', frasa: `${guta ? 'murab' : 'mura'} ${focal}`, beo: true },
+    // `ní` prefixes h- to a vowel, the same rule `le` follows in E201.
+    { rialu: R.DIULTACH, foirm: 'ní', frasa: `ní ${reamhlitirH(focal)}`, beo: false },
+    { rialu: R.CEISTEACH, foirm: 'an', frasa: `an ${focal}`, beo: false },
+    { rialu: R.CEISTEACH_DIULTACH, foirm: 'nach', frasa: `nach ${focal}`, beo: false },
+    { rialu: R.FAISNEISEACH, foirm: 'gur', frasa: `gur ${focal}`, beo: false },
+  ];
+}
+
+/** Every written form of the copula, for the lexer's keyword table. */
+const FOIRMEACHA_COPAIL = Object.freeze(['is', 'más', 'mura', 'murab']);
+
+/**
+ * An briathar saor — the autonomous verb. Céim 0.10, §37.
+ *
+ * The third paradigm here and the first *productive* one. `bí` and the copula
+ * are closed tables of function words: the compiler looks them up. The
+ * autonomous is formed from any verb the author declares, which means this is
+ * the first time the file has had to conjugate rather than recognise.
+ *
+ *   scríobh   →  scríobhtar        1st conjugation, broad
+ *   cuir      →  cuirtear          1st conjugation, slender
+ *   caith     →  caitear           … -th is absorbed by the ending
+ *   léigh     →  léitear           … -gh likewise
+ *   sábháil   →  sábháiltear       polysyllabic loan, still 1st
+ *   ceannaigh →  ceannaítear       2nd conjugation, -aigh dropped
+ *   bailigh   →  bailítear         2nd, slender
+ *   fógair    →  fógraítear        2nd, syncopating: fógair → fógr-
+ *   oscail    →  osclaítear        likewise
+ *   inis      →  insítear          likewise
+ *
+ * The ending agrees in quality with the final consonant of the stem, which
+ * Irish orthography signals with the preceding vowel: broad (a, o, u) takes
+ * -tar / -aítear, slender (e, i) takes -tear / -ítear. Quality is read off the
+ * stem *after* any syncopation, because syncopation is what changes it —
+ * `fógair` looks slender and `fógr-` is broad, and the ending follows the
+ * second.
+ *
+ * Nothing here knows what a verb is used for. As with lenition, the question
+ * "what is the autonomous form of this word" is answered without reference to
+ * whether any position demands it.
+ */
+
+const LEATHAN = 'aouáóú';
+const CAOL = 'eiéí';
+
+/** The handful that do not follow the rules. Irish has eleven irregular verbs. */
+const SAOR_MIREGULTA = Object.freeze({
+  // Stem-internal irregularity: `taispeáin` broadens to `taispeán-` before the
+  // ending, where `sábháil` keeps its slender consonant. No orthographic rule
+  // separates the two, so this is lexical and belongs in a table — which is
+  // what a printed grammar does with it too.
+  taispeáin: 'taispeántar',
+  bí: 'táthar',
+  faigh: 'faightear',
+  abair: 'deirtear',
+  tabhair: 'tugtar',
+  tar: 'tagtar',
+  téigh: 'téitear',
+  feic: 'feictear',
+  clois: 'cloistear',
+  beir: 'beirtear',
+});
+
+/** Vowel groups, in order. `fógair` → ['ó', 'ai']; `scríobh` → ['ío']. */
+function gutai(word) {
+  return word.toLowerCase().match(/[aeiouáéíóú]+/g) || [];
+}
+
+/** Syllable count, counted the way Irish counts it: one per vowel group. */
+const siollai = (word) => gutai(word).length;
+
+/**
+ * Is the stem broad? Decided by its last vowel group's last vowel, which is
+ * the letter that carries the quality of the consonant after it.
+ */
+function isLeathan(stem) {
+  const gs = gutai(stem);
+  if (!gs.length) return true;                 // no vowel: nothing to agree with
+  const g = gs[gs.length - 1];
+  return LEATHAN.includes(g[g.length - 1]);
+}
+
+/**
+ * Second conjugation: polysyllabic verbs in -(a)igh, and the syncopating
+ * stems in -il, -in, -ir, -is. Polysyllabic verbs in -áil and friends are
+ * first-conjugation loans and are excluded before the -il test can catch
+ * them, which is why the order of these clauses matters.
+ */
+function isDaraReimniu(lemma) {
+  const w = lemma.toLowerCase();
+  if (siollai(w) < 2) return false;
+  if (/(áil|eáil|óil|úil|áin|úin)$/.test(w)) return false;   // loans stay 1st
+  if (/(aigh|igh)$/.test(w)) return true;
+  return /[aeiouáéíóú][ilnrs]$/.test(w);
+}
+
+/**
+ * Syncopation: the unstressed vowel of the final syllable drops before a
+ * vowel-initial ending. fógair → fógr, oscail → oscl, inis → ins.
+ */
+function coimriu(stem) {
+  return stem.replace(/[aeiouáéíóú]+([^aeiouáéíóú]+)$/i, '$1');
+}
+
+/** Can this word be conjugated as a verb at all? */
+function inShaor(lemma) {
+  if (!lemma) return { ok: false, cuis: 'folamh' };
+  if (!gutai(lemma).length) return { ok: false, cuis: 'gan-ghuta' };
+  return { ok: true };
+}
+
+/**
+ * The present autonomous of `lemma`.
+ *
+ * The imperative root is the citation form, so this is derivation from the
+ * lemma exactly as `seimhigh` is — but with a suffix rather than a prefix,
+ * and with the shape of the ending decided by the stem rather than by the
+ * environment. That is the difference between this paradigm and the other
+ * two, and the reason it is the one that shows the file generalising.
+ */
+function foirmShaor(lemma) {
+  const iseal = lemma.toLowerCase();
+  if (SAOR_MIREGULTA[iseal]) return SAOR_MIREGULTA[iseal];
+  const cead = inShaor(lemma);
+  if (!cead.ok) throw new Error(`briathar saor: ${cead.cuis} — "${lemma}"`);
+
+  if (isDaraReimniu(lemma)) {
+    let stem = lemma.replace(/(aigh|igh)$/i, '');
+    if (stem === lemma) stem = coimriu(lemma);           // the syncopating kind
+    return stem + (isLeathan(stem) ? 'aítear' : 'ítear');
+  }
+
+  // First conjugation. A stem in -th or -gh is absorbed by the ending: the
+  // ending begins with the same sound, and Irish does not write it twice.
+  let stem = lemma;
+  if (/th$/i.test(stem)) stem = stem.slice(0, -2);
+  else if (/gh$/i.test(stem)) stem = stem.slice(0, -2);
+  return stem + (isLeathan(stem) ? 'tar' : 'tear');
+}
+
+/** The past autonomous. Recognised so it can be refused; see below. */
+const SAOR_CAITE_MIREGULTA = Object.freeze({
+  taispeáin: 'taispeánadh',
+  bí: 'bhíothas',
+  faigh: 'fuarthas',
+  tabhair: 'tugadh',
+  abair: 'dúradh',
+  déan: 'rinneadh',
+  feic: 'chonacthas',
+  clois: 'chualathas',
+  tar: 'thángthas',
+  téigh: 'chuathas',
+  beir: 'rugadh',
+});
+
+/**
+ * The *past* autonomous — `moladh`, `scríobhadh`, `liostaíodh`, `fuarthas`.
+ *
+ * Computed for one reason only: so that writing it can be refused with a
+ * message that names what it is. Spicebag has no tense anywhere, which is the
+ * same ground on which §31 kept `ba` out of the copula's table — a cell for a
+ * distinction the language cannot express would claim more than it can do.
+ * But a reader of Irish will write `liostaíodh` for "it was listed", and an
+ * unrecognised identifier is a worse answer than "that is the past and there
+ * is no past here".
+ *
+ * `fuarthas` is in the table above, and it is the form that made `Fuarthas` an
+ * unsafe variant name in `feidhmchlár/duine.sb` before 0.9 renamed it.
+ *
+ * Returns null where the regular rule does not reach — the monosyllabic verbs
+ * in -igh (`léigh` → `léadh`, `nigh` → `níodh`) are genuinely irregular here
+ * and are not guessed at.
+ */
+function foirmShaorChaite(lemma) {
+  const iseal = lemma.toLowerCase();
+  if (SAOR_CAITE_MIREGULTA[iseal]) return SAOR_CAITE_MIREGULTA[iseal];
+  if (!inShaor(lemma).ok) return null;
+  if (/igh$/i.test(lemma) && siollai(lemma) < 2) return null;
+
+  if (isDaraReimniu(lemma)) {
+    let stem = lemma.replace(/(aigh|igh)$/i, '');
+    if (stem === lemma) stem = coimriu(lemma);
+    return stem + (isLeathan(stem) ? 'aíodh' : 'íodh');
+  }
+  return lemma + (isLeathan(lemma) ? 'adh' : 'eadh');
+}
+
+/**
+ * The autonomous paradigm of one verb, for `--paraidím`.
+ *
+ * Laid out like `paraidimChopail`: the cell a position demands is plain, and
+ * the cell that exists in Irish with no slot here is returned so that it can
+ * be printed and labelled. Same treatment as an eclipsed form (§12), the
+ * copula's four dead cells (§31), and for the same reason.
+ */
+function paraidimShaor(lemma) {
+  const caite = foirmShaorChaite(lemma);
+  return [
+    { aimsir: 'láithreach', foirm: foirmShaor(lemma), beo: true },
+    { aimsir: 'caite', foirm: caite, beo: false },
+  ];
+}
+
+/**
  * Best guess at the lemma behind a surface form. Only a guess: the symbol
  * table has the final say.
  */
@@ -205,6 +489,17 @@ module.exports = {
   RIALU_BRIATHAIR,
   PARAIDIM_BI,
   foirmBhriathartha,
+  RIALU_COPAIL,
+  COPAIL_BEO,
+  FOIRMEACHA_COPAIL,
+  foirmChopail,
+  paraidimChopail,
+  foirmShaor,
+  foirmShaorChaite,
+  paraidimShaor,
+  inShaor,
+  isDaraReimniu,
+  SAOR_MIREGULTA,
   paraidim,
   lemmaTuairim,
   reamhlitirH,
