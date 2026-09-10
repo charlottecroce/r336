@@ -131,6 +131,28 @@ function uraigh(word) {
   return URU[c0.toLowerCase()] + word;
 }
 
+/**
+ * Every lemma that `word` could be the eclipsed form of.
+ *
+ * The inverse of `uraigh`, and it is a set rather than a value because the
+ * mapping is not one-to-one: `n` before a vowel undoes to nothing (nÉire →
+ * Éire), and `ng-` could be an eclipsed `g-` or a word that simply starts
+ * `ng-`. Used only to recognise an eclipsed identifier well enough to refuse
+ * it by name (E108, §12); the symbol table decides which candidate is real.
+ */
+function lemmaiFaoiUru(word) {
+  const amach = [];
+  const iseal = word.toLowerCase();
+  if (iseal.startsWith('n-')) amach.push(word.slice(2));
+  if (iseal[0] === 'n' && isGuta(iseal[1])) amach.push(word.slice(1));
+  if (iseal.startsWith('bhf')) amach.push(word.slice(2));
+  for (const [urú, radacach] of [['mb', 'b'], ['gc', 'c'], ['nd', 'd'],
+    ['ng', 'g'], ['bp', 'p'], ['dt', 't']]) {
+    if (iseal.startsWith(urú)) amach.push(radacach + word.slice(2));
+  }
+  return amach;
+}
+
 /** The full paradigm of a lemma, for `--paraidím` output and symbol dumps. */
 function paraidim(lemma) {
   const can = inSeimhithe(lemma);
@@ -482,6 +504,7 @@ module.exports = {
   inUraithe,
   uraigh,
   cosuilLeUru,
+  lemmaiFaoiUru,
   seimhigh,
   diseimhigh,
   cosuilLeSeimhiu,

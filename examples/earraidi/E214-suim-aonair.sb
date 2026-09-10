@@ -1,0 +1,16 @@
+// E214 — ní suim í suim nach bhfuil dhá mhalairt inti.
+//
+// Dhá chás, aon chód amháin. Níl luach ar bith sa chéad cheann, agus mar sin
+// ní cineál is féidir a lua é. Tá gach luach den dara ceann ar eolas roimh ré,
+// agus mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
+// éigeantach air. Ní dhearbhaíonn ceachtar acu rogha idir catagóirí, agus is é
+// sin an t-aon rud a dhearbhaíonn suim.
+
+// Folamh.
+suim Folamh as Corcaigh {
+}
+
+// Aonair.
+suim Aonair as Gaillimh {
+    Amháin { luach: Uimhir }
+}

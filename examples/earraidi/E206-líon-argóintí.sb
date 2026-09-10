@@ -1,0 +1,9 @@
+// E206 — líon mícheart argóintí.
+
+feidhm iomlán(a: Uimhir, b: Uimhir) -> Uimhir {
+    a + b
+}
+
+gníomh príomh() {
+    scríobh iomlán(1)
+}

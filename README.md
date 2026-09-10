@@ -1,113 +1,203 @@
 # SB
 
-A programming language.
+A programming language grounded in Irish grammar. Source files are `.sb`; the
+compiler emits JavaScript and runs on Node ≥ 22.
 
-```sb
-struchtúr Duine {
-    ainm: Teaghrán
-    aois: Uimhir
+```
+suim Toradh as Gaillimh {
+    Ceart  { duine: Duine }
+    Easpa  { cúis: Teaghrán }
 }
 
-feidhm beannacht ó Dhuine(féin) -> Teaghrán {
-    "Dia duit, " + ainm ó fhéin
+feidhm tuairisc(toradh: Toradh) -> Teaghrán {
+    más Ceart toradh { ainm ó dhuine ó thoradh } mura { cúis ó thoradh }
 }
-
-seasmhach duine = Duine { ainm: "Charlotte", aois: 20 }
-
-scríobh beannacht ó dhuine()
 ```
 
-`duine` and `dhuine` are one binding. `ó` governs its complement and demands the lenited form; the analyzer resolves the surface form back to the lemma; the JavaScript backend emits `Duine$beannacht(duine)` and never sees a mutation.
+**Version 0.10.1.** 309 tests across five suites.
 
-## Úsáid
+> **This file was rewritten at 0.9.** The previous version described the 0.4
+> six-phase project and a `src/` tree with no `contaetha.js`, no `modúil.js`,
+> no counties, no provinces and no sum types. It had not noticed three
+> releases. If you are looking for the old text, it is in the history.
+
+---
+
+## The rule the project runs on
+
+Every unusual syntax feature must have a linguistic justification. Do not
+invent a programming concept and attach an Irish word to it. Start with an
+actual Irish grammatical phenomenon, understand the relationship it expresses,
+then find the programming relationship that resembles it.
+
+Six questions, asked of everything:
+
+1. What actual Irish grammatical phenomenon inspired this?
+2. What relationship does that phenomenon express in Irish?
+3. What programming relationship resembles it?
+4. Does the analogy remain coherent when used repeatedly?
+5. Does the compiler need to understand the grammar to implement it?
+6. Is the feature useful enough to justify its complexity?
+
+**Rejection is a real and expected outcome, and the write-ups are part of the
+value.** `dá` was rejected in §14. Ownership from the prepositional pronouns —
+described in every brief since 0.5 as the strongest unbuilt idea in the
+project — was examined and rejected in §32, and the rejection produced the ordering
+that unblocks it: pronouns first, ownership after.
+
+**Two standing exceptions, both labelled wherever they appear.** The county and
+province system (§24.1, §25.1) is a deliberately strange artistic feature that
+is then enforced rigorously: `as` is a real preposition governed by the
+ordinary machinery, but the 32 counties, the four provinces, the treaties and
+the rivalries are a bit. And the `suim` declaration (§26.1) is engineering;
+only its *eliminator*, the copula, is Irish. Neither is dressed up as grammar
+after the fact.
+
+---
+
+## Getting started
 
 ```
-node bin/sbc.js examples/beannacht.sb --rith        # compile and run
-node bin/sbc.js examples/beannacht.sb --amharc      # show the JavaScript
-node bin/sbc.js examples/beannacht.sb --paraidím    # show every grammatical form
-node bin/sbc.js examples/beannacht.sb --crann       # show the AST
-node bin/sbc.js feidhmchlár                         # compile a whole directory
-node test/run.js                                    # 49 tests
+node bin/sbc.js examples/copail.sb --rith
+npm test
 ```
 
-Node 22+ (the store uses the built-in `node:sqlite`). No dependencies for the
-compiler; the sample application needs `express` and `ejs`.
+### The CLI
 
-## Na gnéithe
+| flag | what it does |
+|---|---|
+| *(none)* | compile to a sibling `.js` |
+| `--rith` | compile and run, awaiting an exported `príomh` |
+| `--amharc` | print the JavaScript without writing it |
+| `--paraidím` | every grammatical form of every binding, plus the copula's paradigm |
+| `--crann` | the abstract syntax tree |
+| `--graf` | modules, provinces, treaties, and each type's provenance |
 
-| construct | Irish phenomenon | means |
+---
+
+## Features
+
+| feature | syntax | grounded in |
 |---|---|---|
-| `ainm ó dhuine` | preposition of origin, lenites its complement | member of |
-| `dhuine` / `duine` | initial mutation as agreement | one lemma, many forms |
-| `duine is Duine` | copula — identification | classification |
-| `bí duine` | substantive verb — existence | presence / state |
-| `feidhm` / `gníomh` | indicative vs imperative mood | expression vs statement |
-| `ag f()` / `tar éis f()` | progressive vs perfect aspect | pending vs settled |
-| `Router ó "express"` | the same `ó`, foreign origin | import |
-| `feidhm m ó Dhuine(féin)` | the same `ó`, a category possessor | method |
+| lenition as government | `ainm ó dhuine` | initial mutation; §5, §6 |
+| possession / origin | `ó` | the prepositional relation; §6 |
+| mood | `feidhm`, `gníomh`, `saor` | indicative, imperative, autonomous; §4, §17, §37 |
+| the copula | `is`, and `más` / `mura` / `murab` | classification, and its paradigm; §13, §31 |
+| the substantive verb | `tá` / `bhfuil` | independent vs dependent; §14 |
+| conditionals | `má` … `mura` | no word for *else*; the elided clause; §17 |
+| aspect | `ag` (ongoing), `tar éis` (completed) | the progressive and perfect; §18 |
+| the verbal noun | `a fhógair` | the particle that nominalises a verb; §18, §20 |
+| iteration | `déan … ar …` | the light verb and its preposition; §21 |
+| state | `seasmhach` / `sealadach`, `cuir … ar …` | essence against accident; §13, §14 |
+| modules | `ó "./sonraí.sb"` | a reader acquires a lexicon before reading; §19 |
+| **provenance** | `as Corcaigh`, `comhaontú` | *(a bit, and enforced)*; §24, §25 |
+| **sum types** | `suim Toradh as Gaillimh { … }` | *(engineering; the eliminator is Irish)*; §26 |
+| the autonomous verb | `saor liostaigh(…)`, `liostaítear x` | an action with no expressible agent; §37 |
 
-Every one of those has an argument behind it in `DEARADH.md`, including the
-ones that are vocabulary rather than grammar and say so.
+### Deliberately absent
 
-## Céimeanna
+Not oversights. Each has an argument attached, and adding any of them casually
+would break one.
 
-All six phases of the spec are implemented.
+- **A programming meaning for eclipsis.** `--paraidím` prints every eclipsed
+  form labelled *gan bhrí, §12*, and `foirmDe(lemma, FOIRM.URAITHE)` throws.
+  The one honest candidate anyone has found is numerals.
+- **The definite article** (§35) — and refusing it is how eclipsis stays out
+  through the back door, since *as an mbaile* eclipses.
+- **Grammatical gender** (§36). 0.9 was the first release to test this: the
+  ownership design needed the gendered `aige`/`aici`, and the design was
+  rejected rather than the rule relaxed.
+- **`dá`** (§14), **anonymous function literals** (no Irish construction for an
+  unnamed verb), **classes, `this`, inheritance and constructors** (never).
+- **Exhaustiveness checking on sums**, refused with an argument in §26.3.
+- **Relative clauses and the vocative** (§33, §34).
 
-1. **Croíthiomsaitheoir** — lexer, parser, AST, primitives, `seasmhach`,
-   `feidhm`, calls, `struchtúr`, type checking.
-2. **Córas gramadaí** — identifier paradigms, lenition, government and
-   agreement, `ó`, possessive semantics, methods.
-3. **`is` agus `bí`** — classification kept separate from existence.
-4. **Express** — `ó "modúl"` imports, `Iasacht` at the boundary, `.sb`
-   modules inside a Node application.
-5. **Aistriú de réir a chéile** — `feidhmchlár/` runs JavaScript, Spicebag and
-   EJS together; the Express wiring stays in JavaScript on purpose.
-6. **Ciseal bunachair** — `rt/stór.js`, a Spicebag database abstraction over
-   SQLite with a pluggable driver and no Prisma anywhere.
+The absence claim has got stronger three times and this file has now noticed:
+**the article and eclipsis remain absent despite counties, provinces and sum
+types** — three features that each brought them within reach and each declined
+them explicitly.
 
-Deliberately absent: eclipsis (§12), mutable bindings (§6), relative clauses
-(§19), the vocative (§20), the definite article (§21), gender (§22).
+---
 
-## Struchtúr an tionscadail
+## Layout
 
 ```
 spicebag/
-├── bin/sbc.js              the compiler driver
+├── bin/sbc.js              the CLI
 ├── src/
-│   ├── morphology.js       Irish initial mutation. Knows no programming.
+│   ├── morphology.js       lenition, eclipsis, and three paradigms: bí, the
+│   │                       copula, and the autonomous verb — the last one
+│   │                       productive. Knows no programming.
 │   ├── diagnostics.js      Irish messages behind stable codes
-│   ├── lexer.js            .sb → tokens; also the verb pre-scan
+│   ├── contaetha.js        the 32, the 4 cúigí, exile, rivalry. Vocabulary.
+│   ├── lexer.js            tokens; the verb pre-scan; the import pre-scan
 │   ├── parser.js           tokens → grammatical AST
-│   ├── analyzer.js         government, agreement, types, mood, aspect
+│   ├── analyzer.js         government, agreement, types, mood, aspect,
+│   │                       state, modules, provenance, sums
+│   ├── modúil.js           the module graph
 │   ├── codegen.js          resolved AST → JavaScript
-│   └── index.js            pipeline and file handling
-├── rt/stór.js              the database abstraction (Céim 6)
-├── examples/
-│   ├── beannacht.sb        the §24 program
-│   ├── seilbh.sb           chained possession
-│   ├── copail.sb           is vs bí
-│   ├── modhanna.sb         methods through ó
-│   ├── modh.sb             imperative vs indicative
-│   ├── aspect.sb           ag / tar éis over the store
-│   └── earraidi/           one file per diagnostic, each failing on purpose
-├── feidhmchlár/            Céim 4 and 5: Express + EJS + Spicebag + SQLite
-│   ├── freastalaí.js       JS — wiring
-│   ├── bealaí.sb           SB — route logic
-│   ├── sonraí.sb           SB — data access
-│   └── amhairc/*.ejs       EJS — untouched
-├── test/run.js
-├── DEARADH.md              why each feature exists, and what is still open
-└── README.md
+│   └── index.js            the pipeline
+├── rt/                     stór.js, bunúsach.js, freastal.js — library, not
+│                           language
+├── examples/               one per feature, plus earraidi/ — one per diagnostic,
+│                           each failing on purpose
+├── feidhmchlár/            Express + EJS + Spicebag + SQLite
+├── craobh/                 the four-province domain; all four spent
+├── test/                   run.js · contae.js · feidhmchlár.js · suim.js ·
+│                           earraidi.js
+└── DEARADH.md              the design record, §1–§38
 ```
 
-## An feidhmchlár
+### Invariants
 
-```
-cd feidhmchlár
-npm install
-npm run tosaigh        # compiles the .sb files, then serves on :3000
-```
+- **The backend never sees a mutation, a county, a province, or a sum.** The
+  sum's name never appears in emitted JavaScript at all.
+- **No driver knowledge in the compiler.** `sql`, `sqlite` and `prisma` appear
+  nowhere in the front end, and there are tests asserting it.
+- **One government mechanism.** `ó`, `ar`, `a` and `as` all route through
+  `reitighFoirm`.
+- **The eclipsed slot stays empty.** `foirmDe(lemma, FOIRM.URAITHE)` throws.
+- **AST node names and internal identifiers are Irish.**
+- **No grammatical form survives into the emitted JavaScript**, and each
+  feature ships a test asserting it.
 
-`GET /` lists people from SQLite through `bealaí.sb`; `GET /duine/1` shows one;
-`GET /duine/abc` returns 400, because the copula asks whether the borrowed id
-belongs to the category `Uimhir` and `NaN` does not.
+---
+
+## Diagnostics
+
+Codes are the contract; the wording is not. Messages are Irish and still need
+review by a fluent speaker.
+
+| range | subject |
+|---|---|
+| E101–E110 | morphology: mutation, form, resolution, modules |
+| E201–E214 | types |
+| E301–E302 | the copula and `bí` |
+| E401–E404 | lexing and parsing |
+| E501–E521 | mood, aspect, the copula's form, the autonomous verb |
+| E601–E609 | provenance: province, county, exile, treaty |
+
+Every diagnostic introduced from 0.5 onward has a file in `examples/earraidi/`
+**Every code has a case, and a test enforces it in both directions.** 59 files
+in `examples/earraidi/`, each failing with the code in its name and with no
+other; and `test/earraidi.js` fails if any code in `diagnostics.js` lacks one.
+This was 23 of 60 until 0.10.1 — see §38.
+
+Two codes are reserved: they have a message and deliberately no way to fire,
+each with a reason recorded in the test. **E211** was made real in 0.8 and
+un-made in the same release (§26.7); **E506** describes a failure the backend
+no longer produces. A reserved code that acquires a case is a failing test,
+because the reservation was then wrong.
+
+
+---
+
+## Calibration
+
+Spicebag has exactly one user: the person building it. **Usable does not mean
+easy.** It means the compiler is internally consistent, every error is
+diagnosable, and the author can still read their own code in six months.
+
+## License
+
+MIT.

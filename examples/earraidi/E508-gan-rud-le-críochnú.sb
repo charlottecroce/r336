@@ -1,0 +1,10 @@
+// E508 — níl aon rud le críochnú anseo.
+//
+// Ní chríochnaíonn `tar éis` ach gníomh atá ar siúl: is aspect é, agus
+// teastaíonn gníomhaíocht uaidh le bheith críochnaithe. Níl aon rud ar siúl
+// in uimhir.
+
+ag gníomh príomh() {
+    seasmhach x = tar éis 3
+    scríobh x
+}

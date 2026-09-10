@@ -1,0 +1,13 @@
+// E512 — foirm mhícheart den bhriathar substaintigh.
+//
+// Roghnaíonn an mhír an fhoirm. Tógann `má` an fhoirm neamhspleách `tá`;
+// tógann `mura` an fhoirm spleách, agus uraíonn sí í: `bhfuil`. Ní athraíonn
+// an bhrí — is comhaontú é seo, ní brí (§14).
+//
+// Léigh le E517 é: is í an fhadhb chéanna í ag an gcopail.
+
+seasmhach x = 1
+
+gníomh príomh() {
+    mura tá x { scríobh "níl" }
+}

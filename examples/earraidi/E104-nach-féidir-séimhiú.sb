@@ -1,0 +1,11 @@
+// E104 — ní féidir an t-aitheantóir a shéimhiú.
+//
+// Tosaíonn `scoil` le cnuasach s + consan, agus ní ghlacann a leithéid le
+// séimhiú sa Ghaeilge. Níl an bhunfhoirm ina rogha anseo: is í an t-aon
+// fhoirm atá ag an bhfocal.
+
+seasmhach scoil = 3
+
+gníomh príomh() {
+    scríobh shcoil
+}

@@ -1,0 +1,14 @@
+// E520 — ní ghlacann briathar saor le faighteoir.
+//
+// Is seilbh é modh, agus is déantóir é an faighteoir: `féin` an focal féin.
+// Sin go díreach an rud nach gcuireann an fhoirm shaor in iúl, mar sin ní
+// féidir an dá rud a bheith le chéile. Diúltú gramadaí é seo seachas
+// srianadh.
+
+struchtúr Duine {
+    ainm: Teaghrán
+}
+
+saor beannaigh ó Dhuine(féin) {
+    scríobh ainm ó fhéin
+}

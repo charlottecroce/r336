@@ -1,0 +1,14 @@
+// E509 — ní féidir modh a fhógairt ar rud nach struchtúr é.
+//
+// Is seilbh é modh: sealbhaíonn an faighteoir é mar a shealbhaíonn struchtúr
+// réimse. Ní shealbhaíonn suim aon rud go dtí go gcaolaítear í, agus ní
+// shealbhaíonn malairt aon rud riamh — ainmníonn sí cruth (§26.9).
+
+suim Toradh {
+    Ceart { luach: Uimhir }
+    Easpa { cúis: Teaghrán }
+}
+
+feidhm cuntas ó Thoradh(féin) -> Uimhir {
+    1
+}

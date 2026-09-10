@@ -1,0 +1,31 @@
+// E517 — foirm mhícheart den chopail.
+//
+// Trí bhealach chun é a fháil, agus is é an t-aon locht amháin atá i ngach
+// ceann acu ná nár ceanglaíodh an chopail leis an mír a rialaíonn í. Is é an
+// comhbhrá céanna le E512 é: ní athraíonn brí na copaile, agus ní athraíonn
+// ach a foirm.
+
+suim Toradh as Corcaigh {
+    Ceart  { luach: Uimhir }
+    Easpa  { cúis: Teaghrán }
+}
+
+seasmhach t: Toradh = Ceart { luach: 1 }
+
+// 1. An seanord focal. Scríobhadh `má` agus `is` ar leithligh, ach ní
+//    fhágann an Ghaeilge scartha iad: `má` + `is` = `más`.
+feidhm a() -> Uimhir {
+    má t is Ceart { 1 } mura { 0 }
+}
+
+// 2. An t-allamorf mícheart. Tosaíonn `Easpa` le guta, agus mar sin is
+//    `murab` atá ag teastáil.
+feidhm b() -> Uimhir {
+    mura Easpa t { 1 } mura { 0 }
+}
+
+// 3. Mír cheangailte gan aicmiú ar bith le déanamh. Ciallaíonn `más` "má is",
+//    agus mar sin geallann sé faisnéis nach bhfuil ann.
+feidhm c() -> Uimhir {
+    más 1 > 0 { 1 } mura { 0 }
+}

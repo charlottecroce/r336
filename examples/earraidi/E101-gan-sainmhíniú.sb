@@ -1,0 +1,9 @@
+// E101 — aitheantóir gan sainmhíniú.
+//
+// An chéad cheist a chuireann an t-anailíseoir riamh, agus an ceann is
+// simplí: an bhfuil an focal seo sa chlár ar chor ar bith? Cuirtear roimh
+// gach ceist faoi fhoirm í, mar níl aon chiall le foirm fhocail nach ann dó.
+
+gníomh príomh() {
+    scríobh rudGanSainmhíniú
+}

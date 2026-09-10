@@ -90,7 +90,7 @@ it('ní fhéadfadh an tsuim a bheith san Mhumhain — sin an rogha a chosain rud
 
 it('is E213 é an rón a chur isteach sa tsuim gan é a thiontú', () => {
   // The rule that keeps the conversion on the boundary where it belongs.
-  const olc = foinseDe('duine.sb').replace('Fuarthas { duine: Duine }', 'Fuarthas { rón: Iasacht }');
+  const olc = foinseDe('duine.sb').replace('Aimsithe { duine: Duine }', 'Aimsithe { rón: Iasacht }');
   assert.notStrictEqual(olc, foinseDe('duine.sb'), 'níor éirigh leis an ionadú');
   assert.ok(coidLeMalairt('duine.sb', olc, 'duine.sb').includes('E213'));
 });
@@ -174,6 +174,35 @@ it('is E609 é an cineál a chur i gcontae le seanaighneas', () => {
   const coid = coidLeMalairt('duine.sb', olc, 'duine.sb');
   assert.ok(coid.length >= 4, JSON.stringify(coid));
   assert.ok(coid.every((c) => c === 'E609'), JSON.stringify(coid));
+});
+
+
+// ══ §37 — na lámhálaithe mar bhriathra saora ══════════════════════════
+
+it('is briathra saora iad an dá bhealach', () => {
+  const src = foinseDe('bealaí.sb');
+  assert.ok(src.includes('ag saor liostaigh('), 'liostaigh');
+  assert.ok(src.includes('ag saor taispeáin('), 'taispeáin');
+  // Agus cláraítear fós iad ar an tslí chéanna: is é an t-ainmniú an t-aon
+  // rud a bhí riamh ann, agus níor athraigh sé.
+  assert.ok(src.includes('a liostaigh'));
+  assert.ok(src.includes('a thaispeáin'));
+});
+
+it('ní féidir lámhálaí a ordú sa mhodúl a fhógraíonn é (E518)', () => {
+  const olc = foinseDe('bealaí.sb')
+    .replace('bealach ó fhreastal(app, "/", a liostaigh)', 'liostaigh app, app');
+  assert.notStrictEqual(olc, foinseDe('bealaí.sb'), 'níor éirigh leis an ionadú');
+  assert.ok(coidLeMalairt('bealaí.sb', olc, 'bealaí.sb').includes('E518'));
+});
+
+it('ní shroicheann an modh saor an JavaScript', () => {
+  const { js } = tiomsaighComhad('bealaí.sb');
+  for (const f of ['saor', 'liostaítear', 'taispeántar', 'liostaíodh']) {
+    assert.ok(!js.includes(f), `${f} sa JavaScript`);
+  }
+  // Agus tá na feidhmeanna féin ann, faoina lemma, mar a bhí riamh.
+  assert.ok(/function liostaigh\(/.test(js) || /liostaigh\s*=/.test(js));
 });
 
 // ── rith ──────────────────────────────────────────────────────────────

@@ -1,0 +1,8 @@
+// E404 — ní ghlacann gníomh le cineál toraidh.
+//
+// Ní thugann ordú aon rud ar ais. Sin an difríocht idir an dá mhodh, agus ní
+// srianadh é ach an rud a chiallaíonn "ordaitheach".
+
+gníomh fógair(t: Teaghrán) -> Uimhir {
+    scríobh t
+}

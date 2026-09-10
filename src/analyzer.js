@@ -372,7 +372,20 @@ class Anailiseoir {
    */
   reitighFoirm(surface, foirm, lemmaAnn, oibreoir) {
     const lemma = mf.lemmaTuairim(surface);
-    if (!lemmaAnn(lemma)) return { earraid: ['E101', lemma] };
+    if (!lemmaAnn(lemma)) {
+      // §12 — an eclipsed identifier is recognised so that it can be refused
+      // by name. Eclipsis has no programming meaning, `foirmDe(…, URAITHE)`
+      // throws, and `--paraidím` prints every eclipsed form annotated *gan
+      // bhrí*. Falling through to E101 would answer a form that is correct
+      // Irish with "undefined identifier", which is the worst of the two
+      // available answers. Same move as E519 makes for the past autonomous.
+      if (mf.cosuilLeUru(surface)) {
+        for (const iarracht of mf.lemmaiFaoiUru(surface)) {
+          if (lemmaAnn(iarracht)) return { earraid: ['E108', surface] };
+        }
+      }
+      return { earraid: ['E101', lemma] };
+    }
 
     const ceart = mf.foirmDe(lemma, foirm);
     if (ceart === surface) return { lemma };

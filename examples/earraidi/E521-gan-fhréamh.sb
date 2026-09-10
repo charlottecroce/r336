@@ -1,0 +1,12 @@
+// E521 — ní féidir foirm shaor a dhéanamh de.
+//
+// Réimníonn an tiomsaitheoir an fhréamh, agus ní féidir focal gan ghuta a
+// réimniú: níl aon siolla ann, mar sin níl aon leithne ná caoile ann, mar sin
+// níl aon deireadh ann a d'fhéadfadh aontú léi.
+//
+// Ní bhaineann sé seo ach leis an modh saor. Is ainm é ainm gníomha, agus
+// glacann `gníomh` le rud ar bith is aitheantóir bailí é.
+
+saor xyz(mír: Teaghrán) {
+    scríobh mír
+}

@@ -1,0 +1,6 @@
+// E503 — luach á chaitheamh i dtraipisí taobh istigh d'fheidhm.
+
+feidhm aois() -> Uimhir {
+    3
+    20
+}

@@ -1,0 +1,7 @@
+// E511 — ní sprioc bhailí do "cuir … ar" é seo.
+//
+// Teastaíonn ceangal nó réimse: rud a bhfuil staid aige. Níl staid ag uimhir.
+
+gníomh príomh() {
+    cuir 1 ar 3
+}

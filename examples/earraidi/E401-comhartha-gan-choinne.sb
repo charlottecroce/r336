@@ -1,0 +1,8 @@
+// E401 — comhartha gan choinne.
+//
+// Earráid chomhréire. Insítear an dá rud a theastaíonn ón léitheoir: an rud a
+// fuarthas, agus an rud a bhí ag teastáil ina áit.
+
+feidhm suim(a: Uimhir, b: Uimhir) -> Uimhir {
+    a +
+}

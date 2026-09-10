@@ -94,10 +94,10 @@ it('is E208 é ainm malairte a athúsáid — gan riail nua', () => {
 });
 
 // ══ 2. Díothú: an chopail a chaolaíonn (§26.3) ═══════════════════════
-it('caolaíonn `má x is Ceart` an ceangal sa chraobh', async () => {
+it('caolaíonn `más Ceart x` an ceangal sa chraobh', async () => {
   const src = `${DUINE}\n${TORADH}\n`
     + 'feidhm tuairisc(t: Toradh) -> Teaghrán {\n'
-    + '    má t is Ceart { ainm ó dhuine ó th } mura { cúis ó th }\n'
+    + '    más Ceart t { ainm ó dhuine ó th } mura { cúis ó th }\n'
     + '}\n'
     + 'gníomh príomh() {\n'
     + '    scríobh tuairisc(Ceart { duine: Duine { ainm: "Cáit" } })\n'
@@ -116,28 +116,28 @@ it('ní osclaítear suim gan í a aithint ar dtús (E205)', () => {
 
 it('caolaíonn an chraobh dhiúltach nuair atá dhá mhalairt ann', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
-    + 'feidhm f(t: Toradh) -> Teaghrán { má t is Ceart { "sea" } mura { cúis ó th } }'), []);
+    + 'feidhm f(t: Toradh) -> Teaghrán { más Ceart t { "sea" } mura { cúis ó th } }'), []);
 });
 
 it('ní chaolaíonn sí nuair atá trí cinn ann — agus sin teorainn dhearbhaithe', () => {
   const trí = 'suim Trí {\n    A { x: Uimhir }\n    B { x: Uimhir }\n    C { x: Uimhir }\n}';
   // The affirmative branch still narrows…
-  assert.deepStrictEqual(coid(`${trí}\nfeidhm f(t: Trí) -> Uimhir { má t is A { x ó th } mura { 0 } }`), []);
+  assert.deepStrictEqual(coid(`${trí}\nfeidhm f(t: Trí) -> Uimhir { más A t { x ó th } mura { 0 } }`), []);
   // …and the negative one does not, because "not A" is not the name of
   // anything when there are three (§26.3).
-  assert.deepStrictEqual(coid(`${trí}\nfeidhm f(t: Trí) -> Uimhir { má t is A { 0 } mura { x ó th } }`), ['E205']);
+  assert.deepStrictEqual(coid(`${trí}\nfeidhm f(t: Trí) -> Uimhir { más A t { 0 } mura { x ó th } }`), ['E205']);
 });
 
 it('iompaíonn `mura` an dá chraobh', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
-    + 'feidhm f(t: Toradh) -> Teaghrán { mura t is Ceart { cúis ó th } mura { "sea" } }'), []);
+    + 'feidhm f(t: Toradh) -> Teaghrán { mura Ceart t { cúis ó th } mura { "sea" } }'), []);
 });
 
 it('ní chaolaítear ceangal sealadach: ní fíor caolú a scriosann `cuir`', () => {
   // Essence narrows; accident does not (§26.3).
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 'sealadach t: Toradh = Easpa { cúis: "x" }\n'
-    + 'gníomh f() { má t is Ceart { scríobh ainm ó dhuine ó th } }'), ['E205']);
+    + 'gníomh f() { más Ceart t { scríobh ainm ó dhuine ó th } }'), ['E205']);
 });
 
 it('buaileann craobhacha le chéile ag an tsuim seachas teip a thabhairt', () => {
@@ -198,7 +198,7 @@ it('ceadaítear Iasacht i réimse struchtúir fós — comhoiriúnacht siar', ()
 
 it('is Neamhní an easpa anois, agus tá sí ann cheana', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n`
-    + 'suim Aimsiú {\n    Fuarthas { duine: Duine }\n    Beag { luach: Neamhní }\n}'), []);
+    + 'suim Aimsiú {\n    Aimsithe { duine: Duine }\n    Beag { luach: Neamhní }\n}'), []);
 });
 
 // ══ 6. Dúchas: aon chúige amháin ag suim (§26.2) ═════════════════════
@@ -229,11 +229,11 @@ it('freagraíonn malairt le contae na suime ag an teorainn', () => {
   // exactly as opening a struct field would be.
   assert.deepStrictEqual(coid('as Gaillimh\n'
     + 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { x: Uimhir }\n}\n'
-    + 'feidhm f(t: T) -> Uimhir { má t is A { x ó th } mura { 0 } }'), ['E601']);
+    + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }'), ['E601']);
   // …and a treaty opens it, through the machinery that was already there.
   assert.deepStrictEqual(coid('as Gaillimh\ncomhaontú Gaillimh Corcaigh\n'
     + 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { x: Uimhir }\n}\n'
-    + 'feidhm f(t: T) -> Uimhir { má t is A { x ó th } mura { 0 } }'), []);
+    + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }'), []);
 });
 
 it('coinníonn ualach a chontae féin taobh istigh de shuim eile', () => {
@@ -246,7 +246,7 @@ it('coinníonn ualach a chontae féin taobh istigh de shuim eile', () => {
   assert.deepStrictEqual(coid(`${src}seasmhach t: T = A { duine: Duine { ainm: "C" } }`), []);
   // Opening the payload is not, because the payload is still from Cork.
   assert.deepStrictEqual(
-    coid(`${src}feidhm f(t: T) -> Teaghrán { má t is A { ainm ó dhuine ó th } mura { cúis ó th } }`),
+    coid(`${src}feidhm f(t: T) -> Teaghrán { más A t { ainm ó dhuine ó th } mura { cúis ó th } }`),
     ['E601']);
 });
 
@@ -254,7 +254,7 @@ it('is E609 é ualach i gcontae a bhfuil seanaighneas leis', () => {
   const src = 'as Ciarraí\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'suim T as Gaillimh {\n    A { duine: Duine }\n    B { cúis: Teaghrán }\n}\n'
-    + 'feidhm f(t: T) -> Teaghrán { má t is A { ainm ó dhuine ó th } mura { cúis ó th } }';
+    + 'feidhm f(t: T) -> Teaghrán { más A t { ainm ó dhuine ó th } mura { cúis ó th } }';
   assert.ok(coid(src).includes('E609'), JSON.stringify(coid(src)));
 });
 
@@ -264,7 +264,7 @@ it('trasnaíonn suim agus a malairtí an teorainn', () => {
     coidTionscadal({
       'toradh.sb': 'suim T {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
       'príomh.sb': 'seasmhach m = ó "./toradh.sb"\n'
-        + 'feidhm f(t: T) -> Uimhir { má t is A { x ó th } mura { 0 } }',
+        + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }',
     }),
     []);
 });
@@ -285,7 +285,7 @@ it('ní éilíonn malairt iompórtáilte cúige di féin', () => {
     coidTionscadal({
       'toradh.sb': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
       'príomh.sb': 'as Corcaigh\nseasmhach m = ó "./toradh.sb"\n'
-        + 'feidhm f(t: T) -> Uimhir { má t is A { x ó th } mura { 0 } }',
+        + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }',
     }),
     []);
 });
@@ -294,7 +294,7 @@ it('ní éilíonn malairt iompórtáilte cúige di féin', () => {
 it('ní shroicheann an tsuim an JavaScript', () => {
   const js = jsDe('as Corcaigh\n'
     + 'suim Toradh as Corcaigh {\n    Ceart { x: Uimhir }\n    Easpa { cúis: Teaghrán }\n}\n'
-    + 'feidhm f(toradh: Toradh) -> Uimhir { má toradh is Ceart { x ó thoradh } mura { 0 } }');
+    + 'feidhm f(toradh: Toradh) -> Uimhir { más Ceart toradh { x ó thoradh } mura { 0 } }');
   // The sum is a statement about which tags are possible, and a statement
   // about possibility has no run-time shadow: the *name* never appears.
   for (const focal of ['Toradh', '__suim', '__malairt', 'Corcaigh', 'An Mhumhain',
@@ -330,6 +330,58 @@ it('fanann `suimiú` ag obair: níor ghoid an eochairfhocal an t-oibreoir', asyn
 
 it('is aitheantóir fós é "suim" mar chuid d\'fhocal', () => {
   assert.deepStrictEqual(coid('seasmhach suimeanna = 3'), []);
+});
+
+
+// ══ E214 — ní suim í suim gan rogha (§26.8) ═══════════════════════════
+
+it('is E214 í suim fholamh', () => {
+  assert.deepStrictEqual(coid('suim T as Corcaigh { }'), ['E214']);
+});
+
+it('is E214 í suim aonair', () => {
+  assert.deepStrictEqual(coid('suim T as Corcaigh { A { u: Uimhir } }'), ['E214']);
+});
+
+it('luaitear cé mhéad malairt a fuarthas, mar is é sin an rud atá le ceartú', () => {
+  const [folamh] = earraidiDe('suim T { }');
+  const [aonair] = earraidiDe('suim T { A { u: Uimhir } }');
+  assert.ok(/malairt ar bith/.test(folamh.teachtaireacht), folamh.teachtaireacht);
+  assert.ok(/malairt amháin/.test(aonair.teachtaireacht), aonair.teachtaireacht);
+});
+
+it('is leor dhá mhalairt', () => {
+  assert.deepStrictEqual(
+    coid('suim T { A { u: Uimhir } B { c: Teaghrán } }'), []);
+});
+
+it('ní chuireann E214 cosc ar an gcuid eile den chomhad a sheiceáil', () => {
+  // Leantar ar aghaidh i ndiaidh E214 d'aon ghnó: dá stopfaí, cheilfí gach
+  // botún eile taobh thiar den chéad cheann.
+  const es = coid('suim T { A { u: Uimhir } }\nseasmhach x: Rud = 1');
+  assert.deepStrictEqual(es, ['E214', 'E202']);
+});
+
+// ══ Dhá iompar a thit amach, agus atá anois luaite (§26.2, §26.9) ═════
+
+it('ainmníonn malairt cruth, agus mar sin is cineál fógartha í (§26.2)', () => {
+  // Bhí sé seo ag obair ó 0.8 gan é a bheith socraithe ná luaite. Coinnítear
+  // é: ainmníonn malairt cruth, agus is í an tsuim a shealbhaíonn an cúige.
+  assert.deepStrictEqual(coid(
+    'suim T { A { u: Uimhir } B { c: Teaghrán } }\n'
+    + 'feidhm f(a: A) -> Uimhir { u ó a }\n'
+    + 'scríobh f(A { u: 1 })'), []);
+});
+
+it('ní ghlacann suim ná malairt le modh (E509, §26.9)', () => {
+  // Is seilbh é modh, agus ní shealbhaíonn luach neamhaitheanta aon rud.
+  // `ó` séimhíonn a chomhlánú anseo mar a dhéanann sé i ngach áit eile.
+  assert.deepStrictEqual(coid(
+    'suim Toradh { Ceart { u: Uimhir } Easpa { c: Teaghrán } }\n'
+    + 'feidhm cuntas ó Thoradh(féin) -> Uimhir { 1 }'), ['E509']);
+  assert.deepStrictEqual(coid(
+    'suim Toradh { Ceart { u: Uimhir } Easpa { c: Teaghrán } }\n'
+    + 'feidhm cuntas ó Cheart(féin) -> Uimhir { 1 }'), ['E509']);
 });
 
 // ── rith ──────────────────────────────────────────────────────────────

@@ -1,0 +1,14 @@
+// E513 — ní féidir "a" a chur roimh rud nach féidir a ainmniú.
+//
+// Ainmníonn an cháithnín `a` briathar: `a fhógair` an gníomh mar ainmfhocal.
+// Tá ainm ag uimhir cheana féin, agus mar sin níl aon rud le déanamh ann.
+//
+// Tabhair faoi deara nach eochairfhocal é `a`: fanann `seasmhach a = 3` ina
+// fhógra bailí. Is é an cruth a chinneann — dhá aitheantóir taobh le taobh,
+// rud nach slonn dlisteanach é — agus ní tábla eochairfhocal.
+
+seasmhach uimhir = 3
+
+gníomh príomh() {
+    scríobh a uimhir
+}

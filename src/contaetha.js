@@ -33,7 +33,7 @@
  *  2. Six names carry the definite article — *An Mhí*, *An Clár*, *An Dún* —
  *     and one carries the genitive plural article, *Dún na nGall*. The
  *     definite article is NOT implemented and nothing here implements it
- *     (§21 stands, and Part 4 of the 0.6 brief stands). These are opaque
+ *     (§35 stands, and Part 4 of the 0.6 brief stands). These are opaque
  *     word sequences in a lookup table. No rule about `an` or `na` is stated,
  *     derived, or reachable from this file. The province names are in the
  *     same position and get the same treatment: `An Mhumhain` is one opaque

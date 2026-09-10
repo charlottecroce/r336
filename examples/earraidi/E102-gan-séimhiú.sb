@@ -1,0 +1,14 @@
+// E102 — ní mór séimhiú a chur air.
+//
+// Séimhíonn `ó` a chomhlánú. Ní stíl é sin ach rialú: iarrann an suíomh an
+// fhoirm shéimhithe, agus tugtar an bhunfhoirm dó.
+
+struchtúr Duine {
+    ainm: Teaghrán
+}
+
+seasmhach duine = Duine { ainm: "Cáit" }
+
+gníomh príomh() {
+    scríobh ainm ó duine
+}

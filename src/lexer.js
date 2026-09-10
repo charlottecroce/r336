@@ -16,10 +16,12 @@
  */
 
 const { earraid } = require('./diagnostics');
+const mf = require('./morphology');
 
 const EOCHAIRFHOCAIL = new Set([
   'feidhm',      // function — produces a nominal
   'gníomh',      // imperative — performs, produces nothing
+  'saor',        // autonomous — performed, by nobody this text can name (§37)
   'struchtúr',   // struct
   'suim',        // sum — a type that is one of several named alternatives
   'seasmhach',   // immutable binding
@@ -28,12 +30,19 @@ const EOCHAIRFHOCAIL = new Set([
   'comhaontú',   // a bilateral agreement between two counties 
   'ag',          // progressive aspect: an ongoing action
   'tar éis',     // perfect aspect: a completed action
-  'is',          // copula — identity / classification
+  'is',          // copula — identity / classification; independent form
   'bí',          // substantive verb, citation form (imperative)
   'tá',          //   … independent form
   'bhfuil',      //   … dependent form, eclipsed by its particle
   'má',          // if — realis particle, selects the independent form
   'mura',        // if…not — selects the dependent form, and eclipses it
+  // The same two particles again, fused with the copula (§31). Irish writes
+  // `má` + `is` as one word, so these are forms of the copula and not new
+  // conjunctions: `más` is `má` and `mura`/`murab` is `mura`, which is why
+  // the parser normalises them back to the bare particle and hands the
+  // written form to the analyzer to check, exactly as it does for `bhfuil`.
+  'más',         // má   + is           — realis, classifying
+  'murab',       // mura + is, before a vowel
   'sealadach',   // mutable binding: what a thing happens to be right now
   'cuir',        // "put" — the imperative that changes a state
   'ar',          // "on" — the surface an action lands on; lenites
@@ -197,6 +206,26 @@ function lexeain(toks, iasachta = null) {
     if (t.cinéal !== 'KW' || toks[i + 1].cinéal !== 'IDENT') continue;
     if (t.luach === 'gníomh') { gniomhartha.add(toks[i + 1].luach); briathra.add(toks[i + 1].luach); }
     else if (t.luach === 'feidhm') briathra.add(toks[i + 1].luach);
+    else if (t.luach === 'saor') {
+      // Two surfaces enter the lexicon for one verb, and both have to, for
+      // different reasons. The autonomous form is the one a statement is
+      // written with, so VSO parsing needs it. The root is added as well —
+      // not because commanding it is legal, but because it has to *parse*
+      // before the analyzer can say why it is refused (E518). Diagnosing
+      // beats failing to parse, which is the same reason the pre-0.9 copula
+      // word order still parses.
+      const lemma = toks[i + 1].luach;
+      briathra.add(lemma);
+      gniomhartha.add(lemma);
+      try {
+        const saor = mf.foirmShaor(lemma);
+        gniomhartha.add(saor); briathra.add(saor);
+        // The past form enters the lexicon so it can be *refused* by name
+        // rather than coming back as an unknown identifier (§37.5).
+        const caite = mf.foirmShaorChaite(lemma);
+        if (caite) { gniomhartha.add(caite); briathra.add(caite); }
+      } catch { /* unformable; the analyzer reports it */ }
+    }
   }
   return { gniomhartha, briathra };
 }

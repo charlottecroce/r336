@@ -1,0 +1,14 @@
+// E501 — is gníomh é seo, ní ainmní.
+//
+// Déantar ordú; ní luaitear é. Léigh le E518 é: ní ordaítear do bhriathar
+// saor, agus ní luaitear gníomh. Is í an fhoirm a dhiúltaíonn sa dá chás.
+//
+// Tá an cháithnín `a` ann chun briathar a ainmniú: `a fhógair`.
+
+gníomh fógair(t: Teaghrán) {
+    scríobh t
+}
+
+gníomh príomh() {
+    scríobh fógair
+}

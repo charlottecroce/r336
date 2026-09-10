@@ -135,10 +135,23 @@ const M = {
   E213: (suim, malairt, reimse, cineal) =>
     `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
 
+  // §26.8 — ní suim í suim nach bhfuil dhá mhalairt inti.
+  //
+  // Dhá chás, aon chód amháin, mar is ionann an locht iontu: ní dhéanann an
+  // fógra rogha. Suim fholamh — níl luach ar bith inti, agus mar sin ní
+  // cineál is féidir a lua í. Suim aonair — tá a fhios roimh ré cad í, agus
+  // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
+  // éigeantach air. Luaitear a bhfuarthas, mar is é sin an rud atá le ceartú.
+  E214: (ainm, lion) =>
+    `Ní suim í "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
+
   // ── 3xx: copail agus briathar substaintigh ────────────────────────────
   E301: () => `Ní mór gur cineál atá ar dheis na copaile "is".`,
 
-  // Curtha in áirithe: aicmiú nach féidir a bheith fíor go statach.
+  // Sroichte ó 0.8: dearbhaíonn suim go beacht cad is féidir le luach a
+  // bheith, agus mar sin is féidir aicmiú a bhréagnú go statach. Ba é seo an
+  // t-aon chód a bhí curtha in áirithe agus a d'éirigh fíor; níor thug an
+  // nóta faoi deara é go dtí 0.10.1.
   E302: (cineal, cineal2) => `Ní féidir le rud de chineál ${cineal} bheith ina ${cineal2} choíche.`,
 
   // ── 4xx: comhréir ─────────────────────────────────────────────────────
@@ -163,7 +176,9 @@ const M = {
   E505: (cineal) =>
     `Gníomh atá ar siúl (${cineal}) á úsáid mar luach. Úsáid "tar éis" chun é a chríochnú.`,
 
-  // Curtha in áirithe: ardaíonn an chúlchríoch craobhacha ilráiteacha anois.
+  // Curtha in áirithe, agus tá an chúis luaite in `test/earraidi.js` mar aon
+  // leis na cinn eile: ardaíonn an chúlchríoch craobhacha ilráiteacha anois,
+  // mar sin ní theipeann "má" mar shlonn ar an gcúis seo a thuilleadh.
   E506: () => `Ní féidir "má" a úsáid mar shlonn ach nuair a thugann gach craobh luach.`,
 
   E507: () =>
@@ -197,6 +212,31 @@ const M = {
   // nGaeilge: ní deirtear "an briathar iasachta X", ach X.
   E516: (ainm) =>
     `Ní ghlacann an t-ordú "${ainm}" le sealbhóir: tógann "ó" frása ainmfhoclach, agus ní ainmní é ordú. Tá briathar iasachta san fhoclóir gan cháiliú — tabhair "${ainm} …" mar ordú.`,
+
+  // §37 — an briathar saor.
+  //
+  // Ní hionann é seo agus cosc: is é an fhoirm féin a dhiúltaíonn. Ordaítear
+  // do dhuine, agus níl aon duine ann. Is é a mhalairt de E501 é — ní féidir
+  // gníomh a lua, agus ní féidir briathar saor a ordú — agus insítear an dá
+  // rud ar an gcaoi chéanna: cad é an rud, agus cad is féidir a dhéanamh leis.
+  E518: (ainm, saor) =>
+    `Ní ordaítear do bhriathar saor: is é "${ainm}" fréamh an bhriathair, agus is í an fhréamh an modh ordaitheach — labhraíonn sí le déantóir. Níl déantóir ag "${ainm}". Scríobh "${saor} …" mar ráiteas, nó tabhair "a ${ainm}" do rud éigin lasmuigh a dhéanfaidh é.`,
+
+  E519: (surface, ceart, lemma) =>
+    `Foirm mhícheart den bhriathar saor: scríobhadh "${surface}", ach is í "${ceart}" foirm shaor "${lemma}". Ní athraíonn an fhoirm shaor an bhrí; ní deir sí ach nach luaitear an déantóir.`,
+
+  E520: (ainm) =>
+    `Ní ghlacann briathar saor le faighteoir: ní chuireann an fhoirm shaor déantóir in iúl, agus is déantóir é "féin". Fógair "${ainm}" gan frása "ó".`,
+
+  E521: (ainm, cuis) =>
+    `Ní féidir foirm shaor a dhéanamh de "${ainm}" (${cuis === 'gan-ghuta' ? 'níl guta ann' : cuis}): ní réimnítear focal nach bhfuil ina fhréamh bhriathair.`,
+
+  // §31 — foirm na copaile. An comhbhrá céanna le E512, ar an mír seachas ar
+  // an mbriathar substaintigh: ceanglaíonn an chopail leis an mír a rialaíonn
+  // í, agus roghnaíonn an chéad litir den chineál ina diaidh idir "mura" agus
+  // "murab". Ní athraíonn a brí, díreach mar nach n-athraíonn brí "bhfuil".
+  E517: (scriofa, ceart) =>
+    `Foirm mhícheart den chopail: scríobhadh "${scriofa}", ach is í "${ceart}" an fhoirm atá ag teastáil sa suíomh seo. Ceanglaíonn an chopail leis an mír a rialaíonn í, agus roghnaíonn tús an chineáil ina diaidh an fhoirm.`,
 
   // ── 6xx: dúchas ───────────────────────────────────────────────────────
   // A new axis, alongside morphology, types, the copula, syntax and mood.

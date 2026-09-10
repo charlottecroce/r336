@@ -1,0 +1,13 @@
+// E502 — ordú taobh istigh d'fheidhm.
+//
+// Ní dhéanann feidhm gníomh. Sa mhodh táscach luaitear rudaí; sa mhodh
+// ordaitheach a dhéantar iad.
+
+gníomh fógair(t: Teaghrán) {
+    scríobh t
+}
+
+feidhm beannacht() -> Teaghrán {
+    fógair "Dia duit"
+    "críochnaithe"
+}

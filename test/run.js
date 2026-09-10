@@ -168,7 +168,7 @@ it('caithfidh Bool a bheith ag "má"', () => {
 
 // ══ 4. Copail agus briathar substaintigh ══════════════════════════════
 it('is aicmiú é `is`, ní comparáid', async () => {
-  const src = 'struchtúr D { }\nseasmhach d = D { }\nmá d is D { scríobh "sea" }';
+  const src = 'struchtúr D { }\nseasmhach d = D { }\nmás D d { scríobh "sea" }';
   assert.ok(jsDe(src).includes('__is(d, "D")'));
   assert.ok(!jsDe(src).includes('=== D'));
   assert.deepStrictEqual(await rith(src), ['sea']);
@@ -205,7 +205,7 @@ it('scarann `is` agus `bí` ó chéile', () => {
 });
 
 it('ní uimhir é NaN don chopail', async () => {
-  const src = 'feidhm f(x: Iasacht) -> Teaghrán { má x is Uimhir { "uimhir" } mura { "níl" } }\n'
+  const src = 'feidhm f(x: Iasacht) -> Teaghrán { más Uimhir x { "uimhir" } mura { "níl" } }\n'
     + 'scríobh f(0 / 0)\nscríobh f(3)';
   assert.deepStrictEqual(await rith(src), ['níl', 'uimhir']);
 });
@@ -315,7 +315,7 @@ it('is Iasacht gach rud a thagann trasna na teorann', async () => {
 
 it('tá tiontuithe sa leabharlann, ní sa teanga', async () => {
   const src = 'seasmhach bun = ó "../rt/bunúsach.js"\n'
-    + 'feidhm cad(x: Iasacht) -> Teaghrán { má x is Uimhir { "uimhir" } mura { "níl" } }\n'
+    + 'feidhm cad(x: Iasacht) -> Teaghrán { más Uimhir x { "uimhir" } mura { "níl" } }\n'
     + 'scríobh cad(uimhir ó bhun("42"))\nscríobh cad(uimhir ó bhun("abc"))';
   assert.deepStrictEqual(await rith(src), ['uimhir', 'níl']);
 });
@@ -359,7 +359,7 @@ it('ardaítear craobhacha ilráiteacha isteach i sealadach', async () => {
   assert.ok(/let __t0;/.test(jsDe(src)), jsDe(src));
 });
 
-it('ní ardaítear má nuair is simplí é', () => {
+it('ní ardaítear más simplí nuair é', () => {
   const js = jsDe('feidhm f(u: Uimhir) -> Uimhir { má u > 0 { 1 } mura { 2 } }');
   assert.ok(js.includes('?') && !js.includes('__t0'));
 });
@@ -765,6 +765,272 @@ it('níl aon eolas ar thiománaí sa ghraf modúl ach oiread (Céim 6)', () => {
   for (const focal of ['prisma', 'sqlite', 'sql']) {
     assert.ok(!new RegExp(focal, 'i').test(téacs), focal);
   }
+});
+
+
+// ══ 12. Céim 0.9: paraidím na copaile (§31) ═══════════════════════════
+//
+// Déantar tástáil ar an moirfeolaíocht ar leithligh ón teanga, mar a
+// dhéantar ar an séimhiú: níl aon eolas ag `morphology.js` ar an gcomhréir,
+// agus ní mór dó na foirmeacha a thabhairt gan cheist a chur.
+
+it('tugann an chopail na trí fhoirm bheo', () => {
+  const R = mf.RIALU_COPAIL;
+  assert.strictEqual(mf.foirmChopail(R.BUN, 'Duine'), 'is');
+  assert.strictEqual(mf.foirmChopail(R.MA, 'Duine'), 'más');
+  assert.strictEqual(mf.foirmChopail(R.MA, 'Easpa'), 'más');
+});
+
+it('roghnaíonn tús an fhocail ina diaidh idir "mura" agus "murab"', () => {
+  const R = mf.RIALU_COPAIL;
+  for (const c of ['Duine', 'Ceart', 'Bua', 'Teaghrán']) {
+    assert.strictEqual(mf.foirmChopail(R.MURA, c), 'mura', c);
+  }
+  for (const g of ['Easpa', 'Áit', 'Uimhir', 'Iasacht', 'Imreoir', 'Ann']) {
+    assert.strictEqual(mf.foirmChopail(R.MURA, g), 'murab', g);
+  }
+});
+
+it('caitheann na cealla nach bhfuil brí acu, mar a chaitheann an t-urú (§12, §31)', () => {
+  const R = mf.RIALU_COPAIL;
+  for (const r of [R.DIULTACH, R.CEISTEACH, R.CEISTEACH_DIULTACH, R.FAISNEISEACH]) {
+    assert.throws(() => mf.foirmChopail(r, 'Duine'), /§31/, r);
+  }
+  // Agus fós taispeántar iad: sin an difríocht idir diúltú agus dearmad.
+  const p = mf.paraidimChopail('Easpa');
+  assert.strictEqual(p.length, 7);
+  assert.strictEqual(p.filter((x) => x.beo).length, 3);
+  assert.deepStrictEqual(p.filter((x) => !x.beo).map((x) => x.frasa),
+    ['ní hEaspa', 'an Easpa', 'nach Easpa', 'gur Easpa']);
+});
+
+it('cuireann "ní" h roimh ghuta, an riail chéanna atá ag "le" in E201', () => {
+  const frasa = (c, r) => mf.paraidimChopail(c).find((x) => x.rialu === r).frasa;
+  assert.strictEqual(frasa('Easpa', mf.RIALU_COPAIL.DIULTACH), 'ní hEaspa');
+  assert.strictEqual(frasa('Duine', mf.RIALU_COPAIL.DIULTACH), 'ní Duine');
+});
+
+// ── an chomhréir ──────────────────────────────────────────────────────
+const SUIM = 'suim T { Ceart { u: Uimhir } Easpa { c: Teaghrán } }\n'
+  + 'seasmhach tor: T = Ceart { u: 1 }\n';
+
+it('ritheann "más" agus caolaíonn sé, mar a rinne an seanord', async () => {
+  assert.deepStrictEqual(
+    await rith(SUIM + 'feidhm f() -> Uimhir { más Ceart tor { u ó thor } mura { 0 } }\n'
+      + 'scríobh f()'), ['1']);
+});
+
+it('caolaíonn "murab" an chraobh eile', async () => {
+  assert.deepStrictEqual(
+    await rith(SUIM + 'feidhm f() -> Uimhir { murab Easpa tor { u ó thor } mura { 0 } }\n'
+      + 'scríobh f()'), ['1']);
+});
+
+it('is E517 é an seanord focal, agus insítear an fhoirm cheart', () => {
+  const es = coid(SUIM + 'feidhm f() -> Uimhir { má tor is Ceart { 1 } mura { 0 } }');
+  assert.deepStrictEqual(es, ['E517']);
+});
+
+it('is E517 é an t-allamorf mícheart, sa dá threo', () => {
+  assert.deepStrictEqual(
+    coid(SUIM + 'feidhm f() -> Uimhir { mura Easpa tor { 1 } mura { 0 } }'), ['E517']);
+  assert.deepStrictEqual(
+    coid(SUIM + 'feidhm f() -> Uimhir { murab Ceart tor { 1 } mura { 0 } }'), ['E517']);
+});
+
+it('is E517 é mír cheangailte gan aicmiú', () => {
+  assert.deepStrictEqual(coid('feidhm f() -> Uimhir { más 1 > 0 { 1 } mura { 0 } }'), ['E517']);
+});
+
+it('fanann an fhoirm neamhspleách gan mhír', () => {
+  assert.deepStrictEqual(coid('struchtúr D { }\nseasmhach d = D { }\nseasmhach a = d is D'), []);
+});
+
+it('ní shroicheann foirm na copaile an JavaScript', () => {
+  const js = jsDe(SUIM + 'feidhm f() -> Uimhir { más Ceart tor { 1 } mura { 0 } }\n'
+    + 'feidhm g() -> Uimhir { murab Easpa tor { 1 } mura { 0 } }');
+  for (const foirm of ['más', 'murab', 'mura', 'copail']) {
+    assert.ok(!js.includes(foirm), `${foirm} sa JavaScript`);
+  }
+  assert.ok(js.includes('__is(tor, "Ceart")'));
+  assert.ok(js.includes('__is(tor, "Easpa")'));
+});
+
+it('ní mheascann an mhír chopaileach glao le hainmní (an chuardach dhá chomhartha)', async () => {
+  // `má óg(duine)` — dhá chomhartha IDENT NOD, ní dhá shlonn. Bhris an
+  // chéad leagan den chuardach seo an feidhmchlár, agus is í an tástáil seo
+  // an chosaint air.
+  const src = 'struchtúr D { aois: Uimhir }\nseasmhach d = D { aois: 9 }\n'
+    + 'feidhm óg(x: D) -> Bool { aois ó x < 18 }\n'
+    + 'feidhm f() -> Teaghrán { má óg(d) { "óg" } mura { "aosta" } }\nscríobh f()';
+  assert.deepStrictEqual(await rith(src), ['óg']);
+});
+
+it('fanann dealú ina dhealú i ndiaidh na míre', async () => {
+  assert.deepStrictEqual(
+    await rith('seasmhach x = 5\nseasmhach y = 3\n'
+      + 'feidhm f() -> Teaghrán { má x - y > 1 { "mór" } mura { "beag" } }\nscríobh f()'),
+    ['mór']);
+});
+
+
+// ══ 13. Céim 0.10: an briathar saor (§37) ═════════════════════════════
+//
+// An chéad phéire tástálacha ar mhoirfeolaíocht tháirgiúil. Ní tábla é seo a
+// bhfuiltear ag cuardach ann — is riail réimnithe í a chuirtear i bhfeidhm ar
+// fhréamh ar bith a fhógraíonn an t-údar.
+
+it('réimníonn an chéad réimniú, leathan agus caol', () => {
+  const c = [['scríobh', 'scríobhtar'], ['mol', 'moltar'], ['déan', 'déantar'],
+    ['dún', 'dúntar'], ['fág', 'fágtar'], ['ól', 'óltar'],
+    ['cuir', 'cuirtear'], ['bris', 'bristear']];
+  for (const [a, b] of c) assert.strictEqual(mf.foirmShaor(a), b, a);
+});
+
+it('slogtar -th agus -gh sa deireadh', () => {
+  for (const [a, b] of [['caith', 'caitear'], ['ith', 'itear'],
+    ['léigh', 'léitear'], ['nigh', 'nitear'], ['suigh', 'suitear']]) {
+    assert.strictEqual(mf.foirmShaor(a), b, a);
+  }
+});
+
+it('réimníonn an dara réimniú, agus titeann -(a)igh', () => {
+  for (const [a, b] of [['ceannaigh', 'ceannaítear'], ['bailigh', 'bailítear'],
+    ['imigh', 'imítear'], ['liostaigh', 'liostaítear'],
+    ['aimsigh', 'aimsítear'], ['críochnaigh', 'críochnaítear']]) {
+    assert.strictEqual(mf.foirmShaor(a), b, a);
+  }
+});
+
+it('coimrítear na fréamhacha in -il, -in, -ir, -is', () => {
+  // Seo an chuid is deacra den riail, agus an chuid a chruthaíonn gur riail í:
+  // athraíonn an coimriú leithne na fréimhe, agus leanann an deireadh an
+  // fhréamh nua. Tá `fógair` caol agus tá `fógr-` leathan.
+  for (const [a, b] of [['fógair', 'fógraítear'], ['oscail', 'osclaítear'],
+    ['imir', 'imrítear'], ['inis', 'insítear'],
+    ['ceangail', 'ceanglaítear'], ['codail', 'codlaítear'],
+    ['freagair', 'freagraítear']]) {
+    assert.strictEqual(mf.foirmShaor(a), b, a);
+  }
+});
+
+it('fanann iasachtaí in -áil sa chéad réimniú', () => {
+  assert.strictEqual(mf.foirmShaor('sábháil'), 'sábháiltear');
+  assert.strictEqual(mf.isDaraReimniu('sábháil'), false);
+  assert.strictEqual(mf.isDaraReimniu('fógair'), true);
+});
+
+it('tá tábla ann do na mírialta, mar atá i ngach gramadach', () => {
+  for (const [a, b] of [['faigh', 'faightear'], ['tabhair', 'tugtar'],
+    ['abair', 'deirtear'], ['bí', 'táthar'], ['taispeáin', 'taispeántar']]) {
+    assert.strictEqual(mf.foirmShaor(a), b, a);
+  }
+});
+
+it('ríomhtar an aimsir chaite, agus ní éilítear riamh í (§37.5)', () => {
+  assert.strictEqual(mf.foirmShaorChaite('liostaigh'), 'liostaíodh');
+  assert.strictEqual(mf.foirmShaorChaite('cuir'), 'cuireadh');
+  // An fhoirm a rinne ainm malairte mí-ábhartha de `Fuarthas` roimh 0.9.
+  assert.strictEqual(mf.foirmShaorChaite('faigh'), 'fuarthas');
+  const p = mf.paraidimShaor('liostaigh');
+  assert.deepStrictEqual(p.map((x) => x.beo), [true, false]);
+});
+
+it('diúltaítear d\'fhocal nach féidir a réimniú', () => {
+  assert.strictEqual(mf.inShaor('xyz').ok, false);
+  assert.throws(() => mf.foirmShaor('xyz'));
+});
+
+// ── an teanga ─────────────────────────────────────────────────────────
+const SAOR = 'saor liostaigh(m: Teaghrán) { scríobh m }\n';
+
+it('is í an fhoirm shaor a scríobhtar i suíomh ráitis', async () => {
+  assert.deepStrictEqual(
+    await rith(SAOR + 'gníomh príomh() { liostaítear "a" }'), ['a']);
+});
+
+it('is E518 é an fhréamh mar ordú', () => {
+  assert.deepStrictEqual(coid(SAOR + 'gníomh príomh() { liostaigh "a" }'), ['E518']);
+});
+
+it('is E519 í an aimsir chaite: aithnítear í chun í a dhiúltú', () => {
+  assert.deepStrictEqual(coid(SAOR + 'gníomh príomh() { liostaíodh "a" }'), ['E519']);
+});
+
+it('is E520 é faighteoir ar bhriathar saor', () => {
+  assert.deepStrictEqual(coid('struchtúr D { }\nsaor f ó D(féin) { }'), ['E520']);
+});
+
+it('is E521 é fréamh nach féidir a réimniú', () => {
+  assert.deepStrictEqual(coid('saor xyz(m: Teaghrán) { scríobh m }'), ['E521']);
+});
+
+it('ní ghlacann briathar saor le cineál toraidh (E404)', () => {
+  assert.deepStrictEqual(coid('saor f(x: Uimhir) -> Uimhir { x }'), ['E404']);
+});
+
+it('is féidir briathar saor a ainmniú le "a"', () => {
+  // Sin an t-aon slí a bhaintear amach é: cuirtear in aithne don saol
+  // lasmuigh é, agus déanann sin é.
+  assert.deepStrictEqual(coid(
+    SAOR + 'seasmhach freastal = ó "../rt/freastal.js"\n'
+    + 'gníomh cláraigh(app: Iasacht) { bealach ó fhreastal(app, "/", a liostaigh) }'), []);
+});
+
+it('ní féidir briathar saor a thabhairt do bhriathar Spicebag', () => {
+  // An toradh is tábhachtaí sa ghné. Dá nglacfadh gníomh leis, d\'fhéadfadh
+  // sé glaoch air — agus dhéanfadh sin déantóir de rud nach bhfuil déantóir
+  // aige. Níl fágtha mar cheann scríbe ach `Iasacht`, agus is í an teorainn í.
+  assert.deepStrictEqual(coid(
+    SAOR + 'gníomh cláraigh(g: gníomh(Teaghrán)) { }\n'
+    + 'gníomh príomh() { cláraigh a liostaigh }'), ['E201']);
+});
+
+it('ní shroicheann an fhoirm shaor an JavaScript', () => {
+  const js = jsDe(SAOR + 'gníomh príomh() { liostaítear "a" }');
+  for (const f of ['liostaítear', 'liostaíodh', 'saor']) {
+    assert.ok(!js.includes(f), `${f} sa JavaScript`);
+  }
+  assert.ok(js.includes('function liostaigh(m)'));
+});
+
+
+// ══ 14. Dhá chód a bhí marbh, agus atá beo anois (§38) ════════════════
+
+it('aithnítear foirm uraithe chun í a dhiúltú faoina hainm (E108, §12)', () => {
+  // Bhí E108 sa tábla ó 0.4 agus ní raibh aon áit á chur i bhfeidhm. Thit
+  // foirm uraithe trí na scoilteanna go E101 — "aitheantóir gan sainmhíniú"
+  // mar fhreagra ar Ghaeilge cheart.
+  assert.deepStrictEqual(coid('seasmhach baile = 3\ngníomh p() { scríobh mbaile }'), ['E108']);
+  assert.deepStrictEqual(coid('seasmhach cat = 3\ngníomh p() { scríobh gcat }'), ['E108']);
+  assert.deepStrictEqual(coid('seasmhach duine = 3\ngníomh p() { scríobh nduine }'), ['E108']);
+  // Agus fanann E101 mar atá nuair nach bhfuil lemma ar bith taobh thiar de.
+  assert.deepStrictEqual(coid('gníomh p() { scríobh mbaile }'), ['E101']);
+});
+
+it('inbhéartaítear an t-urú go tacar, mar nach mapáil aonair é', () => {
+  assert.deepStrictEqual(mf.lemmaiFaoiUru('mbaile'), ['baile']);
+  assert.deepStrictEqual(mf.lemmaiFaoiUru('gcat'), ['cat']);
+  assert.deepStrictEqual(mf.lemmaiFaoiUru('bhfuil'), ['fuil']);
+  assert.deepStrictEqual(mf.lemmaiFaoiUru('n-áit'), ['áit']);
+  assert.deepStrictEqual(mf.lemmaiFaoiUru('baile'), []);
+});
+
+it('is E513 é "a" roimh rud nach briathar é', () => {
+  assert.deepStrictEqual(coid('seasmhach uimhir = 3\ngníomh p() { scríobh a uimhir }'), ['E513']);
+});
+
+it('fanann "a" ina aitheantóir dlisteanach', () => {
+  // An chúis nár eochairfhocal riamh é. Is é an cruth a chinneann — dhá
+  // aitheantóir taobh le taobh — agus ní tábla.
+  assert.deepStrictEqual(coid('seasmhach a = 3\ngníomh p() { scríobh a }'), []);
+  assert.deepStrictEqual(coid('seasmhach a = 3\nseasmhach b = a + 1'), []);
+});
+
+it('fanann "a" roimh bhriathar ina ainmniú', () => {
+  assert.deepStrictEqual(coid(
+    'gníomh fógair(t: Teaghrán) { scríobh t }\n'
+    + 'gníomh p() { déan a fhógair ar ["a", "b"] }'), []);
 });
 
 // ── rith ──────────────────────────────────────────────────────────────

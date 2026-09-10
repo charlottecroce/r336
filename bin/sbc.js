@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const {
-  comhaidSb, paraidimi, duchasanna, Tionscadal, Earraid, Cnuasach,
+  comhaidSb, paraidimi, paraidimChopail, duchasanna, Tionscadal, Earraid, Cnuasach,
 } = require('../src/index');
 const ctae = require('../src/contaetha');
 
@@ -69,6 +69,34 @@ function cloCuigi(d) {
   console.log(`    ${String(4 - saor)}/4 tógtha`);
 }
 
+/*
+ * §31 — the copula block.
+ *
+ * The second paradigm in the language, and the first thing `--paraidím` has
+ * had to print that is not initial mutation. Laid out the same way as the
+ * eclipsed forms above it: the cells a syntactic position can demand are
+ * shown plainly, and the cells that exist in Irish and have no slot here are
+ * annotated *gan bhrí, §31* exactly as an eclipsed form is annotated *gan
+ * bhrí, §12*. Showing them is the point — the reader can see what the
+ * language is declining, which is the only way a deliberate absence is
+ * distinguishable from an oversight.
+ *
+ * Two columns, because both allomorph rules are regressive: `mura` becomes
+ * `murab` and `ní` prefixes h-, and each is triggered by the type that comes
+ * after the copula rather than by anything before it.
+ */
+function cloChopail(c) {
+  const stampa = (k) => (c.ionadaithe[k] ? '  (samhail)' : '');
+  console.log('\n  an chopail — §31');
+  console.log(`    ${''.padEnd(22)}${(c.eiseamlair.consan + stampa('consan')).padEnd(26)}${c.eiseamlair.guta + stampa('guta')}`);
+  for (let i = 0; i < c.consan.length; i++) {
+    const a = c.consan[i];
+    const b = c.guta[i];
+    const nota = a.beo ? '' : '   ← gan bhrí, §31';
+    console.log(`    ${a.rialu.padEnd(22)}${a.frasa.padEnd(26)}${b.frasa}${nota}`);
+  }
+}
+
 async function príomh() {
   for (const c of comhaid) {
     if (bratacha.has('--crann') || bratacha.has('--amharc')
@@ -128,8 +156,14 @@ async function príomh() {
           const s = p.inséimhithe ? p.séimhithe : `${p.bun}  (ní féidir: ${p.cúis})`;
           const u = p.urúFéideartha ? `  [urú: ${p.urúFéideartha} — gan bhrí, §12]` : '';
           const ó = p.foinse ? `  ← ${p.foinse}` : '';
-          console.log(`  ${p.lemma.padEnd(14)} ${(p.sealadach ? 'sealadach' : p.kind).padEnd(9)} ${String(p.cineál).padEnd(24)} bun=${p.bun.padEnd(13)} séimhithe=${s}${u}${ó}`);
+          // The autonomous verb's own paradigm, on the same line as the
+          // mutation forms because it is a form of the same word (§37).
+          const sa = p.saor
+            ? `  [saor: ${p.saor}${p.saorCaite ? `; caite: ${p.saorCaite} — gan aimsir, §37` : ''}]`
+            : '';
+          console.log(`  ${p.lemma.padEnd(14)} ${(p.sealadach ? 'sealadach' : p.kind).padEnd(9)} ${String(p.cineál).padEnd(24)} bun=${p.bun.padEnd(13)} séimhithe=${s}${u}${sa}${ó}`);
         }
+        cloChopail(paraidimChopail(anailiseoir));
       }
       continue;
     }

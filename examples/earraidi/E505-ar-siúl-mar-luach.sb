@@ -1,0 +1,12 @@
+// E505 — gníomh atá ar siúl á úsáid mar luach.
+//
+// Ní luach é gníomh atá ar siúl ach gealltanas. Úsáid `tar éis` chun é a
+// chríochnú.
+
+ag feidhm aois() -> Uimhir {
+    20
+}
+
+ag gníomh príomh() {
+    scríobh aois() + 1
+}

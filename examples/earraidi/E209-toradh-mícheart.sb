@@ -1,0 +1,5 @@
+// E209 — ní thugann an fheidhm an rud a gheall sí.
+
+feidhm aois() -> Uimhir {
+    "fiche"
+}

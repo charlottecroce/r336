@@ -6,7 +6,7 @@
 //                      chomhréir nua ar bith. Is leathnú saor é: is Toradh
 //                      cheana féin é Ceart, agus ní gá aon rud a thiontú.
 //
-//   DÍOTHÚ             `má t is Ceart`. Seo an leath atá bunaithe ar an
+//   DÍOTHÚ             `más Ceart t`. Seo an leath atá bunaithe ar an
 //                      nGaeilge: aicmíonn an chopail, agus nuair a chuirtear
 //                      an cheist tá an freagra ar eolas chomh fada is a
 //                      mhaireann an chraobh.
@@ -35,7 +35,7 @@ suim Toradh as Gaillimh {
 // i réimse malairte: dearbhaíonn suim cad is féidir le luach a bheith, agus
 // ní catagóir í an Iasacht (§26.4).
 feidhm tuairisc(toradh: Toradh) -> Teaghrán {
-    má toradh is Ceart { ainm ó dhuine ó thoradh } mura { cúis ó thoradh }
+    más Ceart toradh { ainm ó dhuine ó thoradh } mura { cúis ó thoradh }
 }
 
 // Buaileann an dá chraobh le chéile ag an tsuim. Ní teip chineáil é craobh

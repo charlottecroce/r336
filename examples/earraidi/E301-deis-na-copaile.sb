@@ -1,0 +1,11 @@
+// E301 — ní mór gur cineál atá ar dheis na copaile.
+//
+// Aicmiú atá sa chopail: cuireann sí ceist faoi chatagóir. Ní catagóir é
+// luach, agus mar sin níl aon cheist ann le cur.
+
+seasmhach duine = 3
+
+gníomh príomh() {
+    seasmhach b = duine is 3
+    scríobh b
+}

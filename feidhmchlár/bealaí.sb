@@ -81,7 +81,7 @@ ag gníomh síolaigh() {
     déan a chéim ar dhaoine
 }
 
-ag gníomh liostaigh(iarr: Iasacht, freag: Iasacht) {
+ag saor liostaigh(iarr: Iasacht, freag: Iasacht) {
     seasmhach rónna = tar éis gachDuine ó shonraí(stór)
     render ó fhreag("innéacs", AmharcLiosta {
         teideal: "Daoine",
@@ -89,11 +89,11 @@ ag gníomh liostaigh(iarr: Iasacht, freag: Iasacht) {
     })
 }
 
-ag gníomh taispeáin(iarr: Iasacht, freag: Iasacht) {
+ag saor taispeáin(iarr: Iasacht, freag: Iasacht) {
     // Coinníonn ball ar iasacht a ainm iasachta: ní aistrímid API duine eile.
     seasmhach aitheantas = uimhir ó bhun(id ó pharams ó iarr)
     // `is` mar aicmiú: an uimhir í an rud a tháinig isteach? Ní uimhir é NaN.
-    má aitheantas is Uimhir {
+    más Uimhir aitheantas {
         seasmhach taifead = tar éis duineDeRéir ó shonraí(stór, aitheantas)
         render ó fhreag("duine", AmharcDuine {
             teideal: teideal(aimsigh(taifead)),
@@ -123,12 +123,23 @@ ag gníomh taispeáin(iarr: Iasacht, freag: Iasacht) {
 // caithfidh an tiontú tarlú ar an teorainn. Sin an rud a bhí uainn.
 feidhm aimsigh(taifead: Iasacht) -> Aimsiú {
     má tá taifead {
-        Fuarthas { duine: Duine { ainm: ainm ó thaifead, aois: aois ó thaifead } }
+        Aimsithe { duine: Duine { ainm: ainm ó thaifead, aois: aois ó thaifead } }
     } mura { Uireasa { } }
 }
 
 // `a liostaigh`, `a thaispeáin`: an briathar mar ainmfhocal. Gan an cháithnín
 // seo bheadh E501 ann — ní ainmní é ordú.
+//
+// Ó 0.10 is briathra saora iad an dá cheann (§37), agus sin an rud ceart:
+// glaonn Express orthu, agus ní ghlaonn Spicebag orthu riamh. Ní ordú é
+// `bealach ó fhreastal(…)` a thugtar dóibh ach clárú — cuirtear in aithne
+// don saol lasmuigh iad, agus déantar iad ansin, ag déantóir nach féidir a
+// ainmniú anseo.
+//
+// Tá dhá rud á bhforfheidhmiú anois nach raibh: ní féidir `liostaigh iarr,
+// freag` a scríobh in aon áit sa mhodúl seo (E518), agus ní féidir ceachtar
+// acu a thabhairt do bhriathar Spicebag ar bith, mar dhéanfadh sin déantóir
+// de. Níl ach `Iasacht` fágtha mar cheann scríbe, agus is í an teorainn í.
 gníomh cláraigh(app: Iasacht) {
     bealach ó fhreastal(app, "/", a liostaigh)
     bealach ó fhreastal(app, "/duine/:id", a thaispeáin)

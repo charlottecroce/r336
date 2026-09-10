@@ -1,9 +1,21 @@
-// copail.sb — `is` i gcoinne `bí`.
+// copail.sb — `is` i gcoinne `bí`, agus paraidím na copaile (§13, §14, §31).
 //
 //   is  →  aitheantas / aicmiú : cén rud é?      (§13)
 //   bí  →  bheith / staid      : an bhfuil sé ann? (§14)
 //
 // Ní hionann iad, agus ní féidir ceann amháin a chur in ionad an chinn eile.
+//
+// Ó chéim 0.9 tá foirm ar an gcopail chomh maith le brí. Ceanglaíonn sí leis
+// an mír a rialaíonn í, mar a dhéanann sí sa Ghaeilge:
+//
+//   is Duine é          ceann a haisnéise féin      → an fhoirm neamhspleách
+//   má  + is  → más     faoin mír réadúil
+//   mura + is → mura    faoin mír neamhréadúil
+//             → murab     … agus -b roimh ghuta
+//
+// Sin an dara paraidím sa teanga. Ní athraíonn brí na copaile in aon cheann
+// de na foirmeacha: aicmiú atá inti i gcónaí, díreach mar a chiallaíonn `bí`
+// an rud céanna i `tá` agus i `bhfuil`.
 
 struchtúr Duine {
     ainm: Teaghrán
@@ -11,9 +23,15 @@ struchtúr Duine {
 
 seasmhach duine = Duine { ainm: "Charlotte" }
 
-má duine is Duine {
+// Faoin mír: `má` + `is` ina aon fhocal amháin, agus an fhaisnéis chun tosaigh
+// ar an ainmní, mar a chuireann an chopail í.
+más Duine duine {
     scríobh "Is duine é: " + ainm ó dhuine
 }
+
+// Gan mhír: an fhoirm neamhspleách, agus is slonn Boole í.
+seasmhach isDuine = duine is Duine
+scríobh isDuine
 
 má tá duine {
     scríobh "Tá duine ann."
@@ -23,6 +41,29 @@ má tá duine {
 
 // Aicmiú ar luach bunúsach.
 seasmhach aois = 20
-má aois is Uimhir {
+más Uimhir aois {
     scríobh "Is uimhir í an aois."
 }
+
+// An dá allamorf. Roghnaíonn an chéad litir den chineál a leanann an chopail
+// idir `mura` agus `murab`, agus is í an mhoirfeolaíocht a roghnaíonn — ní
+// gá don anailíseoir ach an cheist a chur.
+struchtúr Áit {
+    logainm: Teaghrán
+}
+
+seasmhach áit = Áit { logainm: "Cill Chainnigh" }
+
+// Ná cuir an dá cheann seo taobh le taobh: leanann `mura` lom an bhloc roimhe
+// mar chraobh eile (§17), agus mar sin shlogfadh an chéad cheann an dara
+// ceann. Is í an mhír an fáth, ní an chopail — bhí sé amhlaidh roimh 0.9.
+feidhm ganDuine(a: Áit) -> Teaghrán {
+    mura Duine a { "Ní duine í an áit." } mura { "?" }
+}
+
+feidhm ganAit(d: Duine) -> Teaghrán {
+    murab Áit d { "Ní háit é an duine." } mura { "?" }
+}
+
+scríobh ganDuine(áit)
+scríobh ganAit(duine)

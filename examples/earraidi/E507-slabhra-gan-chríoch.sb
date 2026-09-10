@@ -1,0 +1,10 @@
+// E507 — slabhra "má" gan chríoch.
+//
+// Mar shlonn, caithfidh gach cosán luach a thabhairt. Teastaíonn craobh
+// `mura` lom uaidh — an chraobh nach bhfuil coinníoll uirthi — mar níl aon
+// fhocal sa Ghaeilge ar "else" ach an chraobh dheireanach den slabhra (§17).
+
+feidhm rang(aois: Uimhir) -> Teaghrán {
+    seasmhach ainm = má aois > 65 { "sinsear" } mura aois > 17 { "duine fásta" }
+    ainm
+}

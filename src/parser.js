@@ -40,7 +40,7 @@ function tosachSloinn(t, aran = null) {
   if (t.cinéal === 'KW' && t.luach === 'ó') return !!aran && aran.cinéal === 'STR';
   if (t.cinéal === 'NUM' || t.cinéal === 'STR' || t.cinéal === 'IDENT') return true;
   if (t.cinéal === 'KW') {
-    return ['fíor', 'bréagach', 'neamhní', 'bí', 'tá', 'bhfuil', 'tar éis', 'má'].includes(t.luach);
+    return ['fíor', 'bréagach', 'neamhní', 'bí', 'tá', 'bhfuil', 'tar éis', 'má', 'más'].includes(t.luach);
   }
   if (t.cinéal === 'OP') return t.luach === '-';
   if (t.cinéal === 'NOD') return t.luach === '(' || t.luach === '[';
@@ -93,7 +93,7 @@ class Parsalai {
    * `Teaghrán`, `Liosta(Duine)`, and the type of a verb.
    *
    * A verb's type is its declaration with the name abstracted away, which is
-   * what a type is. Mood is a lexical property of the verb (§17), so it is
+   * what a type is. Mood is a lexical property of the verb (§4), so it is
    * part of what the verb *is* and therefore part of its type: `feidhm(T) -> U`
    * and `gníomh(T)` are different types, not one type with a flag. `ag` sits
    * where it sits in a declaration, because aspect marks the verb too.
@@ -257,11 +257,18 @@ class Parsalai {
    * `ag feidhm …` / `ag gníomh …`    ongoing: the action is under way
    */
   parsailBriathar(leanunach) {
-    const modh = this.seiceail('KW', 'gníomh') ? 'ordaitheach' : 'táscach';
-    this.toks[this.i++]; // feidhm | gníomh
+    const modh = this.seiceail('KW', 'gníomh') ? 'ordaitheach'
+      : this.seiceail('KW', 'saor') ? 'saor' : 'táscach';
+    this.toks[this.i++]; // feidhm | gníomh | saor
     const ainm = this.suil('IDENT');
 
     let faighteoir = null;
+    // An autonomous verb has no agent, and a receiver is an agent: `féin` is
+    // exactly the thing the form refuses to express. So it takes no `ó`
+    // phrase, and this is a grammatical refusal rather than a restriction.
+    if (modh === 'saor' && this.seiceail('KW', 'ó')) {
+      throw earraid('E520', this.peek().ionad, ainm.luach);
+    }
     if (this.meaitseail('KW', 'ó')) {
       const t = this.suil('IDENT');
       faighteoir = { surface: t.luach, ionad: t.ionad };
@@ -287,7 +294,7 @@ class Parsalai {
     let toradh = null;
     if (this.seiceail('OP', '->')) {
       const op = this.toks[this.i++];
-      if (modh === 'ordaitheach') throw earraid('E404', op.ionad);
+      if (modh !== 'táscach') throw earraid('E404', op.ionad);
       toradh = this.parsailTagairtCineail();
     }
 
@@ -319,15 +326,17 @@ class Parsalai {
     if (this.seiceail('KW', 'comhaontú')) return this.parsailComhaontu();
     if (this.seiceail('KW', 'struchtúr')) return this.parsailStruchtur();
     if (this.seiceail('KW', 'suim')) return this.parsailSuim();
-    if (this.seiceail('KW', 'feidhm') || this.seiceail('KW', 'gníomh')) return this.parsailBriathar(false);
+    if (this.seiceail('KW', 'feidhm') || this.seiceail('KW', 'gníomh')
+      || this.seiceail('KW', 'saor')) return this.parsailBriathar(false);
     if (this.seiceail('KW', 'ag') && this.peek(1).cinéal === 'KW'
-      && ['feidhm', 'gníomh'].includes(this.peek(1).luach)) {
+      && ['feidhm', 'gníomh', 'saor'].includes(this.peek(1).luach)) {
       this.i++;
       return this.parsailBriathar(true);
     }
     if (this.seiceail('KW', 'seasmhach') || this.seiceail('KW', 'sealadach')) return this.parsailCeangal();
     if (this.seiceail('KW', 'cuir')) return this.parsailCuir();
-    if (this.seiceail('KW', 'má') || this.seiceail('KW', 'mura')) {
+    if (this.seiceail('KW', 'má') || this.seiceail('KW', 'más')
+      || this.seiceail('KW', 'mura') || this.seiceail('KW', 'murab')) {
       const m = this.parsailMa(); m.slonn = false; return m;
     }
 
@@ -396,23 +405,77 @@ class Parsalai {
    * an doras. Mura bhfuil, fág oscailte é." A bare `mura` is that ellipsis.
    */
   parsailMa() {
-    const kw = this.toks[this.i++];               // má | mura
-    const diultach = kw.luach === 'mura';
+    const kw = this.toks[this.i++];               // má | más | mura | murab
+    const diultach = kw.luach === 'mura' || kw.luach === 'murab';
+    // The written form of the copula, kept for the analyzer. The particle is
+    // normalised here because `más` *is* `má` syntactically — it is one word
+    // only because Irish writes the fusion — so nothing downstream should
+    // have to know which of the two was on the page. That is the same split
+    // `bhfuil` gets: the parser sees the particle, the analyzer checks the
+    // form (§31).
+    const copail = kw.luach;
     let coinniall = null;
     if (!this.seiceail('NOD', '{')) {
       this.ganDeantus++;
-      coinniall = this.parsailSlonn();
+      coinniall = this.copailFaoiMhir()
+        ? this.parsailCopailMhir(kw)
+        : this.parsailSlonn();
       this.ganDeantus--;
     } else if (!diultach) {
+      throw earraid('E401', kw.ionad, '"{"', '"coinníoll"');
+    } else if (kw.luach === 'murab') {
+      // A bare `mura` is the elided second clause and is good Irish. A bare
+      // `murab` is not: the -b exists only to meet a following vowel, so
+      // there has to be something following.
       throw earraid('E401', kw.ionad, '"{"', '"coinníoll"');
     }
     const ansin = this.parsailBloc();
     let eile = null;
-    if (this.seiceail('KW', 'mura')) {
+    if (this.seiceail('KW', 'mura') || this.seiceail('KW', 'murab')) {
       const nód = this.parsailMa();
       eile = nód.coinniall === null ? nód.ansin : nód;
     }
-    return { cineál: 'Má', diultach, coinniall, ansin, eile, slonn: true, ionad: kw.ionad };
+    return { cineál: 'Má', diultach, copail, coinniall, ansin, eile, slonn: true, ionad: kw.ionad };
+  }
+
+  /**
+   * Is the condition a copular clause rather than an ordinary expression?
+   *
+   * Irish word order answers this without a symbol table. A copular clause is
+   * PARTICLE + PREDICATE + SUBJECT and contains no verb, so two juxtaposed
+   * expressions follow the particle; every other condition is a single
+   * expression, and juxtaposition is not otherwise legal here. Two tokens are
+   * enough:
+   *
+   *   más Ceart toradh     IDENT IDENT   → copular
+   *   más Ceart cuardaigh(20)  IDENT IDENT → copular; the subject is a call
+   *   mura aois > 17       IDENT OP      → ordinary
+   *   mura duine {         IDENT NOD     → ordinary
+   *   má tá duine          KW            → ordinary
+   *   má óg(duine) {       IDENT NOD "(" → ordinary; this is one call, not two
+   *   má aosta ó dhuine()  IDENT KW      → ordinary
+   *
+   * The second token has to *open* a subject, which means an identifier, a
+   * number or a string. Anything else — an operator, a bracket, a keyword —
+   * means the two words were one expression all along. `(` is the case worth
+   * naming: `f(x)` is a call and reads as juxtaposition if you only count
+   * tokens, so it is excluded by shape rather than by knowing what `f` is.
+   *
+   * Note what this does *not* do: it never asks whether the first identifier
+   * names a type. Deciding by shape rather than by lookup is what keeps this
+   * agreement rather than inference (§26.3).
+   */
+  copailFaoiMhir() {
+    if (!this.seiceail('IDENT')) return false;
+    const ar_aghaidh = this.toks[this.i + 1];
+    return !!ar_aghaidh && ['IDENT', 'NUM', 'STR'].includes(ar_aghaidh.cinéal);
+  }
+
+  /** `<Cineál> <slonn>` — the predicate first, as the copula puts it. */
+  parsailCopailMhir(kw) {
+    const cineal = this.parsailTagairtCineail();
+    const abhar = this.parsailSlonn();
+    return { cineál: 'Copail', abhar, cineal, faoiMhir: true, ionad: kw.ionad };
   }
 
   // ── sloinn ────────────────────────────────────────────────────────────
@@ -424,7 +487,10 @@ class Parsalai {
     const kw = this.meaitseail('KW', 'is');
     if (!kw) return clé;
     if (!this.seiceail('IDENT')) throw earraid('E301', this.peek().ionad);
-    return { cineál: 'Copail', abhar: clé, cineal: this.parsailTagairtCineail(), ionad: kw.ionad };
+    return {
+      cineál: 'Copail', abhar: clé, cineal: this.parsailTagairtCineail(),
+      faoiMhir: false, ionad: kw.ionad,
+    };
   }
 
   denartha(fo, oibreoiri) {
@@ -507,7 +573,7 @@ class Parsalai {
     if (t.cinéal === 'KW' && t.luach === 'neamhní') {
       this.i++; return { cineál: 'Neamhní', ionad: t.ionad };
     }
-    if (t.cinéal === 'KW' && t.luach === 'má') return this.parsailMa();
+    if (t.cinéal === 'KW' && (t.luach === 'má' || t.luach === 'más')) return this.parsailMa();
     if (t.cinéal === 'NOD' && t.luach === '[') {
       this.i++;
       const mireanna = [];
@@ -537,6 +603,12 @@ class Parsalai {
         this.i += 2;
         return { cineál: 'Ainmniú', surface: iarrtha, ionad: ionadV };
       }
+      // Not a verb. `a` falls back to being an ordinary identifier — which is
+      // why `seasmhach a = 3` still works — but two identifiers side by side
+      // are not a legal expression here, so the only reading left is a
+      // particle in front of something that cannot be named. Decided by shape
+      // rather than by lookup, as the copular clause is (§31.4).
+      throw earraid('E513', this.peek(1).ionad, iarrtha);
     }
     if (t.cinéal === 'IDENT') {
       this.i++;

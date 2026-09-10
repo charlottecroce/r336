@@ -1,0 +1,12 @@
+// E504 — gníomh atá ar siúl á ghlaoch as gníomh nach bhfuil.
+//
+// Críochnaíonn ordú do ghníomh atá ar siúl é féin, agus mar sin caithfidh an
+// glaoiteoir a bheith ar siúl chomh maith. Cuir `ag` roimh an bhfógra.
+
+ag gníomh sábháil(t: Teaghrán) {
+    scríobh t
+}
+
+gníomh príomh() {
+    sábháil "rud"
+}

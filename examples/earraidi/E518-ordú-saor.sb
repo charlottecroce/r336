@@ -1,0 +1,18 @@
+// E518 — ní ordaítear do bhriathar saor.
+//
+// Is é a mhalairt de E501 é, agus is fiú an dá cheann a léamh le chéile:
+//
+//   E501  ní féidir gníomh a lua      — déantar é, ní ainmnítear é
+//   E518  ní féidir briathar saor a ordú — luaitear é, ní ordaítear é
+//
+// Ní cosc é ceachtar acu. Is í an fhoirm féin a dhiúltaíonn: labhraíonn an
+// mhodh ordaitheach le déantóir, agus is é an rud a chuireann an fhoirm shaor
+// in iúl ná nach bhfuil aon déantóir ann le labhairt leis.
+
+saor liostaigh(mír: Teaghrán) {
+    scríobh mír
+}
+
+gníomh príomh() {
+    liostaigh "arán"
+}

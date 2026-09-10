@@ -1,0 +1,15 @@
+// E108 — níl urú curtha i bhfeidhm sa teanga.
+//
+// Aithnítear an fhoirm uraithe d'aon ghnó chun í a dhiúltú faoina hainm
+// (§12). Tá `mbaile` ina Ghaeilge cheart; níl aon bhrí ríomhchláraithe
+// sannta don urú, agus mar sin níl aon slot aige. Is measa go mór
+// "aitheantóir gan sainmhíniú" mar fhreagra ar fhoirm atá ceart.
+//
+// Sin an cóireáil chéanna a fhaigheann `liostaíodh` ó E519: ríomhtar an
+// fhoirm, agus insítear cén fáth nach nglactar léi.
+
+seasmhach baile = 3
+
+gníomh príomh() {
+    scríobh mbaile
+}

@@ -1,0 +1,6 @@
+// E212 — líon mícheart paraiméadar cineáil.
+//
+// Tá paraiméadar amháin ag `Liosta`, agus níl aon athróg chineáil sa teanga
+// go fóill le ceann eile a líonadh.
+
+seasmhach xs: Liosta(Uimhir, Teaghrán) = [1, 2]

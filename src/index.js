@@ -62,9 +62,38 @@ function paraidimi(anailiseoir) {
       inséimhithe: c.paraidim.inSeimhithe,
       cúis: c.paraidim.cuis,
       urúFéideartha: c.paraidim.uruFéideartha,
+      // §37 — present for autonomous verbs only. The past is carried too, and
+      // is printed labelled, because Spicebag has no tense and a form that is
+      // refused is worth showing next to the one that is demanded.
+      saor: (c.cineal && c.cineal.saor) || null,
+      saorCaite: (c.cineal && c.cineal.saorCaite) || null,
     });
   }
   return amach;
+}
+
+/**
+ * The copula's paradigm, for `sbc --paraidím` (§31).
+ *
+ * Shown against two real type names from the file rather than a placeholder,
+ * because both of the copula's allomorph rules are conditioned on the first
+ * letter of the type that follows it and neither is visible against a single
+ * exemplar. If the file has no vowel-initial type — or no consonant-initial
+ * one — the missing column falls back to a stand-in, and says so.
+ */
+function paraidimChopail(anailiseoir) {
+  const ainmneacha = [...anailiseoir.cinealacha]
+    .filter(([, t]) => t.k === 'struchtúr' || t.k === 'suim' || t.k === 'malairt')
+    .map(([ainm]) => ainm);
+  const consan = ainmneacha.find((a) => !mf.isGuta(a[0]));
+  const guta = ainmneacha.find((a) => mf.isGuta(a[0]));
+  const eiseamlair = { consan: consan || 'Duine', guta: guta || 'Áit' };
+  return {
+    eiseamlair,
+    ionadaithe: { consan: !consan, guta: !guta },
+    consan: mf.paraidimChopail(eiseamlair.consan),
+    guta: mf.paraidimChopail(eiseamlair.guta),
+  };
 }
 
 /**
@@ -95,6 +124,6 @@ function duchasanna(anailiseoir) {
 }
 
 module.exports = {
-  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, duchasanna, Tionscadal,
+  tiomsaigh, tiomsaighComhad, comhaidSb, paraidimi, paraidimChopail, duchasanna, Tionscadal,
   Earraid, Cnuasach, morphology: mf,
 };

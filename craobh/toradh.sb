@@ -13,5 +13,5 @@ suim Toradh as Muineachán {
 }
 
 feidhm tuairisc(toradh: Toradh) -> Teaghrán {
-    má toradh is Bua { ainmFoirne(buaiteoir ó thoradh) } mura { "Comhscór" }
+    más Bua toradh { ainmFoirne(buaiteoir ó thoradh) } mura { "Comhscór" }
 }

@@ -1,0 +1,11 @@
+// E203 — níl an réimse sa struchtúr.
+
+struchtúr Duine {
+    ainm: Teaghrán
+}
+
+seasmhach duine = Duine { ainm: "Cáit" }
+
+gníomh príomh() {
+    scríobh aois ó dhuine
+}
