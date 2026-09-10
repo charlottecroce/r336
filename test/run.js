@@ -92,7 +92,7 @@ it('urú ceart ar na consain agus ar na gutaí', () => {
 
 // ══ 2. Comhaontú: ó agus séimhiú ══════════════════════════════════════
 const DUINE = `struchtúr Duine { ainm: Teaghrán aois: Uimhir }
-seasmhach duine = Duine { ainm: "Cáit", aois: 20 }
+duine seasmhach = Duine { ainm: "Cáit", aois: 20 }
 `;
 
 it('glacann `ó` leis an bhfoirm shéimhithe', async () => {
@@ -105,25 +105,25 @@ it('diúltaíonn `ó` don bhunfhoirm nuair is féidir séimhiú (E102)', () => {
 
 it('glactar leis an mbunfhoirm nuair nach féidir séimhiú', async () => {
   assert.deepStrictEqual(
-    await rith('struchtúr S { ainm: Teaghrán }\nseasmhach áit = S { ainm: "Gaillimh" }\nscríobh ainm ó áit'),
+    await rith('struchtúr S { ainm: Teaghrán }\náit seasmhach = S { ainm: "Gaillimh" }\nscríobh ainm ó áit'),
     ['Gaillimh']);
   assert.deepStrictEqual(
-    await rith('struchtúr S { ainm: Teaghrán }\nseasmhach stór = S { ainm: "Corcaigh" }\nscríobh ainm ó stór'),
+    await rith('struchtúr S { ainm: Teaghrán }\nstór seasmhach = S { ainm: "Corcaigh" }\nscríobh ainm ó stór'),
     ['Corcaigh']);
 });
 
 it('diúltaítear do shéimhiú lasmuigh de shuíomh rialaithe (E103)', () => {
-  assert.deepStrictEqual(coid(DUINE + 'seasmhach x = dhuine'), ['E103']);
+  assert.deepStrictEqual(coid(DUINE + 'x seasmhach = dhuine'), ['E103']);
 });
 
 it('diúltaítear do shéimhiú bréige (E104)', () => {
   assert.deepStrictEqual(
-    coid('struchtúr S { ainm: Teaghrán }\nseasmhach stór = S { ainm: "x" }\nscríobh ainm ó shtór'),
+    coid('struchtúr S { ainm: Teaghrán }\nstór seasmhach = S { ainm: "x" }\nscríobh ainm ó shtór'),
     ['E104']);
 });
 
 it('ní mór ceangail a fhógairt sa bhunfhoirm (E107)', () => {
-  assert.deepStrictEqual(coid('seasmhach dhuine = 3'), ['E107']);
+  assert.deepStrictEqual(coid('dhuine seasmhach = 3'), ['E107']);
 });
 
 it('is aon siombail amháin iad duine/dhuine', () => {
@@ -135,7 +135,7 @@ it('is aon siombail amháin iad duine/dhuine', () => {
 it('rialaíonn gach `ó` tús a chomhlánaithe féin', async () => {
   const src = `struchtúr Seoladh { baile: Teaghrán }
 struchtúr Duine { seoladh: Seoladh }
-seasmhach duine = Duine { seoladh: Seoladh { baile: "Corcaigh" } }
+duine seasmhach = Duine { seoladh: Seoladh { baile: "Corcaigh" } }
 scríobh baile ó sheoladh ó dhuine`;
   assert.deepStrictEqual(await rith(src), ['Corcaigh']);
   assert.ok(jsDe(src).includes('duine.seoladh.baile'));
@@ -143,64 +143,64 @@ scríobh baile ó sheoladh ó dhuine`;
 });
 
 it('teastaíonn sealbhóir inséalbhaithe ó `ó` (E205)', () => {
-  assert.deepStrictEqual(coid('seasmhach x = fíor\nscríobh ainm ó x'), ['E205']);
+  assert.deepStrictEqual(coid('x seasmhach = fíor\nscríobh ainm ó x'), ['E205']);
 });
 
 // ══ 3. Cineálacha ═════════════════════════════════════════════════════
 it('seiceáiltear argóintí agus torthaí', () => {
-  assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Uimhir { x + x }\nseasmhach a = f("x")'), ['E201']);
+  assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Uimhir { x + x }\na seasmhach = f("x")'), ['E201']);
   assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Teaghrán { x + x }'), ['E209']);
-  assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Uimhir { x }\nseasmhach a = f(1, 2)'), ['E206']);
+  assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Uimhir { x }\na seasmhach = f(1, 2)'), ['E206']);
 });
 
 it('seiceáiltear réimsí struchtúir', () => {
-  assert.deepStrictEqual(coid('struchtúr D { ainm: Teaghrán }\nseasmhach d = D { }'), ['E204']);
-  assert.deepStrictEqual(coid('struchtúr D { ainm: Teaghrán }\nseasmhach d = D { ainm: 3 }'), ['E201']);
+  assert.deepStrictEqual(coid('struchtúr D { ainm: Teaghrán }\nd seasmhach = D { }'), ['E204']);
+  assert.deepStrictEqual(coid('struchtúr D { ainm: Teaghrán }\nd seasmhach = D { ainm: 3 }'), ['E201']);
 });
 
 it('ní mheasctar Teaghrán agus Uimhir le "+" (E210)', () => {
-  assert.deepStrictEqual(coid('seasmhach x = "a" + 1'), ['E210']);
+  assert.deepStrictEqual(coid('x seasmhach = "a" + 1'), ['E210']);
 });
 
 it('caithfidh Bool a bheith ag "má"', () => {
-  assert.deepStrictEqual(coid('seasmhach x = 1\nmá x { }'), ['E201']);
+  assert.deepStrictEqual(coid('x seasmhach = 1\nmá x { }'), ['E201']);
 });
 
 // ══ 4. Copail agus briathar substaintigh ══════════════════════════════
 it('is aicmiú é `is`, ní comparáid', async () => {
-  const src = 'struchtúr D { }\nseasmhach d = D { }\nmás D d { scríobh "sea" }';
+  const src = 'struchtúr D { }\nd seasmhach = D { }\nmás D d { scríobh "sea" }';
   assert.ok(jsDe(src).includes('__is(d, "D")'));
   assert.ok(!jsDe(src).includes('=== D'));
   assert.deepStrictEqual(await rith(src), ['sea']);
 });
 
 it('is ceist bheithe é `bí`', async () => {
-  const src = 'seasmhach x = 1\nmá tá x { scríobh "ann" }';
+  const src = 'x seasmhach = 1\nmá tá x { scríobh "ann" }';
   assert.ok(jsDe(src).includes('__bí(x)'));
   assert.deepStrictEqual(await rith(src), ['ann']);
 });
 
 it('freagraíonn foirm an bhriathair shubstaintigh don cháithnín', async () => {
-  assert.deepStrictEqual(coid('seasmhach x = 1\nmá tá x { }'), []);
-  assert.deepStrictEqual(coid('seasmhach x = 1\nmura bhfuil x { }'), []);
-  assert.deepStrictEqual(coid('seasmhach x = 1\nmá bhfuil x { }'), ['E512']);
-  assert.deepStrictEqual(coid('seasmhach x = 1\nmura tá x { }'), ['E512']);
-  assert.deepStrictEqual(coid('seasmhach x = 1\nmá bí x { }'), ['E512']);
+  assert.deepStrictEqual(coid('x seasmhach = 1\nmá tá x { }'), []);
+  assert.deepStrictEqual(coid('x seasmhach = 1\nmura bhfuil x { }'), []);
+  assert.deepStrictEqual(coid('x seasmhach = 1\nmá bhfuil x { }'), ['E512']);
+  assert.deepStrictEqual(coid('x seasmhach = 1\nmura tá x { }'), ['E512']);
+  assert.deepStrictEqual(coid('x seasmhach = 1\nmá bí x { }'), ['E512']);
   // The alternation is agreement, not meaning: both emit the same call.
-  const a = jsDe('seasmhach x = 1\nmá tá x { scríobh "a" }');
-  const b = jsDe('seasmhach x = 1\nmura bhfuil x { scríobh "a" }');
+  const a = jsDe('x seasmhach = 1\nmá tá x { scríobh "a" }');
+  const b = jsDe('x seasmhach = 1\nmura bhfuil x { scríobh "a" }');
   assert.ok(a.includes('__bí(x)') && b.includes('__bí(x)'));
   assert.ok(!b.includes('bhfuil'));
 });
 
 it('is é "neamhní" an easpa a thuairiscíonn "bí"', async () => {
   assert.deepStrictEqual(
-    await rith('sealadach x: Iasacht = neamhní\ngníomh príomh() { scríobh tá x  cuir 3 ar x  scríobh tá x }'),
+    await rith('x sealadach: Iasacht = neamhní\ngníomh príomh() { scríobh tá x  cuir 3 ar x  scríobh tá x }'),
     ['false', 'true']);
 });
 
 it('scarann `is` agus `bí` ó chéile', () => {
-  const js = jsDe('struchtúr D { }\nseasmhach d = D { }\nseasmhach a = d is D\nseasmhach b = tá d');
+  const js = jsDe('struchtúr D { }\nd seasmhach = D { }\na seasmhach = d is D\nb seasmhach = tá d');
   assert.ok(js.includes('__is(') && js.includes('__bí('));
 });
 
@@ -211,7 +211,7 @@ it('ní uimhir é NaN don chopail', async () => {
 });
 
 it('caithfidh cineál aitheanta a bheith ar dheis na copaile (E202)', () => {
-  assert.deepStrictEqual(coid('seasmhach x = 1\nseasmhach y = x is Rud'), ['E202']);
+  assert.deepStrictEqual(coid('x seasmhach = 1\ny seasmhach = x is Rud'), ['E202']);
 });
 
 // ══ 5. Modhanna (§5, ceartaithe) ══════════════════════════════════════
@@ -225,7 +225,7 @@ it('seoltar modhanna go statach', async () => {
   const src = `struchtúr Duine { ainm: Teaghrán aois: Uimhir }
 feidhm beannacht ó Dhuine(féin) -> Teaghrán { "Dia duit, " + ainm ó fhéin }
 feidhm móide ó Dhuine(féin, n: Uimhir) -> Uimhir { aois ó fhéin + n }
-seasmhach duine = Duine { ainm: "Cáit", aois: 20 }
+duine seasmhach = Duine { ainm: "Cáit", aois: 20 }
 scríobh beannacht ó dhuine()
 scríobh móide ó dhuine(5)`;
   assert.deepStrictEqual(await rith(src), ['Dia duit, Cáit', '25']);
@@ -238,7 +238,7 @@ it('ní féidir modh a fhógairt ar rud nach struchtúr é (E509)', () => {
 
 // ══ 6. Modh: ordaitheach i gcoinne táscaigh (§17) ═════════════════════
 it('ní ainmní é ordú (E501)', () => {
-  assert.deepStrictEqual(coid('gníomh cláraigh(x: Teaghrán) { scríobh x }\nseasmhach g = cláraigh'), ['E501']);
+  assert.deepStrictEqual(coid('gníomh cláraigh(x: Teaghrán) { scríobh x }\ng seasmhach = cláraigh'), ['E501']);
 });
 
 it('ní dhéanann feidhm gníomh (E502)', () => {
@@ -276,7 +276,7 @@ it('teastaíonn "ag" ó "tar éis" (E504)', () => {
 it('ní luach é gníomh atá ar siúl (E505)', () => {
   assert.deepStrictEqual(
     coid('ag feidhm g(x: Iasacht) -> Teaghrán { tar éis x() }\n'
-      + 'ag feidhm f(x: Iasacht) -> Teaghrán { seasmhach a = g(x)  a }'),
+      + 'ag feidhm f(x: Iasacht) -> Teaghrán { a seasmhach = g(x)  a }'),
     ['E505']);
 });
 
@@ -299,22 +299,22 @@ it('críochnaítear ordú leanúnach go huathoibríoch', () => {
 
 // ══ 8. Bunús: modúil mar shealbhóirí (Céim 4) ═════════════════════════
 it('`ó "modúl"` a ghineann require', () => {
-  const js = jsDe('seasmhach e = ó "express"\nseasmhach R = Router ó "express"');
+  const js = jsDe('e seasmhach = ó "express"\nR seasmhach = Router ó "express"');
   assert.ok(js.includes('require("express")'));
   assert.ok(js.includes('require("express").Router'));
 });
 
 it('athscríobhtar .sb go .js i gconairí', () => {
-  assert.ok(jsDe('seasmhach s = ó "./sonraí.sb"').includes('require("./sonraí.js")'));
+  assert.ok(jsDe('s seasmhach = ó "./sonraí.sb"').includes('require("./sonraí.js")'));
 });
 
 it('is Iasacht gach rud a thagann trasna na teorann', async () => {
-  const src = 'seasmhach p = ó "node:path"\nscríobh basename ó ph("/a/b/c.txt")';
+  const src = 'p seasmhach = ó "node:path"\nscríobh basename ó ph("/a/b/c.txt")';
   assert.deepStrictEqual(await rith(src), ['c.txt']);
 });
 
 it('tá tiontuithe sa leabharlann, ní sa teanga', async () => {
-  const src = 'seasmhach bun = ó "../rt/bunúsach.js"\n'
+  const src = 'bun seasmhach = ó "../rt/bunúsach.js"\n'
     + 'feidhm cad(x: Iasacht) -> Teaghrán { más Uimhir x { "uimhir" } mura { "níl" } }\n'
     + 'scríobh cad(uimhir ó bhun("42"))\nscríobh cad(uimhir ó bhun("abc"))';
   assert.deepStrictEqual(await rith(src), ['uimhir', 'níl']);
@@ -322,12 +322,12 @@ it('tá tiontuithe sa leabharlann, ní sa teanga', async () => {
 
 // ══ 9. Liostaí agus má-mar-shlonn ═════════════════════════════════════
 it('fad, folamh, céad tríd an ngaol `ó`', async () => {
-  const src = 'seasmhach xs = [3, 1, 4]\nscríobh fad ó xs\nscríobh céad ó xs\nseasmhach ys: Liosta(Uimhir) = []\nscríobh folamh ó ys';
+  const src = 'xs seasmhach = [3, 1, 4]\nscríobh fad ó xs\nscríobh céad ó xs\nys seasmhach: Liosta(Uimhir) = []\nscríobh folamh ó ys';
   assert.deepStrictEqual(await rith(src), ['3', '3', 'true']);
 });
 
 it('leathnaítear liosta ilchineálach go Liosta(Iasacht)', () => {
-  assert.deepStrictEqual(coid('seasmhach xs = [1, "a"]'), []);
+  assert.deepStrictEqual(coid('xs seasmhach = [1, "a"]'), []);
 });
 
 it('is slonn é "má" nuair a thugann gach craobh luach', async () => {
@@ -345,13 +345,13 @@ it('is "mura" an diúltach, ní "eile if"', async () => {
 
 it('is ráiteas é "mura" ina aonar', async () => {
   assert.deepStrictEqual(
-    await rith('seasmhach xs: Liosta(Uimhir) = []\nmura folamh ó xs { scríobh "lán" }\nmura bhfuil xs { scríobh "as" }'),
+    await rith('xs seasmhach: Liosta(Uimhir) = []\nmura folamh ó xs { scríobh "lán" }\nmura bhfuil xs { scríobh "as" }'),
     []);
 });
 
 it('ardaítear craobhacha ilráiteacha isteach i sealadach', async () => {
   const src = `feidhm f(u: Uimhir) -> Teaghrán {
-    má u > 0 { seasmhach t = "dear" + "fach"  t } mura { seasmhach t = "diúl"  t + "tach" }
+    má u > 0 { t seasmhach = "dear" + "fach"  t } mura { t seasmhach = "diúl"  t + "tach" }
   }
   scríobh f(1)
   scríobh f(0)`;
@@ -365,35 +365,35 @@ it('ní ardaítear más simplí nuair é', () => {
 });
 
 it('teastaíonn craobh "mura" lom ó "má" mar shlonn (E507)', () => {
-  assert.deepStrictEqual(coid('seasmhach x = má fíor { 1 }'), ['E507']);
+  assert.deepStrictEqual(coid('x seasmhach = má fíor { 1 }'), ['E507']);
   assert.deepStrictEqual(coid('feidhm f(u: Uimhir) -> Teaghrán { má u > 0 { "a" } }'), ['E503', 'E209']);
 });
 
 // ══ 13. Staid: seasmhach i gcoinne sealadach ══════════════════════════
 it('ní athraítear rud seasmhach (E510)', () => {
-  assert.deepStrictEqual(coid('seasmhach x = 0\ngníomh g() { cuir 1 ar x }'), ['E510']);
-  assert.deepStrictEqual(coid('sealadach x = 0\ngníomh g() { cuir 1 ar x }'), []);
+  assert.deepStrictEqual(coid('x seasmhach = 0\ngníomh g() { cuir 1 ar x }'), ['E510']);
+  assert.deepStrictEqual(coid('x sealadach = 0\ngníomh g() { cuir 1 ar x }'), []);
 });
 
 it('is ordú é an t-athrú, mar sin tá sé faoi na rialacha modha (E502)', () => {
-  assert.deepStrictEqual(coid('sealadach x = 0\nfeidhm f() -> Uimhir { cuir 1 ar x  x }'), ['E502']);
+  assert.deepStrictEqual(coid('x sealadach = 0\nfeidhm f() -> Uimhir { cuir 1 ar x  x }'), ['E502']);
 });
 
 it('séimhíonn "ar" a chomhlánú, mar a dhéanann "ó"', () => {
-  assert.deepStrictEqual(coid('sealadach duine = 0\ngníomh g() { cuir 1 ar dhuine }'), []);
-  assert.deepStrictEqual(coid('sealadach duine = 0\ngníomh g() { cuir 1 ar duine }'), ['E102']);
+  assert.deepStrictEqual(coid('duine sealadach = 0\ngníomh g() { cuir 1 ar dhuine }'), []);
+  assert.deepStrictEqual(coid('duine sealadach = 0\ngníomh g() { cuir 1 ar duine }'), ['E102']);
 });
 
 it('athraítear réimse trí cheangal sealadach', async () => {
   const src = `struchtúr C { luach: Uimhir }
-gníomh ardaigh(sealadach c: C) { cuir luach ó ch + 1 ar luach ó ch }
-gníomh príomh() { sealadach c = C { luach: 0 }  ardaigh c  ardaigh c  scríobh luach ó ch }`;
+gníomh ardaigh(c sealadach: C) { cuir luach ó ch + 1 ar luach ó ch }
+gníomh príomh() { c sealadach = C { luach: 0 }  ardaigh c  ardaigh c  scríobh luach ó ch }`;
   assert.deepStrictEqual(await rith(src), ['2']);
-  assert.deepStrictEqual(coid(src.replace('sealadach c: C', 'c: C')), ['E510']);
+  assert.deepStrictEqual(coid(src.replace('c sealadach: C', 'c: C')), ['E510']);
 });
 
-it('gineann sealadach let, agus seasmhach const', () => {
-  const js = jsDe('seasmhach a = 1\nsealadach b = 2');
+it('gineann let sealadach, agus const seasmhach', () => {
+  const js = jsDe('a seasmhach = 1\nb sealadach = 2');
   assert.ok(js.includes('const a = 1;') && js.includes('let b = 2;'));
   assert.ok(js.includes('Object.defineProperty(module.exports, "b"'), js);
 });
@@ -401,17 +401,17 @@ it('gineann sealadach let, agus seasmhach const', () => {
 // ══ 14. Ainmniú: a + briathar ═════════════════════════════════════════
 it('ainmníonn "a" briathar, agus séimhíonn sé é', async () => {
   const src = `gníomh fógair(x: Iasacht) { scríobh x }
-gníomh príomh() { seasmhach xs: Iasacht = ["a", "b"]  forEach ó xs(a fhógair) }`;
+gníomh príomh() { xs seasmhach: Iasacht = ["a", "b"]  forEach ó xs(a fhógair) }`;
   assert.deepStrictEqual(await rith(src), ['a', 'b']);
   assert.deepStrictEqual(coid(src.replace('a fhógair', 'a fógair')), ['E102']);
 });
 
 it('gan "a", is E501 fós é', () => {
-  assert.deepStrictEqual(coid('gníomh cláraigh(x: Iasacht) { scríobh x }\nseasmhach f = cláraigh'), ['E501']);
+  assert.deepStrictEqual(coid('gníomh cláraigh(x: Iasacht) { scríobh x }\nf seasmhach = cláraigh'), ['E501']);
 });
 
 it('fanann "a" ina aitheantóir gnáth', async () => {
-  assert.deepStrictEqual(await rith('seasmhach a = 3\nscríobh a'), ['3']);
+  assert.deepStrictEqual(await rith('a seasmhach = 3\nscríobh a'), ['3']);
 });
 
 // ══ 10. Céim 6: teibíocht an stóir ════════════════════════════════════
@@ -460,8 +460,8 @@ it('freastalaíonn an feidhmchlár ar bhealaí Spicebag', async function () {
 it('cuirtear an clár samplach ó §24 i gcrích', async () => {
   const src = `struchtúr Duine { ainm: Teaghrán aois: Uimhir }
 feidhm beannacht(duine: Duine) -> Teaghrán { "Dia duit, " + ainm ó dhuine }
-seasmhach duine = Duine { ainm: "Charlotte", aois: 20 }
-seasmhach teachtaireacht = beannacht(duine)
+duine seasmhach = Duine { ainm: "Charlotte", aois: 20 }
+teachtaireacht seasmhach = beannacht(duine)
 scríobh teachtaireacht`;
   assert.deepStrictEqual(await rith(src), ['Dia duit, Charlotte']);
 });
@@ -511,7 +511,7 @@ function coidTionscadal(comhaid, tosach = 'príomh.sb') {
   }
 }
 
-const FOCLOIR = `seasmhach BEANNACHT = "Dia duit"
+const FOCLOIR = `BEANNACHT seasmhach = "Dia duit"
 feidhm beannaigh(ainm: Teaghrán) -> Teaghrán { BEANNACHT + ", " + ainm }
 gníomh fáiltigh(ainm: Teaghrán) { scríobh beannaigh(ainm) }
 `;
@@ -530,7 +530,7 @@ it('is ordú é ordú iasachta, gan cháiliú', async () => {
   assert.deepStrictEqual(
     await rithTionscadal({
       'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'seasmhach f = ó "./foclóir.sb"\ngníomh príomh() { fáiltigh "Cáit" }',
+      'príomh.sb': 'f seasmhach = ó "./foclóir.sb"\ngníomh príomh() { fáiltigh "Cáit" }',
     }),
     ['Dia duit, Cáit']);
 });
@@ -538,7 +538,7 @@ it('is ordú é ordú iasachta, gan cháiliú', async () => {
 it('rialaíonn `ó` sealbhóir modúil fós', async () => {
   const comhaid = {
     'foclóir.sb': FOCLOIR,
-    'príomh.sb': 'seasmhach foclóir = ó "./foclóir.sb"\n'
+    'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\n'
       + 'gníomh príomh() { scríobh BEANNACHT ó fhoclóir  scríobh beannaigh ó fhoclóir("Oisín") }',
   };
   assert.deepStrictEqual(await rithTionscadal(comhaid), ['Dia duit', 'Dia duit, Oisín']);
@@ -550,8 +550,8 @@ it('ní ainmní é ordú iasachta ach oiread (E501)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'seasmhach foclóir = ó "./foclóir.sb"\n'
-        + 'gníomh príomh() { seasmhach g = fáiltigh ó fhoclóir  scríobh g }',
+      'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\n'
+        + 'gníomh príomh() { g seasmhach = fáiltigh ó fhoclóir  scríobh g }',
     }),
     ['E501']);
 });
@@ -560,7 +560,7 @@ it('ní ghlacann ordú le sealbhóir (E516)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'seasmhach foclóir = ó "./foclóir.sb"\ngníomh príomh() { fáiltigh ó fhoclóir("Cáit") }',
+      'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\ngníomh príomh() { fáiltigh ó fhoclóir("Cáit") }',
     }),
     ['E516']);
 });
@@ -569,7 +569,7 @@ it('tagann struchtúir iasachta isteach mar chineálacha', async () => {
   assert.deepStrictEqual(
     await rithTionscadal({
       'cineál.sb': 'struchtúr Duine { ainm: Teaghrán }\nfeidhm nua(a: Teaghrán) -> Duine { Duine { ainm: a } }',
-      'príomh.sb': 'seasmhach c = ó "./cineál.sb"\n'
+      'príomh.sb': 'c seasmhach = ó "./cineál.sb"\n'
         + 'feidhm ainmDe(d: Duine) -> Teaghrán { ainm ó dh }\n'
         + 'gníomh príomh() { scríobh ainmDe(nua("Cáit")) }',
     }),
@@ -579,17 +579,17 @@ it('tagann struchtúir iasachta isteach mar chineálacha', async () => {
 it('téann ball dúchasach trí chomhaontú, murab ionann agus ball iasachta', () => {
   // A foreign name has no mutation slot at all — you do not get to rename
   // someone else's API. A native member is an Irish lemma and is governed.
-  assert.deepStrictEqual(coid('seasmhach R = Router ó "express"'), []);
+  assert.deepStrictEqual(coid('R seasmhach = Router ó "express"'), []);
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'seasmhach x = bheannaigh ó "./foclóir.sb"',
+      'príomh.sb': 'x seasmhach = bheannaigh ó "./foclóir.sb"',
     }),
     ['E103']);
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'seasmhach x = nachAnn ó "./foclóir.sb"',
+      'príomh.sb': 'x seasmhach = nachAnn ó "./foclóir.sb"',
     }),
     ['E203']);
 });
@@ -598,7 +598,7 @@ it('is E208 é ceangal áitiúil a bhuaileann le hiompórtáil', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': FOCLOIR,
-      'príomh.sb': 'seasmhach foclóir = ó "./foclóir.sb"\ngníomh fáiltigh(x: Teaghrán) { scríobh x }',
+      'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\ngníomh fáiltigh(x: Teaghrán) { scríobh x }',
     }),
     ['E208']);
 });
@@ -608,20 +608,20 @@ it('dhá mhodúl, an lemma céanna (E106)', () => {
     coidTionscadal({
       'a.sb': 'gníomh fógair(t: Teaghrán) { scríobh t }',
       'b.sb': 'gníomh fógair(t: Teaghrán) { scríobh t }',
-      'príomh.sb': 'seasmhach a = ó "./a.sb"\nseasmhach b = ó "./b.sb"',
+      'príomh.sb': 'a seasmhach = ó "./a.sb"\nb seasmhach = ó "./b.sb"',
     }),
     ['E106']);
 });
 
 it('modúl ar iarraidh (E109) agus timthriall (E110)', () => {
   assert.deepStrictEqual(
-    coidTionscadal({ 'príomh.sb': 'seasmhach x = ó "./níl-ann.sb"' }),
+    coidTionscadal({ 'príomh.sb': 'x seasmhach = ó "./níl-ann.sb"' }),
     ['E109']);
   assert.deepStrictEqual(
     coidTionscadal({
-      'a.sb': 'seasmhach b = ó "./b.sb"\nfeidhm f() -> Uimhir { 1 }',
-      'b.sb': 'seasmhach a = ó "./a.sb"\nfeidhm g() -> Uimhir { 2 }',
-      'príomh.sb': 'seasmhach a = ó "./a.sb"',
+      'a.sb': 'b seasmhach = ó "./b.sb"\nfeidhm f() -> Uimhir { 1 }',
+      'b.sb': 'a seasmhach = ó "./a.sb"\nfeidhm g() -> Uimhir { 2 }',
+      'príomh.sb': 'a seasmhach = ó "./a.sb"',
     }),
     ['E110']);
 });
@@ -629,15 +629,15 @@ it('modúl ar iarraidh (E109) agus timthriall (E110)', () => {
 it('is Iasacht fós é modúl JavaScript', () => {
   // Nothing about the graph reaches a foreign origin: `ó "express"` is
   // unchanged, and a .js path is not a Spicebag module.
-  const js = jsDe('seasmhach e = ó "express"\nseasmhach R = Router ó "express"');
+  const js = jsDe('e seasmhach = ó "express"\nR seasmhach = Router ó "express"');
   assert.ok(js.includes('require("express").Router'));
-  assert.deepStrictEqual(coid('seasmhach p = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), []);
+  assert.deepStrictEqual(coid('p seasmhach = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), []);
 });
 
 it('gan tionscadal, is Iasacht gach iompórtáil — iompar 0.4', () => {
   // The single-source entry point is unchanged, which is why the 0.4 suite
   // still passes without touching a line of it.
-  assert.deepStrictEqual(coid('seasmhach s = ó "./sonraí.sb"\nscríobh aonrud ó s'), []);
+  assert.deepStrictEqual(coid('s seasmhach = ó "./sonraí.sb"\nscríobh aonrud ó s'), []);
 });
 
 // ══ 16. Cineál an bhriathair (DEARADH.md §20) ════════════════════════════════════
@@ -655,7 +655,7 @@ it('is cuid den chineál é an modh (E201)', () => {
   assert.deepStrictEqual(
     coid('feidhm dúbail(u: Uimhir) -> Uimhir { u + u }\n'
       + 'gníomh g(x: gníomh(Uimhir), xs: Liosta(Uimhir)) { déan x ar xs }\n'
-      + 'gníomh príomh() { seasmhach xs: Liosta(Uimhir) = [1]  g a dhúbail, xs }'),
+      + 'gníomh príomh() { xs seasmhach: Liosta(Uimhir) = [1]  g a dhúbail, xs }'),
     ['E201']);
 });
 
@@ -686,13 +686,13 @@ it('is E501 é briathar a luaitear gan é a chomhlíonadh', () => {
 // ══ 17. Atriall: déan … ar … (DEARADH.md §21) ════════════════════════════════════
 it('dáileann `déan` an gníomh ar bhaill an bhailiúcháin', async () => {
   const src = `gníomh fógair(t: Teaghrán) { scríobh t }
-gníomh príomh() { seasmhach xs: Liosta(Teaghrán) = ["a", "b", "c"]  déan a fhógair ar xs }`;
+gníomh príomh() { xs seasmhach: Liosta(Teaghrán) = ["a", "b", "c"]  déan a fhógair ar xs }`;
   assert.deepStrictEqual(await rith(src), ['a', 'b', 'c']);
 });
 
 it('séimhíonn "ar" agus "a" san atriall, tríd an gcód céanna', () => {
   const bun = 'gníomh fógair(u: Uimhir) { scríobh u }\n'
-    + 'gníomh príomh() { seasmhach daoine: Liosta(Uimhir) = [1]  déan a fhógair ar dhaoine }';
+    + 'gníomh príomh() { daoine seasmhach: Liosta(Uimhir) = [1]  déan a fhógair ar dhaoine }';
   assert.deepStrictEqual(coid(bun), []);
   assert.deepStrictEqual(coid(bun.replace('ar dhaoine', 'ar daoine')), ['E102']);
   assert.deepStrictEqual(coid(bun.replace('a fhógair', 'a fógair')), ['E102']);
@@ -708,14 +708,14 @@ it('roghnaíonn an briathar a réamhfhocal (E514, E515)', () => {
 it('ní mór don bhriathar a bheith ag teacht le mír an liosta (E201)', () => {
   assert.deepStrictEqual(
     coid('gníomh fógair(u: Uimhir) { scríobh u }\n'
-      + 'gníomh príomh() { seasmhach xs: Liosta(Teaghrán) = ["a"]  déan a fhógair ar xs }'),
+      + 'gníomh príomh() { xs seasmhach: Liosta(Teaghrán) = ["a"]  déan a fhógair ar xs }'),
     ['E201']);
 });
 
 it('ní ghlacann `déan` le feidhm: caitear a toradh i dtraipisí', () => {
   assert.deepStrictEqual(
     coid('feidhm dúbail(u: Uimhir) -> Uimhir { u + u }\n'
-      + 'gníomh príomh() { seasmhach xs: Liosta(Uimhir) = [1]  déan a dhúbail ar xs }'),
+      + 'gníomh príomh() { xs seasmhach: Liosta(Uimhir) = [1]  déan a dhúbail ar xs }'),
     ['E201']);
 });
 
@@ -729,17 +729,17 @@ it('is ordú é an t-atriall, mar sin tá sé faoi na rialacha modha (E502)', ()
 it('is é aspect an bhriathair aspect na lúibe (E504)', () => {
   const bun = 'ag gníomh sábháil(u: Uimhir) { tar éis moill(u) }\n'
     + 'ag feidhm moill(u: Uimhir) -> Uimhir { u }\n';
-  const js = jsDe(bun + 'ag gníomh príomh() { seasmhach xs: Liosta(Uimhir) = [1]  déan a shábháil ar xs }');
+  const js = jsDe(bun + 'ag gníomh príomh() { xs seasmhach: Liosta(Uimhir) = [1]  déan a shábháil ar xs }');
   assert.ok(/for \(const __t\d+ of xs\) await sábháil\(__t\d+\)/.test(js), js);
   assert.deepStrictEqual(
-    coid(bun + 'gníomh príomh() { seasmhach xs: Liosta(Uimhir) = [1]  déan a shábháil ar xs }'),
+    coid(bun + 'gníomh príomh() { xs seasmhach: Liosta(Uimhir) = [1]  déan a shábháil ar xs }'),
     ['E504']);
 });
 
 it('atriallann `déan` ar Iasacht freisin', async () => {
   assert.deepStrictEqual(
     await rith('gníomh fógair(x: Iasacht) { scríobh x }\n'
-      + 'gníomh príomh() { seasmhach xs: Iasacht = ["a", "b"]  déan a fhógair ar xs }'),
+      + 'gníomh príomh() { xs seasmhach: Iasacht = ["a", "b"]  déan a fhógair ar xs }'),
     ['a', 'b']);
 });
 
@@ -747,8 +747,8 @@ it('atriallann `déan` ar Iasacht freisin', async () => {
 it('ní shroicheann foirm ghramadaí an t-aschur, fiú trasna modúl', async () => {
   const t = tionscadalBreige({
     'foclóir.sb': 'gníomh fógair(duine: Teaghrán) { scríobh duine }',
-    'príomh.sb': 'seasmhach foclóir = ó "./foclóir.sb"\n'
-      + 'gníomh príomh() { seasmhach daoine: Liosta(Teaghrán) = ["a"]\n'
+    'príomh.sb': 'foclóir seasmhach = ó "./foclóir.sb"\n'
+      + 'gníomh príomh() { daoine seasmhach: Liosta(Teaghrán) = ["a"]\n'
       + '  scríobh fad ó dhaoine\n  déan a fhógair ar dhaoine }',
   });
   const { js } = t.tiomsaigh('/sb/príomh.sb');
@@ -812,7 +812,7 @@ it('cuireann "ní" h roimh ghuta, an riail chéanna atá ag "le" in E201', () =>
 
 // ── an chomhréir ──────────────────────────────────────────────────────
 const SUIM = 'suim T { Ceart { u: Uimhir } Easpa { c: Teaghrán } }\n'
-  + 'seasmhach tor: T = Ceart { u: 1 }\n';
+  + 'tor seasmhach: T = Ceart { u: 1 }\n';
 
 it('ritheann "más" agus caolaíonn sé, mar a rinne an seanord', async () => {
   assert.deepStrictEqual(
@@ -843,7 +843,7 @@ it('is E517 é mír cheangailte gan aicmiú', () => {
 });
 
 it('fanann an fhoirm neamhspleách gan mhír', () => {
-  assert.deepStrictEqual(coid('struchtúr D { }\nseasmhach d = D { }\nseasmhach a = d is D'), []);
+  assert.deepStrictEqual(coid('struchtúr D { }\nd seasmhach = D { }\na seasmhach = d is D'), []);
 });
 
 it('ní shroicheann foirm na copaile an JavaScript', () => {
@@ -860,7 +860,7 @@ it('ní mheascann an mhír chopaileach glao le hainmní (an chuardach dhá chomh
   // `má óg(duine)` — dhá chomhartha IDENT NOD, ní dhá shlonn. Bhris an
   // chéad leagan den chuardach seo an feidhmchlár, agus is í an tástáil seo
   // an chosaint air.
-  const src = 'struchtúr D { aois: Uimhir }\nseasmhach d = D { aois: 9 }\n'
+  const src = 'struchtúr D { aois: Uimhir }\nd seasmhach = D { aois: 9 }\n'
     + 'feidhm óg(x: D) -> Bool { aois ó x < 18 }\n'
     + 'feidhm f() -> Teaghrán { má óg(d) { "óg" } mura { "aosta" } }\nscríobh f()';
   assert.deepStrictEqual(await rith(src), ['óg']);
@@ -868,7 +868,7 @@ it('ní mheascann an mhír chopaileach glao le hainmní (an chuardach dhá chomh
 
 it('fanann dealú ina dhealú i ndiaidh na míre', async () => {
   assert.deepStrictEqual(
-    await rith('seasmhach x = 5\nseasmhach y = 3\n'
+    await rith('x seasmhach = 5\ny seasmhach = 3\n'
       + 'feidhm f() -> Teaghrán { má x - y > 1 { "mór" } mura { "beag" } }\nscríobh f()'),
     ['mór']);
 });
@@ -973,7 +973,7 @@ it('is féidir briathar saor a ainmniú le "a"', () => {
   // Sin an t-aon slí a bhaintear amach é: cuirtear in aithne don saol
   // lasmuigh é, agus déanann sin é.
   assert.deepStrictEqual(coid(
-    SAOR + 'seasmhach freastal = ó "../rt/freastal.js"\n'
+    SAOR + 'freastal seasmhach = ó "../rt/freastal.js"\n'
     + 'gníomh cláraigh(app: Iasacht) { bealach ó fhreastal(app, "/", a liostaigh) }'), []);
 });
 
@@ -1001,9 +1001,9 @@ it('aithnítear foirm uraithe chun í a dhiúltú faoina hainm (E108, §12)', ()
   // Bhí E108 sa tábla ó 0.4 agus ní raibh aon áit á chur i bhfeidhm. Thit
   // foirm uraithe trí na scoilteanna go E101 — "aitheantóir gan sainmhíniú"
   // mar fhreagra ar Ghaeilge cheart.
-  assert.deepStrictEqual(coid('seasmhach baile = 3\ngníomh p() { scríobh mbaile }'), ['E108']);
-  assert.deepStrictEqual(coid('seasmhach cat = 3\ngníomh p() { scríobh gcat }'), ['E108']);
-  assert.deepStrictEqual(coid('seasmhach duine = 3\ngníomh p() { scríobh nduine }'), ['E108']);
+  assert.deepStrictEqual(coid('baile seasmhach = 3\ngníomh p() { scríobh mbaile }'), ['E108']);
+  assert.deepStrictEqual(coid('cat seasmhach = 3\ngníomh p() { scríobh gcat }'), ['E108']);
+  assert.deepStrictEqual(coid('duine seasmhach = 3\ngníomh p() { scríobh nduine }'), ['E108']);
   // Agus fanann E101 mar atá nuair nach bhfuil lemma ar bith taobh thiar de.
   assert.deepStrictEqual(coid('gníomh p() { scríobh mbaile }'), ['E101']);
 });
@@ -1017,14 +1017,14 @@ it('inbhéartaítear an t-urú go tacar, mar nach mapáil aonair é', () => {
 });
 
 it('is E513 é "a" roimh rud nach briathar é', () => {
-  assert.deepStrictEqual(coid('seasmhach uimhir = 3\ngníomh p() { scríobh a uimhir }'), ['E513']);
+  assert.deepStrictEqual(coid('uimhir seasmhach = 3\ngníomh p() { scríobh a uimhir }'), ['E513']);
 });
 
 it('fanann "a" ina aitheantóir dlisteanach', () => {
   // An chúis nár eochairfhocal riamh é. Is é an cruth a chinneann — dhá
   // aitheantóir taobh le taobh — agus ní tábla.
-  assert.deepStrictEqual(coid('seasmhach a = 3\ngníomh p() { scríobh a }'), []);
-  assert.deepStrictEqual(coid('seasmhach a = 3\nseasmhach b = a + 1'), []);
+  assert.deepStrictEqual(coid('a seasmhach = 3\ngníomh p() { scríobh a }'), []);
+  assert.deepStrictEqual(coid('a seasmhach = 3\nb seasmhach = a + 1'), []);
 });
 
 it('fanann "a" roimh bhriathar ina ainmniú', () => {

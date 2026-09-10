@@ -12,7 +12,7 @@
 // 1. LEATHNÚ. Níl aon cheann coitianta ag na míreanna seo, mar sin is
 //    `Liosta(Iasacht)` an liosta — sin an rud a chiallaíonn `Iasacht`: níl an
 //    cineál á rianú againn. Ní botún é.
-seasmhach measctha = [1, "a dó", 3]
+measctha seasmhach = [1, "a dó", 3]
 scríobh fad ó mheasctha
 
 // 2. BUALADH. Is scéal eile ar fad é seo. Tá ceann coitianta ag an dá mhalairt
@@ -24,7 +24,7 @@ suim Toradh {
     Easpa  { cúis: Teaghrán }
 }
 
-seasmhach torthaí: Liosta(Toradh) = [
+torthaí seasmhach: Liosta(Toradh) = [
     Ceart { luach: 1 },
     Easpa { cúis: "Gan aimsiú" }
 ]

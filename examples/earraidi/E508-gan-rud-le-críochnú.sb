@@ -5,6 +5,6 @@
 // in uimhir.
 
 ag gníomh príomh() {
-    seasmhach x = tar éis 3
+    x seasmhach = tar éis 3
     scríobh x
 }

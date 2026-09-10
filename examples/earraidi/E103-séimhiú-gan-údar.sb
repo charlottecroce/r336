@@ -3,7 +3,7 @@
 // A mhalairt de E102. Tá an fhoirm shéimhithe scríofa i suíomh nach n-iarrann
 // í: ní shéimhíonn `scríobh` a argóint, agus mar sin níl aon fhoras leis.
 
-seasmhach duine = 3
+duine seasmhach = 3
 
 gníomh príomh() {
     scríobh dhuine

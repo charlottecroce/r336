@@ -1,6 +1,6 @@
 // E106 — an lemma céanna á onnmhairiú ag dhá mhodúl.
 // Tagann briathra isteach san fhoclóir gan cháiliú, agus mar sin ní féidir a
 // rá cé acu `fógair` atá i gceist. Athainmnigh ceann acu.
-seasmhach a = ó "./E106-a.sb"
-seasmhach b = ó "./E106-b.sb"
+a seasmhach = ó "./E106-a.sb"
+b seasmhach = ó "./E106-b.sb"
 gníomh príomh() { fógair "x" }

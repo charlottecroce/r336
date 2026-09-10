@@ -3,9 +3,9 @@ as Gaillimh
 // Caithfear `imreoir.sb` a iompórtáil go díreach: taistealaíonn cineálacha
 // tríd an ath-onnmhairiú ach ní thaistealaíonn briathra, mar is stór focal é
 // briathar agus caithfidh an léitheoir an téacs a bheith léite aige (§19.2).
-seasmhach imr = ó "./imreoir.sb"
-seasmhach fir = ó "./foireann.sb"
-seasmhach tor = ó "./toradh.sb"
+imr seasmhach = ó "./imreoir.sb"
+fir seasmhach = ó "./foireann.sb"
+tor seasmhach = ó "./toradh.sb"
 
 // Ní roghnaíodh an dá chonradh seo — b'éigean iad. Is é seo an t-aon chomhad a
 // fhéadann `Imreoir` agus `Foireann` araon a oscailt, mar go bhfuil

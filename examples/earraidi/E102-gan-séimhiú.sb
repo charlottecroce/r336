@@ -7,7 +7,7 @@ struchtúr Duine {
     ainm: Teaghrán
 }
 
-seasmhach duine = Duine { ainm: "Cáit" }
+duine seasmhach = Duine { ainm: "Cáit" }
 
 gníomh príomh() {
     scríobh ainm ó duine

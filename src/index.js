@@ -67,6 +67,14 @@ function paraidimi(anailiseoir) {
       // refused is worth showing next to the one that is demanded.
       saor: (c.cineal && c.cineal.saor) || null,
       saorCaite: (c.cineal && c.cineal.saorCaite) || null,
+      // §40 — the first thing this output has ever carried that varies per
+      // identifier rather than per construction. `réamhshocraithe` is not
+      // decoration: a binding always declares its gender by the form of its
+      // own adjective, so a null here means a parameter or a receiver, which
+      // has no adjective slot and is therefore masculine by default rather
+      // than by statement (Part 11 D).
+      inscne: c.inscne || mf.INSCNE.FIR,
+      inscneRéamhshocraithe: !c.inscne,
     });
   }
   return amach;

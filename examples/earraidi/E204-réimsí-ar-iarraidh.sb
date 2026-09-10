@@ -8,4 +8,4 @@ struchtúr Duine {
     aois: Uimhir
 }
 
-seasmhach duine = Duine { ainm: "Cáit" }
+duine seasmhach = Duine { ainm: "Cáit" }

@@ -18,7 +18,7 @@ struchtúr Cuntas {
     iarmhéid: Uimhir
 }
 
-gníomh taisc(sealadach cuntas: Cuntas, méid: Uimhir) {
+gníomh taisc(cuntas sealadach: Cuntas, méid: Uimhir) {
     cuir iarmhéid ó chuntas + méid ar iarmhéid ó chuntas
 }
 
@@ -28,14 +28,14 @@ feidhm saibhir ó Chuntas(féin) -> Bool {
 }
 
 gníomh príomh() {
-    sealadach cuntas = Cuntas { úinéir: "Cáit", iarmhéid: 0 }
+    cuntas sealadach = Cuntas { úinéir: "Cáit", iarmhéid: 0 }
 
     taisc cuntas, 40
     taisc cuntas, 70
 
     scríobh úinéir ó chuntas + ": " + tuairisc(cuntas)
 
-    sealadach comhaireamh = 0
+    comhaireamh sealadach = 0
     cuir comhaireamh + 1 ar chomhaireamh
     cuir comhaireamh + 1 ar chomhaireamh
     scríobh "orduithe: " + focal(comhaireamh)

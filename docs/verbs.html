@@ -19,6 +19,7 @@
       <a href="grammar.html">Grammar</a>
       <a href="async.html">Async</a>
       <a href="modules.html">Modules</a>
+      <a href="counties.html">Counties</a>
       <a href="errors.html">Errors</a>
       <a href="glossary.html">Glossary</a>
     </nav>
@@ -32,14 +33,20 @@
     <div class="slab-body">
       <pre class="code">feidhm dúbail(x: Uimhir) -&gt; Uimhir { x + x }
 
-gníomh scríobhLine(t: Teaghrán) { scríobh t }</pre>
-      <p>A <code>gníomh</code> cannot declare a return type
-      (<a class="tag" href="errors.html">E404</a>). Inside a
+gníomh scríobhLine(t: Teaghrán) { scríobh t }
+
+saor liostaigh(mír: Teaghrán) { scríobh "· " + mír }</pre>
+      <p>A <code>gníomh</code> or <code>saor</code> cannot declare a return
+      type (<a class="tag" href="errors.html">E404</a>). Inside a
       <code>feidhm</code> body the last expression statement is the return
       value; every other value must actually be used, not dropped
       (<a class="tag" href="errors.html">E503</a>). A <code>gníomh</code>
       cannot be called from inside a <code>feidhm</code>
       (<a class="tag" href="errors.html">E502</a>).</p>
+      <p>A parameter may carry <code>sealadach</code> to say the callee may
+      change what the caller passed. Like every attributive adjective, it
+      follows its noun and agrees with it:</p>
+      <pre class="code">gníomh taisc(cuntas sealadach: Cuntas, méid: Uimhir) { … }</pre>
     </div>
   </div>
 
@@ -54,6 +61,16 @@ fógair "a", 1</pre>
       <p>A <code>gníomh</code> can only ever be obeyed as a command, never
       mentioned as a value - writing its bare name, or calling it with
       parentheses, is <a class="tag" href="errors.html">E501</a>.</p>
+      <p>A <code>saor</code> verb is the mirror image: it can only ever be
+      <em>mentioned</em>, never commanded
+      (<a class="tag" href="errors.html">E518</a>). The autonomous states that
+      an action happens while making its agent unnameable, so nothing inside
+      the language can be told to perform one. In a statement you write the
+      autonomous form, which the compiler conjugates -
+      <code>liostaigh</code> → <code>liostaítear</code>,
+      <code>fógair</code> → <code>fógraítear</code>. The past forms are
+      computed and refused by name
+      (<a class="tag" href="errors.html">E519</a>): the language has no tense.</p>
     </div>
   </div>
 
@@ -71,6 +88,67 @@ scríobh beannacht ó dhuine()</pre>
       can carry methods (<a class="tag" href="errors.html">E509</a>). At the
       call site it is the ordinary field-access relation, followed by a
       call: <code>beannacht ó dhuine()</code>.</p>
+      <p>A <code>saor</code> verb takes no receiver
+      (<a class="tag" href="errors.html">E520</a>): <code>féin</code> is an
+      agent, and the autonomous has none.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Adverse state: -&gt; T ar A</h2>
+    <div class="slab-body">
+      <p>Irish has no verb <em>to fail</em>. Misfortune is put <strong>on</strong>
+      you - <em>tá tinneas cinn orm</em>, <em>theip orm</em> - and
+      <code>ar</code> is the preposition that does it. A verb may declare what
+      can happen to its result.</p>
+      <pre class="code">struchtúr Earráid { cúis: Teaghrán }
+
+feidhm roinn(uachtar: Uimhir, íochtar: Uimhir) -&gt; Uimhir ar Earráid {
+    má íochtar == 0 {
+        Earráid { cúis: "ní roinntear ar nialas" }
+    } mura {
+        uachtar / íochtar
+    }
+}</pre>
+      <p>Introduction is free widening, as a sum variant widens to its sum:
+      inside such a verb a bare <code>Uimhir</code> and a bare
+      <code>Earráid</code> are both acceptable results, and the two
+      <code>má</code> branches meet at the afflicted type. There is no
+      constructor to write.</p>
+      <p><code>T ar A</code> is a type reference, so it may be written anywhere
+      a type is written. <code>A</code> must be a declared structure, sum or
+      variant (<a class="tag" href="errors.html">E525</a>) - a misfortune is a
+      thing with a reason, and a bare <code>Uimhir</code> is not one. An
+      <code>ar</code> clause on a <code>gníomh</code> or <code>saor</code> is
+      <a class="tag" href="errors.html">E522</a>: there is no result to
+      afflict.</p>
+      <p>Ask with <code>bí</code>, whose form agrees with the governing
+      particle exactly as it always has:</p>
+      <pre class="code">gníomh luaigh(uachtar: Uimhir, íochtar: Uimhir) {
+    toradh seasmhach = roinn(uachtar, íochtar)
+    má tá Earráid ar thoradh {
+        scríobh "theip air: " + cúis ó thoradh   <span class="c">// toradh : Earráid</span>
+    } mura {
+        scríobh toradh                           <span class="c">// toradh : Uimhir</span>
+    }
+}</pre>
+      <p>Both branches narrow, because an affliction is binary. Only a
+      <code>seasmhach</code> binding narrows: a <code>sealadach</code> one can
+      be assigned inside the branch, and a narrowing a <code>cuir</code> can
+      invalidate was never true.</p>
+      <p>Until the affliction is ruled out the value is not its result type -
+      <a class="tag" href="errors.html">E523</a> at every site that wants the
+      plain type. Asking about an affliction no verb declared is
+      <a class="tag" href="errors.html">E524</a>, refused rather than answered
+      <code>bréagach</code>, because the declaration is what creates the
+      question. This is <strong>protective only where the verb declared
+      it</strong>: unlike a sum, the caller is not asked to enumerate every
+      case, only to rule out the one thing the signature named.</p>
+      <p>An adverse type is an ordinary structure, so it claims a province like
+      any other placed type - a program that has spent all four cannot have
+      one. Nothing survives into the emitted JavaScript:
+      <code>tá Earráid ar thoradh</code> becomes
+      <code>__is(toradh, "Earráid")</code>, the tag the copula already read.</p>
     </div>
   </div>
 
@@ -80,7 +158,15 @@ scríobh beannacht ó dhuine()</pre>
       <pre class="code">déan a fhógair ar dhaoine
 forEach ó liosta(a fhógair)</pre>
       <p><code>a</code> + the lenited verb name turns a declared verb into a
-      nominal so it can be passed where a value is expected.</p>
+      nominal so it can be passed where a value is expected. <code>a</code>
+      before anything that is not a verb is
+      <a class="tag" href="errors.html">E513</a> - there is no possessive
+      determiner in the language.</p>
+      <p>A <code>saor</code> verb may be named this way but matches no
+      <code>gníomh</code> or <code>feidhm</code> parameter, because anything
+      that could accept it could call it, and calling is commanding. Its only
+      destination is <code>Iasacht</code> - the boundary, which is what makes
+      it the right mood for a route handler someone else invokes.</p>
     </div>
   </div>
 
@@ -89,6 +175,7 @@ forEach ó liosta(a fhógair)</pre>
     <div class="slab-body">
       <pre class="code">feidhm(Uimhir) -&gt; Uimhir      <span class="c">// indicative, one Uimhir param</span>
 gníomh(Teaghrán)              <span class="c">// imperative, no result</span>
+saor(Teaghrán)                <span class="c">// autonomous, no agent</span>
 ag feidhm(Iasacht) -&gt; Bool    <span class="c">// async, see Async</span></pre>
       <p>Mood and aspect are part of the type: a <code>gníomh</code> value
       never matches a <code>feidhm</code> parameter. Used to type
@@ -112,6 +199,9 @@ ag feidhm(Iasacht) -&gt; Bool    <span class="c">// async, see Async</span></pre
       writing <code>fógair 1 ar 2</code> is
       <a class="tag" href="errors.html">E515</a>, and calling <code>déan</code>
       without the phrase is <a class="tag" href="errors.html">E514</a>.</p>
+      <p>The <code>ar</code> of an adverse clause is a third use of the same
+      preposition and needs no new government: it lenites what follows it
+      through the one function every operator routes through.</p>
     </div>
   </div>
   <p class="footline">

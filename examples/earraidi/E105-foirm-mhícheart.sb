@@ -12,7 +12,7 @@ struchtúr Taifead {
     ainm: Teaghrán
 }
 
-seasmhach Duine = Taifead { ainm: "Cáit" }
+Duine seasmhach = Taifead { ainm: "Cáit" }
 
 gníomh príomh() {
     scríobh ainm ó DHuine

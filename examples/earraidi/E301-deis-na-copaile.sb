@@ -3,9 +3,9 @@
 // Aicmiú atá sa chopail: cuireann sí ceist faoi chatagóir. Ní catagóir é
 // luach, agus mar sin níl aon cheist ann le cur.
 
-seasmhach duine = 3
+duine seasmhach = 3
 
 gníomh príomh() {
-    seasmhach b = duine is 3
+    b seasmhach = duine is 3
     scríobh b
 }

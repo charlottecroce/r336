@@ -6,7 +6,7 @@
 //
 // Léigh le E517 é: is í an fhadhb chéanna í ag an gcopail.
 
-seasmhach x = 1
+x seasmhach = 1
 
 gníomh príomh() {
     mura tá x { scríobh "níl" }

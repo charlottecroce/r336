@@ -145,7 +145,7 @@ it('is E601 é an croí ag lorg an JavaScript', () => {
   // Placing a module severs it from JavaScript permanently. This is the
   // pressure the whole feature exists to apply (§24.3).
   const olc = foinseDe('duine.sb').replace('as Corcaigh\n',
-    'as Corcaigh\nseasmhach bun = ó "../rt/bunúsach.js"\n');
+    'as Corcaigh\nbun seasmhach = ó "../rt/bunúsach.js"\n');
   assert.deepStrictEqual(
     coidLeMalairt('duine.sb', `${olc}\nfeidhm f() -> Teaghrán { uimhir ó bhun }`,
       'duine.sb'),

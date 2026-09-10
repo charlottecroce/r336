@@ -1,0 +1,19 @@
+// E526 — deir an aidiacht rud amháin agus tá sí scríofa mar rud eile.
+//
+// Aidiachtaí iad `firinscneach` agus `baininscneach`, agus réitíonn aidiacht
+// lena hainmfhocal mar a dhéanann gach aidiacht eile ó chéim 0.11. Ciallaíonn
+// sin go seiceálann an fógra é féin: má tá `Aois` baininscneach, éilíonn sí
+// séimhiú ar an aidiacht a leanann í, agus is í an aidiacht sin an ceann atá
+// á rá gur baininscneach í.
+//
+// Dhá bhealach chun teip air, agus is é an locht céanna iad: `Aois
+// baininscneach` (an fhoirm fhirinscneach ag rá "baininscneach") agus `Duine
+// fhirinscneach` (an fhoirm bhaininscneach ag rá "firinscneach").
+//
+// Níl aon rud anseo ach `foirmDe(…, SEIMHITHE)` á ghairm — an mheicníocht
+// chéanna a rialaíonn `ó`, `ar`, `a` agus `as`. Níor cuireadh cúigiú
+// mheicníocht leis.
+
+struchtúr Aois baininscneach {
+    luach: Uimhir
+}

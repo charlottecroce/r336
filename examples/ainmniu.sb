@@ -15,7 +15,7 @@
 // Ghaeilge — ceann chun duine a ghairm, ceann chun briathar a ainmniú — agus
 // is é an dara ceann atá anseo. Ní ghlaotar ar aon rud leis.
 
-seasmhach bun = ó "../rt/bunúsach.js"
+bun seasmhach = ó "../rt/bunúsach.js"
 
 gníomh fógair(mír: Iasacht) {
     scríobh "  • " + téacs ó bhun(mír)
@@ -27,7 +27,7 @@ gníomh trom(mír: Iasacht) {
 
 gníomh príomh() {
     // `forEach` is ball ar iasacht: coinníonn sé a ainm iasachta.
-    seasmhach liosta: Iasacht = ["Cáit", "Oisín", "Aoife"]
+    liosta seasmhach: Iasacht = ["Cáit", "Oisín", "Aoife"]
 
     scríobh "gnáth:"
     forEach ó liosta(a fhógair)

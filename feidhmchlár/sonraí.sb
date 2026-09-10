@@ -13,9 +13,9 @@
 // Ó chéim 0.5 i leith téann an scaradh sin trasna na teorann idir modúil:
 // feiceann bealaí.sb gur gníomh é `cuirDuine`, agus ní luach.
 
-seasmhach stórlann = ó "../rt/stór.js"
+stórlann seasmhach = ó "../rt/stór.js"
 
-seasmhach SCÉIM = "CREATE TABLE IF NOT EXISTS daoine (
+SCÉIM seasmhach = "CREATE TABLE IF NOT EXISTS daoine (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ainm TEXT NOT NULL,
     aois INTEGER NOT NULL
@@ -34,7 +34,7 @@ ag feidhm gachDuine(stór: Iasacht) -> Liosta(Iasacht) {
 }
 
 ag feidhm duineDeRéir(stór: Iasacht, aitheantas: Uimhir) -> Iasacht {
-    seasmhach rónna: Liosta(Iasacht) = tar éis ceistigh ó stór("SELECT id, ainm, aois FROM daoine WHERE id = ?", [aitheantas])
+    rónna seasmhach: Liosta(Iasacht) = tar éis ceistigh ó stór("SELECT id, ainm, aois FROM daoine WHERE id = ?", [aitheantas])
     céad ó rónna
 }
 

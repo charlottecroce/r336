@@ -7,7 +7,7 @@
 // fhógra bailí. Is é an cruth a chinneann — dhá aitheantóir taobh le taobh,
 // rud nach slonn dlisteanach é — agus ní tábla eochairfhocal.
 
-seasmhach uimhir = 3
+uimhir seasmhach = 3
 
 gníomh príomh() {
     scríobh a uimhir

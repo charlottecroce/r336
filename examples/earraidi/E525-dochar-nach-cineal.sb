@@ -1,0 +1,21 @@
+// E525 — ní dochar é bunchineál.
+//
+// Ainmníonn `tá tinneas cinn orm` galar. Ainmníonn `theip orm` teip. Is rud
+// é an mí-ádh a bhfuil cur síos air, agus níl i dTeaghrán lom ach téacs: ní
+// insíonn sé cad a tharla, ní féidir réimse a chur air, agus ní féidir cúis
+// a bhaint as.
+//
+// Is é argóint E213 é seo, aon leibhéal amháin suas. Deir E213 nach
+// catagóir í an Iasacht agus mar sin nach féidir léi bheith i réimse
+// malairte; deir an ceann seo nach mí-ádh é uimhir ná teaghrán agus mar sin
+// nach féidir leis bheith ina dhochar. Sa dá chás is é an rud céanna atá á
+// rá: ní ainmníonn an cineál a dhóthain.
+//
+// Tá cúis phraiticiúil leis freisin agus is fiú í a lua: dá gceadófaí é,
+// bheadh `Teaghrán` marcáilte mar dhochar don mhodúl ar fad, agus bhuailfeadh
+// gach `má` a thugann Teaghrán le rud ar bith eile le chéile ag cineál
+// buailte nár iarr aon duine.
+
+feidhm ainmnigh(aitheantas: Uimhir) -> Teaghrán ar Teaghrán {
+    "duine"
+}

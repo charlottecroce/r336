@@ -233,7 +233,7 @@
       have to be a bare binding either: the analyzer walks any possessive
       chain back to its root binding and checks mutability there, so
       <code>cuir luach ó ch + 1 ar luach ó ch</code> is legal on a field of a
-      <code>sealadach struchtúr</code> parameter, even though the field
+      <code>struchtúr sealadach</code> parameter, even though the field
       itself is written in the ordinary immutable struct form.</p>
       <p>Primitives: <code>Uimhir</code>, <code>Teaghrán</code>,
       <code>Bool</code>, <code>Neamhní</code>, <code>Iasacht</code> (anything
@@ -354,7 +354,7 @@ ag gníomh(Iasacht)             <span class="c">// imperative, ongoing — see a
       another identifier, it checks whether that second word, delenited if
       it looks lenited, is a known verb. If it is, the pair becomes a
       verbal noun. If it is not, <code>a</code> simply falls back to being an
-      ordinary identifier, which is why <code>seasmhach a = 3</code> still
+      ordinary identifier, which is why <code>a seasmhach = 3</code> still
       compiles and <code>scríobh a</code> still works afterward. <code>a</code>
       was deliberately never made a keyword: two bare identifiers together
       are otherwise meaningless, so the shape of the input carries the

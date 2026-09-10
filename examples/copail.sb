@@ -21,7 +21,7 @@ struchtúr Duine {
     ainm: Teaghrán
 }
 
-seasmhach duine = Duine { ainm: "Charlotte" }
+duine seasmhach = Duine { ainm: "Charlotte" }
 
 // Faoin mír: `má` + `is` ina aon fhocal amháin, agus an fhaisnéis chun tosaigh
 // ar an ainmní, mar a chuireann an chopail í.
@@ -30,7 +30,7 @@ más Duine duine {
 }
 
 // Gan mhír: an fhoirm neamhspleách, agus is slonn Boole í.
-seasmhach isDuine = duine is Duine
+isDuine seasmhach = duine is Duine
 scríobh isDuine
 
 má tá duine {
@@ -40,7 +40,7 @@ má tá duine {
 }
 
 // Aicmiú ar luach bunúsach.
-seasmhach aois = 20
+aois seasmhach = 20
 más Uimhir aois {
     scríobh "Is uimhir í an aois."
 }
@@ -52,7 +52,7 @@ struchtúr Áit {
     logainm: Teaghrán
 }
 
-seasmhach áit = Áit { logainm: "Cill Chainnigh" }
+áit seasmhach = Áit { logainm: "Cill Chainnigh" }
 
 // Ná cuir an dá cheann seo taobh le taobh: leanann `mura` lom an bhloc roimhe
 // mar chraobh eile (§17), agus mar sin shlogfadh an chéad cheann an dara

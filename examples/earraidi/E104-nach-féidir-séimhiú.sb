@@ -4,7 +4,7 @@
 // séimhiú sa Ghaeilge. Níl an bhunfhoirm ina rogha anseo: is í an t-aon
 // fhoirm atá ag an bhfocal.
 
-seasmhach scoil = 3
+scoil seasmhach = 3
 
 gníomh príomh() {
     scríobh shcoil

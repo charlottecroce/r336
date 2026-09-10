@@ -19,6 +19,7 @@
       <a href="grammar.html">Grammar</a>
       <a href="async.html">Async</a>
       <a href="modules.html" class="at">Modules</a>
+      <a href="counties.html">Counties</a>
       <a href="errors.html">Errors</a>
       <a href="glossary.html">Glossary</a>
     </nav>
@@ -30,9 +31,9 @@
   <div class="slab">
     <h2 class="slab-head">Importing</h2>
     <div class="slab-body">
-      <pre class="code">seasmhach foclóir = ó "./foclóir.sb"   <span class="c">// native Spicebag module</span>
-seasmhach e       = ó "express"        <span class="c">// npm package</span>
-seasmhach p       = ó "node:path"      <span class="c">// node builtin</span></pre>
+      <pre class="code">foclóir seasmhach = ó "./foclóir.sb"   <span class="c">// native Spicebag module</span>
+e seasmhach       = ó "express"        <span class="c">// npm package</span>
+p seasmhach       = ó "node:path"      <span class="c">// node builtin</span></pre>
       <p>A relative specifier resolves relative to the importing file, as in
       Node. A <code>.sb</code> path is a native module; anything else is
       foreign.</p>
@@ -60,7 +61,7 @@ fáiltigh "Aoife"</pre>
   <div class="slab">
     <h2 class="slab-head">Foreign modules</h2>
     <div class="slab-body">
-      <pre class="code">seasmhach R = Router ó "express"</pre>
+      <pre class="code">R seasmhach = Router ó "express"</pre>
       <p>Everything reached from a non-<code>.sb</code> origin is
       <code>Iasacht</code>. A foreign member keeps its exact borrowed
       spelling - it is never lenited, and its category is only known by

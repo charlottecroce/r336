@@ -9,7 +9,7 @@
 // níl ann ach go bhfuil an sealbhóir níos fearr aitheanta anois. Coinníonn
 // `ó shonraí` a shéimhiú, agus tá cineál ceart ag gach ball.
 
-seasmhach foclóir = ó "./foclóir.sb"
+foclóir seasmhach = ó "./foclóir.sb"
 
 gníomh príomh() {
     // ball luachmhar tríd an ngaol sealbhach

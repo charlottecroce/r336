@@ -19,6 +19,7 @@
       <a href="grammar.html">Grammar</a>
       <a href="async.html">Async</a>
       <a href="modules.html">Modules</a>
+      <a href="counties.html">Counties</a>
       <a href="errors.html" class="at">Errors</a>
       <a href="glossary.html">Glossary</a>
     </nav>
@@ -39,7 +40,7 @@
         <tr><td><code>E105</code></td><td>Form doesn't match any valid paradigm of the identifier.</td></tr>
         <tr><td><code>E106</code></td><td>The same lemma is exported by more than one imported module.</td></tr>
         <tr><td><code>E107</code></td><td>Declarations must use the base form.</td></tr>
-        <tr><td><code>E108</code></td><td>Eclipsis is not implemented.</td></tr>
+        <tr><td><code>E108</code></td><td>An eclipsed form was recognised. Eclipsis has no meaning in the language; write the base form.</td></tr>
         <tr><td><code>E109</code></td><td>Module not found.</td></tr>
         <tr><td><code>E110</code></td><td>Circular import.</td></tr>
       </table>
@@ -61,8 +62,10 @@
         <tr><td><code>E208</code></td><td>Identifier already bound in this scope.</td></tr>
         <tr><td><code>E209</code></td><td>Function body returns the wrong type.</td></tr>
         <tr><td><code>E210</code></td><td>Operator not valid for these types.</td></tr>
-        <tr><td><code>E211</code></td><td>List items must share a type.</td></tr>
+        <tr><td><code>E211</code></td><td><span class="reserved">Reserved.</span> List items had to share a type. Made real in 0.8 and un-made in the same release: a driver's parameter list is legitimately mixed, and a mixed literal widens to <code>Liosta(Iasacht)</code>.</td></tr>
         <tr><td><code>E212</code></td><td>Wrong number of type parameters.</td></tr>
+        <tr><td><code>E213</code></td><td>A sum variant's field cannot be <code>Iasacht</code>. A sum states what a value may be; an unknown category is not a category.</td></tr>
+        <tr><td><code>E214</code></td><td>A sum needs at least two variants — it exists to offer a choice.</td></tr>
       </table>
     </div>
   </div>
@@ -73,6 +76,7 @@
       <table class="listing">
         <tr><th class="col-narrow">Code</th><th>Meaning</th></tr>
         <tr><td><code>E301</code></td><td>The right side of <code>is</code> must be a type.</td></tr>
+        <tr><td><code>E302</code></td><td>A classification that can never be true. A sum enumerates its variants, so this is decidable in advance.</td></tr>
       </table>
     </div>
   </div>
@@ -85,13 +89,13 @@
         <tr><td><code>E401</code></td><td>Unexpected token.</td></tr>
         <tr><td><code>E402</code></td><td>Unknown character in source.</td></tr>
         <tr><td><code>E403</code></td><td>Unterminated string.</td></tr>
-        <tr><td><code>E404</code></td><td><code>gníomh</code> cannot declare a return type.</td></tr>
+        <tr><td><code>E404</code></td><td><code>gníomh</code> and <code>saor</code> cannot declare a return type.</td></tr>
       </table>
     </div>
   </div>
 
   <div class="slab">
-    <h2 class="slab-head">Mood &amp; aspect <span class="head-note">5xx</span></h2>
+    <h2 class="slab-head">Mood, aspect &amp; form <span class="head-note">5xx</span></h2>
     <div class="slab-body">
       <table class="listing">
         <tr><th class="col-narrow">Code</th><th>Meaning</th></tr>
@@ -100,18 +104,61 @@
         <tr><td><code>E503</code></td><td>A value was discarded inside a function body.</td></tr>
         <tr><td><code>E504</code></td><td><code>tar éis</code> used outside an <code>ag</code> verb.</td></tr>
         <tr><td><code>E505</code></td><td>An ongoing action was used as a value; complete it with <code>tar éis</code>.</td></tr>
-        <tr><td><code>E506</code></td><td>Reserved.</td></tr>
+        <tr><td><code>E506</code></td><td><span class="reserved">Reserved.</span> The backend hoists multi-statement branches, so <code>má</code> as an expression no longer fails for this reason.</td></tr>
         <tr><td><code>E507</code></td><td>A <code>má</code> expression chain must end in a bare <code>mura</code>.</td></tr>
         <tr><td><code>E508</code></td><td><code>tar éis</code> on something that isn't an ongoing action.</td></tr>
-        <tr><td><code>E509</code></td><td>A method was declared on a type that isn't a structure.</td></tr>
-        <tr><td><code>E510</code></td><td>Cannot mutate a <code>seasmhach</code> binding; use <code>sealadach</code>.</td></tr>
+        <tr><td><code>E509</code></td><td>A method was declared on a type that isn't a structure. A method is a possession, and an unidentified value possesses nothing.</td></tr>
+        <tr><td><code>E510</code></td><td>Cannot mutate a <code>seasmhach</code> binding; declare it <code>sealadach</code>.</td></tr>
         <tr><td><code>E511</code></td><td>Invalid target for <code>cuir … ar …</code>.</td></tr>
-        <tr><td><code>E512</code></td><td>Wrong form of the substantive verb for the governing particle.</td></tr>
+        <tr><td><code>E512</code></td><td>Wrong form of the substantive verb for the governing particle — <code>tá</code> after <code>má</code>, <code>bhfuil</code> after <code>mura</code>.</td></tr>
         <tr><td><code>E513</code></td><td><code>a</code> was used on something that isn't a verb.</td></tr>
         <tr><td><code>E514</code></td><td>This command requires a prepositional phrase it didn't get.</td></tr>
         <tr><td><code>E515</code></td><td>This command doesn't accept a prepositional phrase.</td></tr>
-        <tr><td><code>E516</code></td><td>A command cannot take a possessor; call the imported verb directly.</td></tr>
+        <tr><td><code>E516</code></td><td>A command cannot take a possessor; an imported verb joins the vocabulary unqualified.</td></tr>
+        <tr><td><code>E517</code></td><td>Wrong copula form. Covers the pre-0.9 word order, the wrong allomorph in either direction, and a fused particle with nothing to classify.</td></tr>
+        <tr><td><code>E518</code></td><td>An autonomous verb's root was commanded. The root is the imperative and an imperative needs someone to obey it.</td></tr>
+        <tr><td><code>E519</code></td><td>A past autonomous form was written. The language has no tense; the form is recognised so it can be refused by name.</td></tr>
+        <tr><td><code>E520</code></td><td>An autonomous verb was given a receiver. <code>féin</code> is an agent, and the autonomous has none.</td></tr>
+        <tr><td><code>E521</code></td><td>This word has no vowel, so no syllable, so no quality an ending could agree with. It cannot be conjugated.</td></tr>
+        <tr><td><code>E522</code></td><td>An <code>ar</code> clause on a verb with no result. Nothing is there to be afflicted.</td></tr>
+        <tr><td><code>E523</code></td><td>An afflicted value used before the affliction was ruled out. Ask <code>má tá A ar …</code> and use it in the negative branch.</td></tr>
+        <tr><td><code>E524</code></td><td>Asking about an affliction no verb declared. The declaration is what creates the question.</td></tr>
+        <tr><td><code>E525</code></td><td>The adverse type is not a declared category. A misfortune is a thing with a reason; a bare number is not.</td></tr>
+        <tr><td><code>E526</code></td><td>A gender adjective's written form contradicts what it declares — <code>Aois baininscneach</code> says "feminine" in the masculine form.</td></tr>
+        <tr><td><code>E527</code></td><td>The same noun was given two genders in one module. A word does not change gender between two sentences of the same text.</td></tr>
       </table>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Provenance <span class="head-note">6xx</span></h2>
+    <div class="slab-body">
+      <p>The county and province system. A county is a lock on the box, not a
+      border on the road: only reading a member through <code>ó</code> is
+      checked.</p>
+      <table class="listing">
+        <tr><th class="col-narrow">Code</th><th>Meaning</th></tr>
+        <tr><td><code>E601</code></td><td>Province border crossed with no treaty in force.</td></tr>
+        <tr><td><code>E602</code></td><td>Not one of the 32 counties.</td></tr>
+        <tr><td><code>E603</code></td><td>That province is already claimed by another placed type. There are four slots.</td></tr>
+        <tr><td><code>E604</code></td><td>The module declared <code>as</code> twice. A text is not from two places.</td></tr>
+        <tr><td><code>E605</code></td><td>Exile cannot be declared or treatied with. It is not a place, it is what is there when no place is named.</td></tr>
+        <tr><td><code>E606</code></td><td>A treaty with itself.</td></tr>
+        <tr><td><code>E607</code></td><td>Duplicate treaty. A treaty holds from both sides, so the second declaration is a repetition.</td></tr>
+        <tr><td><code>E608</code></td><td>No treaty is possible between rivals. There is no remedy.</td></tr>
+        <tr><td><code>E609</code></td><td>A rivalry blocks the access even within one province, and no treaty can reach it.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">The corpus</h2>
+    <div class="slab-body">
+      <p>Every code above has a file in <code>examples/earraidi/</code> that
+      fails with that code and no other. <code>test/earraidi.js</code> checks
+      the rule in both directions: a case that fails with the wrong code is an
+      error, and so is a code with no case. Reserved codes must have
+      <em>no</em> file — if one acquires a case, the reservation was wrong.</p>
     </div>
   </div>
   <p class="footline">

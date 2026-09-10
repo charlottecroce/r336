@@ -1,0 +1,20 @@
+// E523 — an luach buailte á úsáid sula bhfuil an dochar curtha as an áireamh.
+//
+// Seo an chosaint ar fad, agus níl sí ann ach san áit ar fhógair briathar í.
+// Ní iarrtar ar an nglaoiteoir gach cás a scrúdú mar a iarrfadh cineál suime
+// air — ní iarrtar air ach an t-aon rud amháin a dúradh leis a d'fhéadfadh
+// titim amach.
+//
+// Is é an leigheas ná an cheist a chur: `má tá Earráid ar thoradh { … }
+// mura { … }`. Sa chraobh dhiúltach is Uimhir lom é, agus téann sé áit ar
+// bith a dtéann Uimhir.
+
+struchtúr Earráid {
+    cúis: Teaghrán
+}
+
+feidhm roinn(uachtar: Uimhir, íochtar: Uimhir) -> Uimhir ar Earráid {
+    má íochtar == 0 { Earráid { cúis: "nialas" } } mura { uachtar / íochtar }
+}
+
+leath seasmhach: Uimhir = roinn(10, 2)

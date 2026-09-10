@@ -31,7 +31,7 @@ feidhm comhaireamh(u: Uimhir) -> Teaghrán {
 }
 
 gníomh príomh() {
-    seasmhach daoine = [
+    daoine seasmhach = [
         Duine { ainm: "Cáit", aois: 20 },
         Duine { ainm: "Oisín", aois: 12 },
         Duine { ainm: "Aoife", aois: 34 }

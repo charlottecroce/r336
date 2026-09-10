@@ -30,10 +30,10 @@
 //      bhfuil `ainmDe` agus `aoisDe` ann thall. Ní seirbhísigh iad: is iad an
 //      trasnú.
 
-seasmhach croí     = ó "./duine.sb"
-seasmhach sonraí   = ó "./sonraí.sb"
-seasmhach bun      = ó "../rt/bunúsach.js"
-seasmhach freastal = ó "../rt/freastal.js"
+croí seasmhach     = ó "./duine.sb"
+sonraí seasmhach   = ó "./sonraí.sb"
+bun seasmhach      = ó "../rt/bunúsach.js"
+freastal seasmhach = ó "../rt/freastal.js"
 
 struchtúr AmharcLiosta {
     teideal: Teaghrán
@@ -48,11 +48,11 @@ struchtúr AmharcDuine {
 
 // Níl aon stór ann go dtí go dtosaítear an feidhmchlár, agus sin an rud a
 // insíonn "bí" dúinn.
-sealadach stór: Iasacht = neamhní
+stór sealadach: Iasacht = neamhní
 
 // D'imigh `struchtúr Síol`. Ba chóip de `Duine` é a bhí ann toisc nach raibh
 // aon `Duine` ann le cóipeáil. Anois tá, agus tógtar é anseo sa deoraíocht.
-seasmhach daoine: Liosta(Duine) = [
+daoine seasmhach: Liosta(Duine) = [
     Duine { ainm: "Charlotte", aois: 20 },
     Duine { ainm: "Séamus", aois: 12 },
     Duine { ainm: "Aoife", aois: 34 }
@@ -74,7 +74,7 @@ ag gníomh cuirSíol(duine: Duine) {
 
 ag gníomh síolaigh() {
     cruthaighScéim stór
-    seasmhach rónna: Liosta(Iasacht) = tar éis gachDuine ó shonraí(stór)
+    rónna seasmhach: Liosta(Iasacht) = tar éis gachDuine ó shonraí(stór)
     má folamh ó rónna { déan a chuirSíol ar dhaoine }
     // An lúb á tiomáint as an deoraíocht, an corp á rith san áit. `céim` a
     // tháinig ó "./duine.sb" agus níl cáiliú ar bith air.
@@ -82,7 +82,7 @@ ag gníomh síolaigh() {
 }
 
 ag saor liostaigh(iarr: Iasacht, freag: Iasacht) {
-    seasmhach rónna = tar éis gachDuine ó shonraí(stór)
+    rónna seasmhach = tar éis gachDuine ó shonraí(stór)
     render ó fhreag("innéacs", AmharcLiosta {
         teideal: "Daoine",
         daoine: rónna
@@ -91,10 +91,10 @@ ag saor liostaigh(iarr: Iasacht, freag: Iasacht) {
 
 ag saor taispeáin(iarr: Iasacht, freag: Iasacht) {
     // Coinníonn ball ar iasacht a ainm iasachta: ní aistrímid API duine eile.
-    seasmhach aitheantas = uimhir ó bhun(id ó pharams ó iarr)
+    aitheantas seasmhach = uimhir ó bhun(id ó pharams ó iarr)
     // `is` mar aicmiú: an uimhir í an rud a tháinig isteach? Ní uimhir é NaN.
     más Uimhir aitheantas {
-        seasmhach taifead = tar éis duineDeRéir ó shonraí(stór, aitheantas)
+        taifead seasmhach = tar éis duineDeRéir ó shonraí(stór, aitheantas)
         render ó fhreag("duine", AmharcDuine {
             teideal: teideal(aimsigh(taifead)),
             duine: taifead,

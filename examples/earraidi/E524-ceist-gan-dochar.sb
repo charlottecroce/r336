@@ -1,0 +1,21 @@
+// E524 — ag fiafraí faoi dhochar nár fógraíodh riamh.
+//
+// Ní freagra é `bréagach`. Dá bhfreagrófaí an cheist seo bheadh sé á rá gur
+// féidir an cheist a chur faoi rud ar bith, agus ansin ní bheadh brí ar bith
+// leis an bhfógra `-> Uimhir ar Earráid`: is é an fógra a chruthaíonn an
+// cheist. Gan é, níl san abairt ach focail.
+//
+// Sin an patrún céanna atá ag E302: ceist nach féidir a bheith fíor choíche,
+// agus is fearr í a dhiúltú ná í a fhreagairt go bréagach.
+
+struchtúr Earráid {
+    cúis: Teaghrán
+}
+
+comhaireamh seasmhach = 3
+
+gníomh luaigh() {
+    má tá Earráid ar chomhaireamh {
+        scríobh "buailte"
+    }
+}

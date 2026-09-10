@@ -10,7 +10,7 @@ suim Toradh as Corcaigh {
     Easpa  { cúis: Teaghrán }
 }
 
-seasmhach t: Toradh = Ceart { luach: 1 }
+t seasmhach: Toradh = Ceart { luach: 1 }
 
 // 1. An seanord focal. Scríobhadh `má` agus `is` ar leithligh, ach ní
 //    fhágann an Ghaeilge scartha iad: `má` + `is` = `más`.

@@ -1,2 +1,2 @@
 // E109 — níl an modúl ann.
-seasmhach x = ó "./níl-ann-dó.sb"
+x seasmhach = ó "./níl-ann-dó.sb"

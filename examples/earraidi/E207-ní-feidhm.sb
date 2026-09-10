@@ -1,6 +1,6 @@
 // E207 — ní feidhm é seo.
 
-seasmhach uimhir = 3
+uimhir seasmhach = 3
 
 gníomh príomh() {
     scríobh uimhir(1)

@@ -4,22 +4,22 @@
 // ag `bealaí.sb` i gcéim 0.7: is glas ar an mbosca é contae, ní teorainn ar an
 // mbóthar, mar sin téann luachanna áit ar bith.
 
-seasmhach imr = ó "./imreoir.sb"
-seasmhach fir = ó "./foireann.sb"
-seasmhach clu = ó "./cluiche.sb"
-seasmhach tor = ó "./toradh.sb"
+imr seasmhach = ó "./imreoir.sb"
+fir seasmhach = ó "./foireann.sb"
+clu seasmhach = ó "./cluiche.sb"
+tor seasmhach = ó "./toradh.sb"
 
-seasmhach ciarraí = Foireann {
+ciarraí seasmhach = Foireann {
     ainm: "Ciarraí",
     imreoirí: [Imreoir { ainm: "Ó Sé", scór: 12 }]
 }
 
-seasmhach gaillimh = Foireann {
+gaillimh seasmhach = Foireann {
     ainm: "Gaillimh",
     imreoirí: [Imreoir { ainm: "Ó Curraoin", scór: 9 }]
 }
 
-seasmhach cluichí: Liosta(Cluiche) = [
+cluichí seasmhach: Liosta(Cluiche) = [
     Cluiche { baile: ciarraí, cuairt: gaillimh },
     Cluiche { baile: gaillimh, cuairt: gaillimh }
 ]

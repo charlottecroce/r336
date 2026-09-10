@@ -1,6 +1,6 @@
 // foclóir.sb — an modúl a onnmhairíonn an foclóir (DEARADH.md §19).
 
-seasmhach BEANNACHT = "Dia duit"
+BEANNACHT seasmhach = "Dia duit"
 
 feidhm beannaigh(ainm: Teaghrán) -> Teaghrán {
     BEANNACHT + ", " + ainm

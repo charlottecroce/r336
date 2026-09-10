@@ -47,7 +47,7 @@ feidhm cuardaigh(aois: Uimhir) -> Toradh {
 
 // Tá áit ag liosta ilchineálach le dul anois, agus sin an rud a fhágann go
 // bhfuil E211 sroichte faoi dheireadh (§26.5).
-seasmhach torthaí: Liosta(Toradh) = [
+torthaí seasmhach: Liosta(Toradh) = [
     Ceart { duine: Duine { ainm: "Síle", aois: 30 } },
     Easpa { cúis: "Gan aimsiú" }
 ]

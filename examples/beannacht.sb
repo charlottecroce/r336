@@ -13,12 +13,12 @@ feidhm dúbail(x: Uimhir) -> Uimhir {
     x + x
 }
 
-seasmhach duine = Duine {
+duine seasmhach = Duine {
     ainm: "Charlotte",
     aois: 20
 }
 
-seasmhach teachtaireacht = beannacht(duine)
+teachtaireacht seasmhach = beannacht(duine)
 
 scríobh teachtaireacht
 scríobh dúbail(aois ó dhuine)

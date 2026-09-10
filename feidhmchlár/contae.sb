@@ -21,7 +21,7 @@
 // fhéadfadh: tá sé ar deoraíocht, agus ní dhéanann an deoraíocht comhaontú.
 // Sin an chúis a bhfuil `ainmDe` agus `clúdach` sa chomhad eile.
 
-seasmhach croí = ó "./contae-croí.sb"
+croí seasmhach = ó "./contae-croí.sb"
 
 struchtúr Iontráil {
     ainm: Teaghrán
@@ -33,7 +33,7 @@ gníomh próiseáil(iontráil: Iontráil) {
 }
 
 gníomh príomh() {
-    seasmhach amh: Liosta(Iontráil) = [
+    amh seasmhach: Liosta(Iontráil) = [
         Iontráil { ainm: "Cáit", aois: 19 },
         Iontráil { ainm: "Séamus", aois: 34 }
     ]

@@ -1,0 +1,20 @@
+// E522 — dochar ar rud nach bhfuil ann.
+//
+// Buaileann an mí-ádh rud. `tá tinneas cinn orm` — tá duine ann le bheith
+// buailte. Ní thugann `gníomh` aon rud ar ais, mar sin níl aon rud ann a
+// d'fhéadfadh a bheith buailte, agus ní frása gan bhrí é an frása `ar`
+// anseo ach frása gan ábhar.
+//
+// Ní hionann é seo agus E404. Deir E404 nach nglacann gníomh le cineál
+// toraidh ar chor ar bith; deir an ceann seo go bhfuil an frása `ar` ag
+// brath ar thoradh a bheith ann. Dhá riail ar an aon fhíric amháin, agus is
+// fiú an dá cheann a rá, mar is é `->` a scríobhfaí chun an ceann seo a
+// leigheas agus is é `->` a bhaintear amach chun an ceann eile a leigheas.
+
+struchtúr Earráid {
+    cúis: Teaghrán
+}
+
+gníomh fógair(x: Uimhir) ar Earráid {
+    scríobh x
+}

@@ -8,7 +8,7 @@
 // Sin an cóireáil chéanna a fhaigheann `liostaíodh` ó E519: ríomhtar an
 // fhoirm, agus insítear cén fáth nach nglactar léi.
 
-seasmhach baile = 3
+baile seasmhach = 3
 
 gníomh príomh() {
     scríobh mbaile

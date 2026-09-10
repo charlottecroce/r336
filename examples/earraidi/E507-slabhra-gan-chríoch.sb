@@ -5,6 +5,6 @@
 // fhocal sa Ghaeilge ar "else" ach an chraobh dheireanach den slabhra (§17).
 
 feidhm rang(aois: Uimhir) -> Teaghrán {
-    seasmhach ainm = má aois > 65 { "sinsear" } mura aois > 17 { "duine fásta" }
+    ainm seasmhach = má aois > 65 { "sinsear" } mura aois > 17 { "duine fásta" }
     ainm
 }

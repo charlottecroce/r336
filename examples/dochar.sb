@@ -1,0 +1,67 @@
+// dochar.sb — `ar` mar staid dhochrach (§39).
+//
+// Níl aon bhriathar "to have" sa Ghaeilge, agus níl aon bhriathar "to fail"
+// ach oiread. Buaileann an mí-ádh thú, agus is é `ar` a chuireann ort é:
+//
+//   tá tinneas cinn orm      tá brón orm      tá eagla orm      theip orm
+//
+// Sin an tríú ball de scoilt a bhí leathdhéanta cheana. Coimeádann `ag`,
+// tugann `le` teideal, agus buaileann `ar`. Is é an ceann seo an t-aon
+// bhall den triúr is féidir a thógáil gan forainmneacha (§32.6), agus is
+// é sin an fáth a bhfuil sé anseo agus nach bhfuil an dá cheann eile.
+//
+// NÍ GAEILGE É AN CHUID AR FAD, AGUS DEIRTEAR É SIN OS ARD. Is Gaeilge é
+// `ar` féin — séimhíonn sé cheana, agus téann sé trí `reitighFoirm` cheana,
+// agus níor cuireadh moirfeolaíocht nua ar bith leis an teanga chun é seo a
+// dhéanamh. Ach is ar fhorais shéimeantacha atá an ghné bunaithe: ceistítear
+// cad a tharlaíonn do luach, agus sin brí seachas foirm. An chóireáil chéanna
+// a fuair `suim` i §26.1.
+
+as Corcaigh
+
+// Tógann an dochar cúige, mar a thógann gach cineál curtha eile. Níl aon
+// eisceacht anseo: is cineál é, agus tá ceithre shliotán ann. Sin an rogha
+// a rinneadh, agus tá praghas uirthi — féach §39.5.
+struchtúr Earráid as Corcaigh {
+    cúis: Teaghrán
+}
+
+// AN FÓGRA. `-> Uimhir ar Earráid`: tugann an briathar seo uimhir ar ais,
+// agus d'fhéadfadh Earráid a bheith uirthi. Ní suim í seo. Ní iarrtar ar an
+// nglaoiteoir gach rogha a scrúdú — ní iarrtar air ach an rud a d'fhógair an
+// briathar a chur as an áireamh.
+feidhm roinn(uachtar: Uimhir, íochtar: Uimhir) -> Uimhir ar Earráid {
+    má íochtar == 0 {
+        Earráid { cúis: "ní roinntear ar nialas" }
+    } mura {
+        uachtar / íochtar
+    }
+}
+
+// Buaileann an dá chraobh le chéile ag an gcineál buailte, díreach mar a
+// bhuaileann dhá mhalairt le chéile ag an tsuim (§26.5). Níl aon tógálaí
+// ann: is Uimhir bhuailte cheana féin í Uimhir, agus is leathnú saor é.
+
+// AN CHEIST. `tá Earráid ar …` — an briathar substaintigh, agus ceanglaíonn
+// a fhoirm leis an mír a rialaíonn í díreach mar a rinne sí riamh: `tá`
+// faoi `má`, `bhfuil` faoi `mura`. Ní athraigh an ceistiú sin.
+gníomh luaigh(uachtar: Uimhir, íochtar: Uimhir) {
+    toradh seasmhach = roinn(uachtar, íochtar)
+    má tá Earráid ar thoradh {
+        // Sa chraobh seo is Earráid é `toradh`, agus tá réimse aige.
+        scríobh "theip air: " + cúis ó thoradh
+    } mura {
+        // Agus sa chraobh seo is Uimhir lom é.
+        scríobh toradh
+    }
+}
+
+// Agus an fhoirm spleách, mar a bhíonn i gcónaí faoi `mura`.
+feidhm slán(toradh: Uimhir ar Earráid) -> Bool {
+    mura bhfuil Earráid ar thoradh { fíor } mura { bréagach }
+}
+
+gníomh príomh() {
+    luaigh 10, 2
+    luaigh 10, 0
+}

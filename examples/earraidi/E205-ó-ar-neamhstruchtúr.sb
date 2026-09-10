@@ -2,7 +2,7 @@
 //
 // Is caidreamh sealbhaíochta é `ó`, agus ní shealbhaíonn uimhir aon rud.
 
-seasmhach uimhir = 3
+uimhir seasmhach = 3
 
 gníomh príomh() {
     scríobh ainm ó uimhir

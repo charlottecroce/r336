@@ -150,6 +150,18 @@ async function príomh() {
         if (naimhde.length) {
           console.log(`\n  seanaighneas — ní dhéanann ${d.contae} comhaontú le ${naimhde.join(', ')}  (E608)`);
         }
+      } else if (bratacha.has('--json')) {
+        // §40 — the structured mode. `--paraidím` now carries base form,
+        // lenited form, the reason lenition is impossible, the eclipsed form,
+        // the autonomous present and past, gender, the source module and a
+        // copula block. That is eight columns and it stopped fitting on a
+        // line, so the human output keeps the four that a reader scans and
+        // everything else is here, whole, for anything that wants to read it.
+        console.log(JSON.stringify({
+          comhad: c,
+          ceangail: paraidimi(anailiseoir),
+          copail: paraidimChopail(anailiseoir),
+        }, null, 2));
       } else {
         console.log(`foirmeacha gramadaí — ${c}`);
         for (const p of paraidimi(anailiseoir)) {
@@ -161,8 +173,15 @@ async function príomh() {
           const sa = p.saor
             ? `  [saor: ${p.saor}${p.saorCaite ? `; caite: ${p.saorCaite} — gan aimsir, §37` : ''}]`
             : '';
-          console.log(`  ${p.lemma.padEnd(14)} ${(p.sealadach ? 'sealadach' : p.kind).padEnd(9)} ${String(p.cineál).padEnd(24)} bun=${p.bun.padEnd(13)} séimhithe=${s}${u}${sa}${ó}`);
+          // §40 — the gender column, and the adjective form it demands. A
+          // starred gender was never declared: a parameter has no adjective
+          // slot, so it is masculine by default rather than by statement.
+          const aid = p.sealadach ? 'sealadach' : 'seasmhach';
+          const inscne = `${p.inscne === 'bain' ? 'bain' : 'fir'}${p.inscneRéamhshocraithe ? '*' : ' '}`;
+          const foirmAid = require('../src/morphology').foirmAidiachta(aid, p.inscne);
+          console.log(`  ${p.lemma.padEnd(14)} ${inscne.padEnd(5)}${foirmAid.padEnd(12)} ${String(p.cineál).padEnd(22)} bun=${p.bun.padEnd(13)} séimhithe=${s}${u}${sa}${ó}`);
         }
+        console.log('\n  * inscne réamhshocraithe: ní raibh slot aidiachta ann lena rá (§40.4)');
         cloChopail(paraidimChopail(anailiseoir));
       }
       continue;

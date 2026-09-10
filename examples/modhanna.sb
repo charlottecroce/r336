@@ -22,7 +22,7 @@ feidhm aoisAmachAnseo ó Dhuine(féin, blianta: Uimhir) -> Uimhir {
     aois ó fhéin + blianta
 }
 
-seasmhach duine = Duine { ainm: "Charlotte", aois: 20 }
+duine seasmhach = Duine { ainm: "Charlotte", aois: 20 }
 
 // Ag an suíomh glaoch, an gaol céanna: `beannacht ó dhuine`.
 scríobh beannacht ó dhuine()

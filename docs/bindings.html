@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spicebag - Bindings & Types</title>
+<title>Spicebag - Bindings &amp; Types</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,6 +19,7 @@
       <a href="grammar.html">Grammar</a>
       <a href="async.html">Async</a>
       <a href="modules.html">Modules</a>
+      <a href="counties.html">Counties</a>
       <a href="errors.html">Errors</a>
       <a href="glossary.html">Glossary</a>
     </nav>
@@ -30,13 +31,64 @@
   <div class="slab">
     <h2 class="slab-head">seasmhach / sealadach</h2>
     <div class="slab-body">
-      <pre class="code">seasmhach x = 5              <span class="c">// immutable</span>
-sealadach y = 5              <span class="c">// mutable</span>
-seasmhach x: Uimhir = 5      <span class="c">// explicit type</span></pre>
+      <pre class="code">x seasmhach = 5              <span class="c">// immutable</span>
+y sealadach = 5              <span class="c">// mutable</span>
+x seasmhach: Uimhir = 5      <span class="c">// explicit type</span></pre>
+      <p><strong>The adjective follows its noun.</strong> An attributive
+      adjective follows in Irish - <em>fear mór</em>, not <em>mór fear</em> -
+      and <code>seasmhach</code> and <code>sealadach</code> are attributive
+      adjectives. Before 0.11 the language wrote them first, which was English
+      order in Irish words.</p>
       <p>A binding must be declared in its base (unlenited) form -
-      <code>seasmhach dhuine = 3</code> is <a class="tag" href="errors.html">E107</a>.
+      <code>dhuine seasmhach = 3</code> is <a class="tag" href="errors.html">E107</a>.
       Only a <code>sealadach</code> binding, or a <code>sealadach</code>
       parameter, may be mutated.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Gender</h2>
+    <div class="slab-body">
+      <p>Irish nouns are masculine or feminine, the gender is largely
+      arbitrary, and in the nominative it shows as lenition of a following
+      adjective: <em>fear mór</em> but <em>bean mhór</em>. Spicebag's
+      identifiers are Irish nouns, so they have gender too.</p>
+      <pre class="code">duine seasmhach = Duine { ainm: "Cáit" }     <span class="c">// masculine</span>
+aois sheasmhach = Aois { luach: 20 }         <span class="c">// feminine</span>
+tuairisc shealadach: Teaghrán = ""           <span class="c">// feminine</span></pre>
+      <p>There is no gender keyword and no new syntax. Every binding already
+      carried an adjective and an adjective already agrees, so <strong>the form
+      of that adjective is the declaration</strong>. Nothing is inferred from
+      the shape of the word: the ending rules are real but say nothing at all
+      about the fifth of Irish nouns that end in a vowel, <code>duine</code>
+      among them.</p>
+      <p>One gender per noun per module. A word does not change gender between
+      two sentences of the same text, so a second, different spelling is
+      <a class="tag" href="errors.html">E527</a> and the message names the line
+      where the word was first spelled. A parameter with no adjective declares
+      nothing; it takes whatever the module already recorded, or masculine.</p>
+      <p>Agreement calls the same <code>foirmDe</code> that <code>ó</code>,
+      <code>ar</code>, <code>a</code> and <code>as</code> route through, so an
+      adjective that cannot bear a séimhiú is not an exception:
+      <code>aois óg</code> and <code>aois luath</code> are correct after a
+      feminine noun for the same reason <code>ó áit</code> is correct after a
+      leniting preposition.</p>
+      <p><strong>Gender carries no meaning.</strong> It never reaches
+      <a class="tag" href="errors.html">E201</a> - two types differing only in
+      gender are the same type - and it never survives into the emitted
+      JavaScript.</p>
+      <pre class="code">sbc comhad.sb --paraidím
+
+  <span class="c">lemma          inscne  aidiacht     … (type, forms, source elided)</span>
+  duine          fir     seasmhach    …
+  aois           bain    sheasmhach   …
+  x              fir*    seasmhach    …
+
+  <span class="c">* gender defaulted: there was no adjective slot to state it in</span></pre>
+      <p><code>--paraidím --json</code> gives the whole structured record.
+      <code>tools/imirce-inscne.js</code> migrates pre-0.11 source: it moves
+      the adjective, leaves comments alone, and writes every noun as masculine
+      - it does not guess.</p>
     </div>
   </div>
 
@@ -44,7 +96,7 @@ seasmhach x: Uimhir = 5      <span class="c">// explicit type</span></pre>
     <h2 class="slab-head">Mutation</h2>
     <div class="slab-body">
       <pre class="code">cuir &lt;luach&gt; ar &lt;sprioc&gt;</pre>
-      <pre class="code">sealadach comhaireamh = 0
+      <pre class="code">comhaireamh sealadach = 0
 cuir comhaireamh + 1 ar chomhaireamh</pre>
       <p><code>cuir</code> is a command: only valid inside a <code>gníomh</code>
       (<a class="tag" href="errors.html">E502</a> inside a <code>feidhm</code>).
@@ -65,7 +117,32 @@ cuir comhaireamh + 1 ar chomhaireamh</pre>
         <tr><td><code>Neamhní</code></td><td><code>neamhní</code> - absence</td></tr>
         <tr><td><code>Iasacht</code></td><td>any value crossing a JS boundary; untyped</td></tr>
         <tr><td><code>Liosta(T)</code></td><td>a list of <code>T</code></td></tr>
+        <tr><td><code>T ar A</code></td><td>a <code>T</code> that may instead be an <code>A</code> - see <a href="verbs.html">Verbs</a></td></tr>
       </table>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">A type's gender</h2>
+    <div class="slab-body">
+      <p>A type name is an ordinary Irish noun, but nothing in the language
+      puts an adjective after one, so if you want its gender recorded you state
+      it - with an adjective, which then agrees with the noun it is declaring.</p>
+      <pre class="code">struchtúr Duine firinscneach as Corcaigh { … }
+struchtúr Aois bhaininscneach { … }
+
+suim Aimsiú bhaininscneach as Gaillimh {
+    Aimsithe firinscneach { duine: Duine }
+    Uireasa bhaininscneach { }
+}</pre>
+      <p>So the declaration checks itself. <code>Aois baininscneach</code> says
+      "feminine" in the masculine form and is
+      <a class="tag" href="errors.html">E526</a>; so is
+      <code>Duine fhirinscneach</code>.</p>
+      <p><strong>It is optional.</strong> Nothing in the language yet demands
+      agreement with a type's gender, and requiring it would collect ceremony
+      against a rule that does not exist. Where absent, the type is masculine
+      and <code>--paraidím</code> marks it as defaulted rather than declared.</p>
     </div>
   </div>
 
@@ -79,7 +156,7 @@ fíor
 bréagach
 neamhní
 [1, 2, 3]
-seasmhach ys: Liosta(Uimhir) = []</pre>
+ys seasmhach: Liosta(Uimhir) = []</pre>
       <p>A list literal's element type is the common type of its items;
       a mixed list widens to <code>Liosta(Iasacht)</code> rather than
       erroring.</p>

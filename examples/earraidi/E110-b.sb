@@ -1,2 +1,2 @@
-seasmhach a = ó "./E110-a.sb"
+a seasmhach = ó "./E110-a.sb"
 feidhm g() -> Uimhir { 2 }

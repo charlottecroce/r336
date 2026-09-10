@@ -1,4 +1,4 @@
 // E208 — tá an t-aitheantóir ceangailte cheana sa scóip seo.
 
-seasmhach ainm = "Cáit"
-seasmhach ainm = "Síle"
+ainm seasmhach = "Cáit"
+ainm seasmhach = "Síle"

@@ -44,6 +44,17 @@ const EOCHAIRFHOCAIL = new Set([
   'más',         // má   + is           — realis, classifying
   'murab',       // mura + is, before a vowel
   'sealadach',   // mutable binding: what a thing happens to be right now
+  // §40 — the same two adjectives after a feminine noun, and the two that
+  // declare a type's gender. Inflected forms of a function word live in this
+  // table exactly as `bhfuil`, `más` and `murab` do: the parser normalises
+  // them back to the base adjective and hands the written form to the
+  // analyzer to check. A lenited adjective is not a new word.
+  'sheasmhach',  // … after a feminine noun
+  'shealadach',  // …
+  'firinscneach',   // declares a type masculine
+  'fhirinscneach',  //   … the form is wrong for what it declares (E526)
+  'baininscneach',  // declares a type feminine
+  'bhaininscneach', //   … and this is the form a feminine name demands
   'cuir',        // "put" — the imperative that changes a state
   'ar',          // "on" — the surface an action lands on; lenites
   'fíor',        // true
@@ -188,7 +199,7 @@ function bunuis(toks) {
  * `briathra` is every declared verb of either mood, needed because `a` is
  * the particle that turns a verb into a noun (`a fhógair`) and is otherwise
  * an ordinary identifier. Deciding by lexicon rather than by keyword means
- * `seasmhach a = 3` still works.
+ * `a seasmhach = 3` still works.
  */
 function lexeain(toks, iasachta = null) {
   const gniomhartha = new Set(GNIOMHARTHA_IONSUITE);

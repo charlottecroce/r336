@@ -27,6 +27,28 @@
 
 const { earraid } = require('./diagnostics');
 const ctae = require('./contaetha');
+const mf = require('./morphology');
+
+/**
+ * §40 — the adjectives, written form → base form.
+ *
+ * `bhfuil` is normalised to `bí` and its written surface handed on to be
+ * checked; so are `más` and `murab`; so are these. The parser's job is to know
+ * that `sheasmhach` is `seasmhach`. Whether the noun in front of it licensed
+ * the séimhiú is agreement, and agreement is the analyzer's.
+ */
+const AIDIACHTAI_STAIDE = new Map([
+  ['seasmhach', 'seasmhach'], ['sheasmhach', 'seasmhach'],
+  ['sealadach', 'sealadach'], ['shealadach', 'sealadach'],
+]);
+const AIDIACHTAI_INSCNE = new Map([
+  ['firinscneach', 'firinscneach'], ['fhirinscneach', 'firinscneach'],
+  ['baininscneach', 'baininscneach'], ['bhaininscneach', 'baininscneach'],
+]);
+const isAidiachtStaide = (t) => t.cinéal === 'KW' && AIDIACHTAI_STAIDE.has(t.luach);
+const isAidiachtInscne = (t) => t.cinéal === 'KW' && AIDIACHTAI_INSCNE.has(t.luach);
+/** `{ scriofa, bun }` — what was written, and the adjective it is a form of. */
+const aidiacht = (t, tabla) => ({ scriofa: t.luach, bun: tabla.get(t.luach), ionad: t.ionad });
 
 /**
  * Tokens that can begin an expression, for deciding a command's arity.
@@ -136,6 +158,16 @@ class Parsalai {
       }
       this.suil('NOD', ')');
     }
+    // §39 — `Uimhir ar Earráid`. The affliction belongs to the type reference
+    // rather than to the signature, so it is written wherever a type is
+    // written: a return, a parameter, a declared binding, a list element. A
+    // verb that takes an afflicted argument is opting in to receive one, and
+    // that is the whole of what "protective only where the verb declared it"
+    // has to mean on the receiving side.
+    if (this.seiceail('KW', 'ar')) {
+      this.i++;
+      ref.dochar = this.parsailTagairtCineail();
+    }
     return ref;
   }
 
@@ -173,7 +205,16 @@ class Parsalai {
     while (this.seiceail('IDENT') && ctae.isReamhran([...focail, this.peek().luach])) {
       focail.push(this.toks[this.i++].luach);
     }
-    while (slánú && !ctae.isContae(focail.join(' ')) && this.seiceail('IDENT')) {
+    // Recovery, so that an unknown name is reported whole rather than one
+    // word at a time. It must not run past the start of the next statement —
+    // and since §40 a statement can begin with a bare identifier, which is
+    // exactly what this loop eats. `IDENT` followed by a state adjective is a
+    // declaration and nothing else (§40.2), so that is where it stops. This
+    // is the ambiguity §24.4 warned about arriving from the other direction:
+    // the county reader was safe only while every statement began with a
+    // keyword.
+    while (slánú && !ctae.isContae(focail.join(' ')) && this.seiceail('IDENT')
+      && !isAidiachtStaide(this.peek(1))) {
       focail.push(this.toks[this.i++].luach);
     }
     return { focail, ionad: tus.ionad };
@@ -201,13 +242,21 @@ class Parsalai {
   parsailStruchtur() {
     this.suil('KW', 'struchtúr');
     const ainm = this.suil('IDENT');
+    // §40 — `struchtúr Duine firinscneach as Corcaigh`. A type's name is an
+    // ordinary Irish noun and has a gender like any other, but nothing in the
+    // language puts an adjective after it, so the gender has to be stated. It
+    // is stated by an adjective, which then agrees with the noun it declares:
+    // `Duine firinscneach`, `Aois bhaininscneach`. The declaration checks
+    // itself, and E526 is what happens when it does not.
+    const inscne = isAidiachtInscne(this.peek())
+      ? aidiacht(this.toks[this.i++], AIDIACHTAI_INSCNE) : null;
     const contae = this.seiceail('KW', 'as') ? this.parsailAsFrasa() : null;
     const reimsi = this.parsailReimsi();
-    return { cineál: 'Struchtúr', ainm: ainm.luach, ionad: ainm.ionad, reimsi, contae };
+    return { cineál: 'Struchtúr', ainm: ainm.luach, ionad: ainm.ionad, reimsi, contae, inscne };
   }
 
   /**
-   * `suim Toradh as Corcaigh { Ceart { duine: Duine } Earráid { … } }`
+   * `suim Toradh firinscneach as Corcaigh { Ceart { duine: Duine } Earráid { … } }`
    *
    * A variant is a name with fields, and the fields are parsed by exactly the
    * loop `struchtúr` uses — a variant body *is* a struct body, so there is no
@@ -224,16 +273,22 @@ class Parsalai {
   parsailSuim() {
     this.suil('KW', 'suim');
     const ainm = this.suil('IDENT');
+    const inscne = isAidiachtInscne(this.peek())
+      ? aidiacht(this.toks[this.i++], AIDIACHTAI_INSCNE) : null;
     const contae = this.seiceail('KW', 'as') ? this.parsailAsFrasa() : null;
     this.suil('NOD', '{');
     const malairti = [];
     while (!this.seiceail('NOD', '}')) {
       const m = this.suil('IDENT');
-      malairti.push({ ainm: m.luach, ionad: m.ionad, reimsi: this.parsailReimsi() });
+      // A variant declares its own gender: it is its own noun in the type
+      // namespace (§26.9), and `Easpa` is feminine whatever `Toradh` is.
+      const mInscne = isAidiachtInscne(this.peek())
+        ? aidiacht(this.toks[this.i++], AIDIACHTAI_INSCNE) : null;
+      malairti.push({ ainm: m.luach, ionad: m.ionad, inscne: mInscne, reimsi: this.parsailReimsi() });
       this.meaitseail('NOD', ',');
     }
     this.suil('NOD', '}');
-    return { cineál: 'Suim', ainm: ainm.luach, ionad: ainm.ionad, malairti, contae };
+    return { cineál: 'Suim', ainm: ainm.luach, ionad: ainm.ionad, malairti, contae, inscne };
   }
 
   /** `{ ainm: Cineál, … }` — the record body, shared by struct and variant. */
@@ -278,15 +333,17 @@ class Parsalai {
     const params = [];
     while (!this.seiceail('NOD', ')')) {
       // `sealadach` on a parameter is permission, not storage: it says the
-      // callee may change what the caller passed.
-      const sealadach = !!this.meaitseail('KW', 'sealadach');
+      // callee may change what the caller passed. It follows its noun for the
+      // same reason every other attributive adjective now does (§40).
       const p = this.suil('IDENT');
+      const aid = isAidiachtStaide(this.peek()) ? aidiacht(this.toks[this.i++], AIDIACHTAI_STAIDE) : null;
+      const sealadach = !!aid && aid.bun === 'sealadach';
       // The receiver of a method carries its type in the `ó` phrase, so it is
       // the one parameter written bare: `feidhm beannacht ó Dhuine(féin)`.
       let cineal = null;
       if (this.meaitseail('NOD', ':')) cineal = this.parsailTagairtCineail();
       else if (!(faighteoir && params.length === 0)) this.suil('NOD', ':');
-      params.push({ ainm: p.luach, cineal, ionad: p.ionad, sealadach, faighteoir: cineal === null });
+      params.push({ ainm: p.luach, cineal, ionad: p.ionad, sealadach, aidiacht: aid, faighteoir: cineal === null });
       if (!this.meaitseail('NOD', ',')) break;
     }
     this.suil('NOD', ')');
@@ -297,6 +354,11 @@ class Parsalai {
       if (modh !== 'táscach') throw earraid('E404', op.ionad);
       toradh = this.parsailTagairtCineail();
     }
+
+    // §39 — an `ar` phrase here has already been swallowed by the return type
+    // if there was one. What is left is `gníomh f(…) ar Earráid`: an
+    // affliction with nothing to sit on.
+    if (this.seiceail('KW', 'ar')) throw earraid('E522', this.peek().ionad, ainm.luach);
 
     return {
       cineál: 'Briathar', modh, leanunach, faighteoir,
@@ -333,7 +395,12 @@ class Parsalai {
       this.i++;
       return this.parsailBriathar(true);
     }
-    if (this.seiceail('KW', 'seasmhach') || this.seiceail('KW', 'sealadach')) return this.parsailCeangal();
+    // A declaration is `IDENT` followed by a state adjective, and nothing else
+    // in the language produces that shape — two identifiers side by side are
+    // not a legal expression (§38.2), and a state adjective is a keyword. So
+    // this is settled by shape, and it is settled *before* the VSO test,
+    // because a declaration is not a command however the noun is spelled.
+    if (this.seiceail('IDENT') && isAidiachtStaide(this.peek(1))) return this.parsailCeangal();
     if (this.seiceail('KW', 'cuir')) return this.parsailCuir();
     if (this.seiceail('KW', 'má') || this.seiceail('KW', 'más')
       || this.seiceail('KW', 'mura') || this.seiceail('KW', 'murab')) {
@@ -371,15 +438,24 @@ class Parsalai {
     return { cineál: 'Ordú', ainm: ainm.luach, ionad: ainm.ionad, argointi, fras };
   }
 
+  /**
+   * §40 — `duine seasmhach = …`, `aois sheasmhach = 20`.
+   *
+   * The noun comes first because Irish puts an attributive adjective after
+   * its noun, and `seasmhach` and `sealadach` are attributive adjectives:
+   * they say what kind of thing this binding is, not what to do with it. The
+   * pre-0.11 order wrote English word order in Irish words, which is the same
+   * fault §31.4 corrected in the copula and it is corrected the same way.
+   */
   parsailCeangal() {
-    const kw = this.toks[this.i++];               // seasmhach | sealadach
     const ainm = this.suil('IDENT');
+    const aid = aidiacht(this.toks[this.i++], AIDIACHTAI_STAIDE);
     let cineal = null;
     if (this.meaitseail('NOD', ':')) cineal = this.parsailTagairtCineail();
     this.suil('OP', '=');
     return {
-      cineál: 'Ceangal', ainm: ainm.luach, ionad: ainm.ionad, cineal,
-      sealadach: kw.luach === 'sealadach',
+      cineál: 'Ceangal', ainm: ainm.luach, ionad: ainm.ionad, cineal, aidiacht: aid,
+      sealadach: aid.bun === 'sealadach',
       luach: this.parsailSlonn(),
     };
   }
@@ -511,6 +587,20 @@ class Parsalai {
   parsailAonartha() {
     if (this.seiceail('KW', 'bí') || this.seiceail('KW', 'tá') || this.seiceail('KW', 'bhfuil')) {
       const kw = this.toks[this.i++];
+      // §39 — `tá Earráid ar thoradh`. Decided by shape, never by lookup, on
+      // the §31.4 pattern: an identifier followed by `ar` can only be this,
+      // because `tá <slonn>` takes one operand and `ar` cannot continue it.
+      // Asking whether the identifier names a type would make the predication
+      // inference rather than agreement, which §26.3 refused.
+      if (this.seiceail('IDENT') && this.peek(1).cinéal === 'KW' && this.peek(1).luach === 'ar') {
+        const t = this.toks[this.i++];
+        this.i++;                                     // ar
+        return {
+          cineál: 'Dochar', surface: kw.luach,
+          cineal: { surface: t.luach, ionad: t.ionad },
+          abhar: this.parsailAonartha(), ionad: kw.ionad,
+        };
+      }
       return {
         cineál: 'Substaint', surface: kw.luach,
         abhar: this.parsailAonartha(), ionad: kw.ionad,
@@ -604,7 +694,7 @@ class Parsalai {
         return { cineál: 'Ainmniú', surface: iarrtha, ionad: ionadV };
       }
       // Not a verb. `a` falls back to being an ordinary identifier — which is
-      // why `seasmhach a = 3` still works — but two identifiers side by side
+      // why `a seasmhach = 3` still works — but two identifiers side by side
       // are not a legal expression here, so the only reading left is a
       // particle in front of something that cannot be named. Decided by shape
       // rather than by lookup, as the copular clause is (§31.4).

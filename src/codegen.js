@@ -48,7 +48,7 @@ class Ginteoir {
 
   clar(ast) {
     const onnmhairi = [];
-    const beo = [];   // sealadach bindings: exported live, not as a snapshot
+    const beo = [];   // bindings sealadach: exported live, not as a snapshot
     // Verbs imported unqualified still have to come from somewhere at run
     // time. The alias is invisible in the source, as the lexicon is.
     for (const [foinse, ailias] of (ast.ailiasanna || new Map())) {
@@ -244,6 +244,12 @@ class Ginteoir {
       case 'Aonártha': return `(-${this.slonn(e.abhar)})`;
       case 'Copail': return `__is(${this.slonn(e.abhar)}, ${JSON.stringify(e.cineal.ainm)})`;
       case 'Substaint': return `__bí(${this.slonn(e.abhar)})`;   // tá / bhfuil alike
+
+      // §39 — `tá Earráid ar thoradh`. The backend learns nothing: an
+      // affliction is a value carrying a tag, and `__is` already reads tags.
+      // Nothing at run time knows that the tag was reached through `ar`
+      // rather than through the copula, which is the same erasure §26.5 got.
+      case 'Dochar': return `__is(${this.slonn(e.abhar)}, ${JSON.stringify(e.cineal.ainm)})`;
       case 'Críoch': return `(await ${this.slonn(e.abhar)})`;
 
       case 'Má': {

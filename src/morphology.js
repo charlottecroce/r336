@@ -497,7 +497,64 @@ function reamhlitirH(word) {
   return isGuta(word[0]) ? 'h' + word : word;
 }
 
+/*
+ * §40 — inscne ghramadaí.
+ *
+ * Tá gach ainmfhocal Gaeilge firinscneach nó baininscneach, agus is beag
+ * loighic atá leis. Ní athraíonn an inscne brí ar bith. Ní dhéanann sí ach
+ * foirm a éileamh — agus is é sin an fáth a bhfuil sí anseo agus nach raibh
+ * sí i §36: dhiúltaigh §36 don inscne mar rud a iompraíonn brí (cé leis é),
+ * agus ní hé sin an rud atá anseo ar chor ar bith.
+ *
+ * Sa tuiseal ainmneach séimhítear an aidiacht i ndiaidh ainmfhocail
+ * bhaininscnigh agus ní shéimhítear i ndiaidh ainmfhocail fhirinscnigh:
+ *
+ *     fear mór          bean mhór
+ *     duine aois seasmhach sheasmhach
+ *
+ * Níl aon rud anseo ach `seimhigh` á ghairm nó gan é a ghairm. Sin an
+ * ceathrú paraidím, agus is é an ceann is lú de na ceithre cinn.
+ */
+const INSCNE = { FIR: 'fir', BAIN: 'bain' };
+
+/** The Irish name, for messages and for `--paraidím`. */
+const ainmInscne = (i) => (i === INSCNE.BAIN ? 'baininscneach' : 'firinscneach');
+
+/**
+ * The form an attributive adjective takes after a noun of this gender, in the
+ * nominative singular.
+ *
+ * The genitive is not here and cannot be. Irish reverses the rule in the
+ * genitive singular — *hata an fhir* lenites the masculine, *doras na scoile*
+ * leaves the feminine bare — and that chiasmus is the most distinctive thing
+ * about the system. Spicebag has no genitive construction at all: `ainm ó
+ * dhuine` is a prepositional phrase, not *ainm an duine*. So there is no slot
+ * the reversed rule could attach to, and its absence is forced rather than
+ * chosen (§40.6).
+ */
+function foirmAidiachta(aidiacht, inscne) {
+  if (inscne !== INSCNE.BAIN) return aidiacht;
+  // Straight through `foirmDe`, which is the load-bearing line of the whole
+  // language: a leniting environment demands lenition of anything that can be
+  // lenited and demands nothing of anything that cannot. An adjective with an
+  // empty mutation slot after a feminine noun is not an exception to gender
+  // agreement — it is gender agreement applied to a word with nothing to
+  // change (§5).
+  return foirmDe(aidiacht, FOIRM.SEIMHITHE);
+}
+
+/** Which gender, if any, this written adjective form is agreeing with. */
+function inscneOFhoirm(scriofa, bun) {
+  if (scriofa === bun) return INSCNE.FIR;
+  if (scriofa === foirmAidiachta(bun, INSCNE.BAIN) && scriofa !== bun) return INSCNE.BAIN;
+  return null;
+}
+
 module.exports = {
+  INSCNE,
+  ainmInscne,
+  foirmAidiachta,
+  inscneOFhoirm,
   FOIRM,
   isGuta,
   inSeimhithe,

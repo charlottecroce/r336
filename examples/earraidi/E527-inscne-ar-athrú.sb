@@ -1,0 +1,21 @@
+// E527 — an focal céanna, dhá inscne.
+//
+// Ní athraíonn ainmfhocal a inscne idir dhá abairt den téacs céanna. Is airí
+// den fhocal í an inscne, ní den suíomh, agus mar sin coinníonn an modúl
+// inscne amháin in aghaidh an fhocail.
+//
+// Tabhair faoi deara nach bhfuil aon fhógra inscne ar leith ann do cheangal.
+// Ní theastaíonn: iompraíonn gach ceangal aidiacht cheana, agus réitíonn
+// aidiacht cheana. Is é `aois sheasmhach` an fógra, agus is é `aois
+// seasmhach` an fógra contrártha. Níor cuireadh comhréir ar bith leis an
+// teanga chun é seo a dhéanamh — níor athraíodh ach an t-ord.
+//
+// Ainmnítear an chéad líne sa teachtaireacht, mar is í an líne eile a
+// chaithfidh an t-údar a fheiceáil chun cinneadh a dhéanamh cé acu ceann atá
+// mícheart.
+
+aois sheasmhach = 20
+
+gníomh luaigh(aois seasmhach: Uimhir) {
+    scríobh aois
+}

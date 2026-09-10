@@ -120,7 +120,7 @@ const M = {
   // mhalairt den tsuim chéanna le chéile ag an tsuim ó 0.8 i leith, ach
   // leathnaíonn liosta nach mbuaileann in aon áit go Liosta(Iasacht) mar a
   // rinne sé riamh: is liosta paraiméadar dlisteanach é `[ainm, aois]` ag an
-  // teorainn, agus níor cheart suim a chumhdach air (§26.7).
+  // teorainn, agus níor cheart suim a firinscneach chumhdach air (§26.7).
   E211: (a, b) => `Ní mór an cineál céanna a bheith ag gach mír i liosta: ${a} agus ${b}.`,
 
   E212: (ainm, suil, fuarthas) =>
@@ -128,27 +128,27 @@ const M = {
 
   // §26.4 — ní ceadmhach `Iasacht` i réimse malairte.
   //
-  // Dearbhaíonn suim go beacht cad is féidir le luach a bheith; deir
+  // Dearbhaíonn suim go firinscneach beacht cad is féidir le luach a bheith; deir
   // `Iasacht` nach eol cén chatagóir í. Ualach de chatagóir anaithnid taobh
-  // istigh d'áireamh catagóirí: sin suim nár críochnaíodh a scríobh. Ceadaítear
+  // istigh d'áireamh catagóirí: sin suim nár firinscneach críochnaíodh a scríobh. Ceadaítear
   // é fós i réimse struchtúir, mar nár mhaígh taifead riamh go n-áiríonn sé.
   E213: (suim, malairt, reimse, cineal) =>
-    `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
+    `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad firinscneach is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
 
-  // §26.8 — ní suim í suim nach bhfuil dhá mhalairt inti.
+  // §26.8 — ní suim í firinscneach suim nach firinscneach bhfuil dhá mhalairt inti.
   //
   // Dhá chás, aon chód amháin, mar is ionann an locht iontu: ní dhéanann an
   // fógra rogha. Suim fholamh — níl luach ar bith inti, agus mar sin ní
   // cineál is féidir a lua í. Suim aonair — tá a fhios roimh ré cad í, agus
-  // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
+  // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a firinscneach bhfuil `más`
   // éigeantach air. Luaitear a bhfuarthas, mar is é sin an rud atá le ceartú.
   E214: (ainm, lion) =>
-    `Ní suim í "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
+    `Ní suim í firinscneach "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
 
   // ── 3xx: copail agus briathar substaintigh ────────────────────────────
   E301: () => `Ní mór gur cineál atá ar dheis na copaile "is".`,
 
-  // Sroichte ó 0.8: dearbhaíonn suim go beacht cad is féidir le luach a
+  // Sroichte ó 0.8: dearbhaíonn suim go firinscneach beacht cad is féidir le luach a
   // bheith, agus mar sin is féidir aicmiú a bhréagnú go statach. Ba é seo an
   // t-aon chód a bhí curtha in áirithe agus a d'éirigh fíor; níor thug an
   // nóta faoi deara é go dtí 0.10.1.
@@ -186,7 +186,7 @@ const M = {
 
   E508: (cineal) => `Níl aon rud le críochnú anseo: ní gníomh ar siúl é ${cineal}.`,
 
-  E509: (ainm) => `Ní féidir modh a fhógairt ar rud nach struchtúr é: "${ainm}".`,
+  E509: (ainm) => `Ní féidir modh a fhógairt ar rud nach struchtúr é firinscneach: "${ainm}".`,
 
   E510: (ainm) =>
     `Tá "${ainm}" seasmhach: ní féidir staid a chur air. Fógair le "sealadach" é más rud é atá le hathrú.`,
@@ -238,6 +238,45 @@ const M = {
   E517: (scriofa, ceart) =>
     `Foirm mhícheart den chopail: scríobhadh "${scriofa}", ach is í "${ceart}" an fhoirm atá ag teastáil sa suíomh seo. Ceanglaíonn an chopail leis an mír a rialaíonn í, agus roghnaíonn tús an chineáil ina diaidh an fhoirm.`,
 
+  // §39 — `ar` mar staid dhochrach.
+  //
+  // Cuireann an Ghaeilge an mí-ádh ort: *tá tinneas cinn orm*, *theip orm*,
+  // *tá brón orm*. Ní dhéanann an duine é agus ní leis é — tarlaíonn sé dó.
+  // Sin an tríú ball den scoilt: `ag` coimeád, `le` teideal, `ar` dochar.
+  //
+  // Níl aon mhoirfeolaíocht nua anseo. Séimhíonn `ar` cheana agus téann sé
+  // trí `reitighFoirm` cheana (§12, §21). Is í an bhrí atá nua, agus mar sin
+  // caithfear a rá gur ar fhorais shéimeantacha atá an ghné seo bunaithe agus
+  // ní ar fhorais ghramadaí — an chóireáil chéanna a fuair `suim` i §26.1.
+  E522: (ainm) =>
+    `Ní chuirtear dochar ar rud nach bhfuil ann: níl toradh ar bith ag "${ainm}", mar sin níl aon rud ann le bheith buailte. Níl frása "ar" ceadaithe ach ar fheidhm a bhfuil "->" aici.`,
+
+  // An chosaint, agus níl sí ann ach san áit ar fhógair an briathar í. Sin an
+  // difríocht idir seo agus cineál suime: ní iarrtar ar an nglaoiteoir gach
+  // rud a scrúdú, ní iarrtar air ach an rud a dúradh leis a d'fhéadfadh a
+  // bheith buailte.
+  E523: (dochar, toradh) =>
+    `Tá ${dochar} air seo go fóill: ní ${toradh} é go dtí go bhfuil an dochar curtha as an áireamh. Scríobh "má tá ${dochar} ar …" agus úsáid é sa chraobh dhiúltach.`,
+
+  E525: (cineal) =>
+    `Ní dochar é ${cineal}: ainmníonn *tá tinneas cinn orm* galar, agus ní mí-ádh í uimhir lom. Caithfidh an rud a bhuaileann tú a bheith ina chineál fógartha a bhfuil cúis ann le rá aige.`,
+
+  E524: (dochar, cineal) =>
+    `Ní bhuailtear ${cineal} le ${dochar}: níor fhógair aon bhriathar an dochar sin air, mar sin tá an cheist gan bhrí. Ní cheistítear ach an rud a d'fhéadfadh a bheith buailte.`,
+
+  // §40 — inscne ghramadaí.
+  //
+  // Ní iompraíonn an inscne brí ar bith. Sin an difríocht idir seo agus an
+  // rud ar dhiúltaigh §36 dó: theastaigh `aige`/`aici` ón úinéireacht chun
+  // sealbhóir amháin a aithint thar cheann eile, agus b'shin catagóir
+  // ghramadaí ag iompar ábhair a raibh an clár ag brath air. Ní éilíonn an
+  // inscne anseo ach foirm, agus ní athraíonn sí rud ar bith eile.
+  E526: (ainm, scriofa, ceart, dearbhaithe) =>
+    `Ní réitíonn foirm na haidiachta leis an rud a fhógraíonn sí: scríobhadh "${scriofa}" i ndiaidh "${ainm}", ach is í "${ceart}" an fhoirm a éilíonn ainm ${dearbhaithe}. Aidiacht atá san fhógra, agus réitíonn aidiacht lena hainmfhocal.`,
+
+  E527: (ainm, roimhe, ceart, line) =>
+    `Is ainm ${roimhe} é "${ainm}" (líne ${line}), mar sin is í "${ceart}" an fhoirm atá ag teastáil anseo. Ní athraíonn focal a inscne idir dhá abairt den téacs céanna.`,
+
   // ── 6xx: dúchas ───────────────────────────────────────────────────────
   // A new axis, alongside morphology, types, the copula, syntax and mood.
   // The county system is a bit and the notes say so (§24.1, §25.1); the
@@ -259,8 +298,8 @@ const M = {
   // province that is gone, the county sitting in it, and the struct that put
   // it there. Naming only the county — which is what 0.6 did — is now wrong,
   // because the thing that was taken is not the county that was written.
-  // Ó 0.8 i leith is féidir gur suim atá san áititheoir, mar tá suim agus
-  // struchtúr san iomaíocht chéanna ar na ceithre shliotán (§26.2).
+  // Ó 0.8 i leith is féidir gur suim atá firinscneach san áititheoir, mar tá suim agus firinscneach
+  // struchtúr san firinscneach iomaíocht chéanna ar na ceithre shliotán (§26.2).
   E603: (cuige, contae, struchtur) =>
     `Tá ${cuige} tógtha cheana ag an gcineál "${struchtur}", atá as ${contae}. Ní bhíonn ach cineál amháin ag cúige: ceithre chineál churtha atá i gclár, agus is ionann contae a roghnú agus cúige a roghnú.`,
 

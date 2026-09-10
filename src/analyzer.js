@@ -66,10 +66,13 @@ function ainmCineail(t) {
     case 'arSiúl': return `ag ${ainmCineail(t.inner)}`;
     case 'modúl': return `modúl ${t.ainm}`;
     // A variant is named on its own, because it is its own name in the type
-    // namespace: `suim Toradh { Ceart … }` makes `Ceart` unavailable to
+    // namespace: `suim Toradh firinscneach { Ceart … }` makes `Ceart` unavailable to
     // anything else, and E208 says so.
     case 'malairt': return t.ainm;
     case 'suim': return t.ainm;
+    // §39 — written exactly as the signature writes it, so a mismatch reads
+    // back as the declaration that produced it.
+    case 'dochar': return `${ainmCineail(t.toradh)} ar ${ainmCineail(t.dochar)}`;
     case 'feidhm': {
       // Render a verb type the way it is written, so a mismatch reads as the
       // declaration the caller should have made.
@@ -96,7 +99,17 @@ function comhionann(a, b) {
   // convert. Directional on purpose — `comhionann(súil, fuarthas)` — because
   // the reverse is the narrowing the copula does and it is not free.
   if (isMalairtDe(a, b)) return true;
+  // §39 — the same widening, one level up. Inside a verb declared
+  // `-> Uimhir ar Earráid` both a bare `Uimhir` and a bare `Earráid` are
+  // acceptable results, because the affliction is a thing that may have
+  // happened rather than an alternative the author chose between. The reverse
+  // is the narrowing `tá … ar …` does, and it is not free — that asymmetry is
+  // the whole of the protection (E523).
+  if (a.k === 'dochar' && b.k !== 'dochar') {
+    return comhionann(a.toradh, b) || comhionann(a.dochar, b);
+  }
   if (a.k !== b.k) return false;
+  if (a.k === 'dochar') return comhionann(a.toradh, b.toradh) && comhionann(a.dochar, b.dochar);
   if (a.k === 'liosta') return comhionann(a.mir, b.mir);
   if (a.k === 'arSiúl') return comhionann(a.inner, b.inner);
   if (a.k === 'modúl') return a.ainm === b.ainm;
@@ -131,6 +144,14 @@ function nasc(a, b, cinealacha) {
   const sa = suimDe(a) || (a.k === 'suim' ? a : null);
   const sb = suimDe(b) || (b.k === 'suim' ? b : null);
   if (sa && sb && sa.ainm === sb.ainm) return sa;
+  // §39 — a `má` whose branches are the result and the affliction is the
+  // ordinary way a verb with an `ar` clause is written, so the two have to
+  // meet somewhere. They meet at the afflicted type, and only because one of
+  // them has been *declared* an affliction by some signature in this module:
+  // `dochrach` is set by the `ar` clause and by nothing else, so this is not
+  // a rule that quietly joins any two unrelated types.
+  if (a.dochrach && !b.dochrach) return { k: 'dochar', toradh: b, dochar: a };
+  if (b.dochrach && !a.dochrach) return { k: 'dochar', toradh: a, dochar: b };
   return null;
 }
 
@@ -178,6 +199,9 @@ class Anailiseoir {
     this.cinealacha = new Map(BUNCHINEALACHA);
     this.domhanda = new Scoip();
     this.modhanna = [];   // method declarations, for the backend
+    // §40 — one gender per noun, per module. A word does not change gender
+    // between two sentences of the same text.
+    this.inscni = new Map();   // lemma → { inscne, ionad }
     // foinse → síniú, filled in by the module graph before analysis. Empty by
     // default, which is exactly the pre-0.5 behaviour: every import is a loan.
     this.modúil = comhthéacs.modúil || new Map();
@@ -570,14 +594,39 @@ class Anailiseoir {
         this.bail.cuir('E212', ref.ionad, 'Liosta', 1, ref.argointi.length);
         return liosta(IASACHT);
       }
-      return liosta(this.tagairtCineail(ref.argointi[0]));
+      return this.dochraigh(ref, liosta(this.tagairtCineail(ref.argointi[0])));
     }
     const t = this.cinealacha.get(ref.ainm);
     if (!t) { this.bail.cuir('E202', ref.ionad, ref.ainm); return IASACHT; }
     if (ref.argointi && ref.argointi.length) {
       this.bail.cuir('E212', ref.ionad, ref.ainm, 0, ref.argointi.length);
     }
-    return t;
+    return this.dochraigh(ref, t);
+  }
+
+  /**
+   * §39 — `Uimhir ar Earráid`. The affliction wraps the result rather than
+   * sitting beside it, so nothing downstream needs a special path: what a verb
+   * with an `ar` clause yields simply *is* an afflicted `Uimhir`, and every
+   * check that already existed sees it.
+   *
+   * The adverse type must be a declared one. *Tá tinneas cinn orm* names an
+   * illness; a bare number is not a misfortune, and `Iasacht` is the statement
+   * that a category is unknown — E213's argument, one level up. The
+   * restriction is also what keeps the `dochrach` mark off the shared
+   * primitive singletons, which is the practical half of the same rule.
+   */
+  dochraigh(ref, t) {
+    if (!ref.dochar) return t;
+    const td = this.tagairtCineail(ref.dochar);
+    if (!['struchtúr', 'suim', 'malairt'].includes(td.k)) {
+      this.bail.cuir('E525', ref.dochar.ionad, ainmCineail(td));
+      return t;
+    }
+    // Declaring an affliction is what makes a type an affliction. Nothing else
+    // sets this, which is why `nasc` can rely on it.
+    td.dochrach = true;
+    return { k: 'dochar', toradh: t, dochar: td };
   }
 
   // ---- clár ----------------------------------------------------------
@@ -682,6 +731,66 @@ class Anailiseoir {
     }
   }
 
+  /**
+   * §40 — the gender a *type declaration* states, and whether it states it in
+   * the form its own name demands.
+   *
+   * `firinscneach` and `baininscneach` are adjectives, so they agree with the
+   * noun they follow like any other. That makes the declaration check itself:
+   * `Duine firinscneach` says masculine in the masculine form, `Aois
+   * bhaininscneach` says feminine in the feminine form, and the two ways of
+   * getting it wrong are the same fault written twice. E526 is that fault.
+   *
+   * Optional, and that is a finding rather than a convenience. A binding
+   * always carries a state adjective, so a binding's gender is always
+   * declared and never guessed; a type name carries no adjective, and 0.11
+   * built no site that demands agreement with one. Requiring it would have
+   * been ceremony collected against a rule that does not yet exist — and it
+   * would have rewritten every type declaration in the repository to say
+   * something nothing reads. So it may be written, it is recorded, it is
+   * printed by `--paraidím`, and where it is absent the type is masculine by
+   * default (Part 11 D). If the possessive determiner is ever built, that is
+   * the release in which this stops being optional (§40.7).
+   */
+  inscneFhogartha(ainm, aid) {
+    if (!aid) return mf.INSCNE.FIR;
+    const dearbhaithe = aid.bun === 'baininscneach' ? mf.INSCNE.BAIN : mf.INSCNE.FIR;
+    const foirm = mf.inscneOFhoirm(aid.scriofa, aid.bun);
+    if (foirm !== dearbhaithe) {
+      this.bail.cuir('E526', aid.ionad, ainm, aid.scriofa,
+        mf.foirmAidiachta(aid.bun, dearbhaithe), mf.ainmInscne(dearbhaithe));
+    }
+    return dearbhaithe;
+  }
+
+  /**
+   * §40 — the gender a *binding* states, which is stated by the form of its
+   * own state adjective and by nothing else.
+   *
+   * There is no separate declaration syntax for a binding's gender because
+   * there does not need to be one: every binding already carries an
+   * attributive adjective, and an attributive adjective already agrees. So
+   * writing `aois sheasmhach` *is* the declaration, and `duine seasmhach` is
+   * the other one. Nothing was added to the language to make this possible.
+   *
+   * The module keeps one gender per lemma. A noun does not change gender
+   * between two sentences of the same text, so a second, different spelling
+   * of the same word is E527 — and the message names where the word was first
+   * spelled, because that is the other line the author has to look at.
+   */
+  inscneCheangail(ainm, aid) {
+    if (!aid) return null;                      // a receiver: no adjective slot
+    const inscne = mf.inscneOFhoirm(aid.scriofa, aid.bun) || mf.INSCNE.FIR;
+    const roimhe = this.inscni.get(ainm);
+    if (roimhe && roimhe.inscne !== inscne) {
+      this.bail.cuir('E527', aid.ionad, ainm, mf.ainmInscne(roimhe.inscne),
+        mf.foirmAidiachta(aid.bun, roimhe.inscne), roimhe.ionad.line);
+      return roimhe.inscne;
+    }
+    if (!roimhe) this.inscni.set(ainm, { inscne, ionad: aid.ionad });
+    return inscne;
+  }
+
   fogairStruchtur(m) {
     if (!this.seiceailBunfhoirm(m.ainm, m.ionad)) return;
     if (this.cinealacha.has(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
@@ -689,7 +798,7 @@ class Anailiseoir {
     if (contae !== ctae.DEORAIOCHT) {
       const cuige = ctae.cuigeDe(contae);
       const gafa = this.cuigeGafa.get(cuige);
-      // Declaring `struchtúr Duine as Corcaigh` claims the whole of An
+      // Declaring `struchtúr Duine firinscneach as Corcaigh` claims the whole of An
       // Mhumhain: Ciarraí, Luimneach, An Clár, Port Láirge and Tiobraid
       // Árann are closed for the rest of the program. Choosing a county is
       // choosing a province, and what is left over is the decision about
@@ -705,6 +814,7 @@ class Anailiseoir {
     }
     this.cinealacha.set(m.ainm, {
       k: 'struchtúr', ainm: m.ainm, reimsi: new Map(), modhanna: new Map(), contae,
+      inscne: this.inscneFhogartha(m.ainm, m.inscne),
     });
   }
 
@@ -718,7 +828,7 @@ class Anailiseoir {
   }
 
   /**
-   * `suim Toradh as Corcaigh { Ceart { … } Earráid { … } }` — §26.
+   * `suim Toradh firinscneach as Corcaigh { Ceart { … } Earráid { … } }` — §26.
    *
    * Both the sum and every variant go into `cinealacha`, because both are
    * written: `Toradh` in a signature, `Ceart` in a literal and to the right of
@@ -740,13 +850,17 @@ class Anailiseoir {
     // would hide every later error behind this one.
     if (m.malairti.length < 2) this.bail.cuir('E214', m.ionad, m.ainm, m.malairti.length);
 
-    const t = { k: 'suim', ainm: m.ainm, contae, malairti: new Map() };
+    const t = {
+      k: 'suim', ainm: m.ainm, contae, malairti: new Map(),
+      inscne: this.inscneFhogartha(m.ainm, m.inscne),
+    };
     this.cinealacha.set(m.ainm, t);
     for (const mal of m.malairti) {
       if (!this.seiceailBunfhoirm(mal.ainm, mal.ionad)) continue;
       if (this.cinealacha.has(mal.ainm)) { this.bail.cuir('E208', mal.ionad, mal.ainm); continue; }
       const tm = {
         k: 'malairt', ainm: mal.ainm, suim: m.ainm, contaeSuime: contae, reimsi: new Map(),
+        inscne: this.inscneFhogartha(mal.ainm, mal.inscne),
       };
       this.cinealacha.set(mal.ainm, tm);
       t.malairti.set(mal.ainm, tm);
@@ -839,6 +953,7 @@ class Anailiseoir {
       return t;
     });
     cineal.toradh = m.toradh ? this.tagairtCineail(m.toradh) : NEAMHNI;
+    if (cineal.toradh.k === 'dochar') cineal.dochar = cineal.toradh.dochar;
   }
 
   corpBriathair(m) {
@@ -848,6 +963,12 @@ class Anailiseoir {
     for (const p of m.params) {
       if (!this.seiceailBunfhoirm(p.ainm, p.ionad)) continue;
       p.ceangal = scoip.cuir(new Ceangal(p.ainm, p.cinealSocraithe || IASACHT, 'luach', !!p.sealadach));
+      // A parameter may carry a state adjective and usually does not, so a
+      // parameter usually declares no gender. Where the module has heard the
+      // word before it keeps that gender; where it has not, the word is
+      // masculine by default and `--paraidím` says so rather than the source.
+      p.ceangal.inscne = this.inscneCheangail(p.ainm, p.aidiacht)
+        || (this.inscni.get(p.ainm) || {}).inscne || null;
     }
 
     const roimhe = this.ctx;
@@ -908,12 +1029,11 @@ class Anailiseoir {
         let dearbh = t;
         if (r.cineal) {
           dearbh = this.tagairtCineail(r.cineal);
-          if (!comhionann(dearbh, t)) {
-            this.bail.cuir('E201', r.luach.ionad, ainmCineail(dearbh), ainmCineail(t));
-          }
+          if (!comhionann(dearbh, t)) this.mismeaitseail(r.luach.ionad, dearbh, t);
         }
         if (scoip.faighAitiuil(r.ainm)) { this.bail.cuir('E208', r.ionad, r.ainm); return; }
         r.ceangal = scoip.cuir(new Ceangal(r.ainm, dearbh, 'luach', !!r.sealadach));
+        r.ceangal.inscne = this.inscneCheangail(r.ainm, r.aidiacht);
         return;
       }
 
@@ -946,9 +1066,7 @@ class Anailiseoir {
           const fréamh = this.fréamhCheangal(r.sprioc);
           if (fréamh && !fréamh.sealadach) this.bail.cuir('E510', r.ionad, fréamh.lemma);
         }
-        if (!comhionann(tSprioc, tLuach)) {
-          this.bail.cuir('E201', r.luach.ionad, ainmCineail(tSprioc), ainmCineail(tLuach));
-        }
+        if (!comhionann(tSprioc, tLuach)) this.mismeaitseail(r.luach.ionad, tSprioc, tLuach);
         return;
       }
 
@@ -1038,6 +1156,7 @@ class Anailiseoir {
    */
   caolu(r, scoip) {
     const c = r.coinniall;
+    if (c && c.cineál === 'Dochar') return this.caoluDochair(r, c, scoip);
     if (!c || c.cineál !== 'Copail' || c.abhar.cineál !== 'Aitheantóir') return null;
     const lemma = mf.lemmaTuairim(c.abhar.surface);
     const ceangal = scoip.faigh(lemma);
@@ -1054,6 +1173,33 @@ class Anailiseoir {
     const dearfach = { lemma, cineal: tM };
     const diultach = eile ? { lemma, cineal: eile } : null;
     // `mura t is Ceart` inverts which branch learned what.
+    return r.diultach ? { ansin: diultach, eile: dearfach } : { ansin: dearfach, eile: diultach };
+  }
+
+  /**
+   * §39 — narrowing through `tá Earráid ar thoradh`.
+   *
+   * This is the second shape `caolu` recognises, and admitting a second one is
+   * the real cost of the feature. §26.3 confined narrowing to exactly one
+   * shape on purpose, so that the analyzer never had to be taught to see a
+   * conditional as a match. It still does not: this is one more condition
+   * whose truth is a fact about a binding's type, written the one way Irish
+   * writes it, and the two shapes share every rule that follows.
+   *
+   * Both branches learn something here, which the copula's version cannot
+   * always manage: an affliction is binary — it is on the thing or it is not —
+   * so there is no "one variant among many" case and no complement to name.
+   * Only `seasmhach` narrows, for §26.3's reason exactly.
+   */
+  caoluDochair(r, c, scoip) {
+    if (c.abhar.cineál !== 'Aitheantóir') return null;
+    const lemma = mf.lemmaTuairim(c.abhar.surface);
+    const ceangal = scoip.faigh(lemma);
+    if (!ceangal || ceangal.kind !== 'luach' || ceangal.sealadach) return null;
+    const t = ceangal.cineal;
+    if (!t || t.k !== 'dochar') return null;
+    const dearfach = { lemma, cineal: t.dochar };
+    const diultach = { lemma, cineal: t.toradh };
     return r.diultach ? { ansin: diultach, eile: dearfach } : { ansin: dearfach, eile: diultach };
   }
 
@@ -1141,6 +1287,24 @@ class Anailiseoir {
     return null;
   }
 
+  /**
+   * §39 — the protection, and it is only ever a mismatch report.
+   *
+   * A value that a verb declared may be afflicted is not its result type until
+   * the affliction has been ruled out, so every existing check refuses it
+   * already; all this does is answer with the sentence that names the remedy
+   * rather than with a bare type mismatch. Where no verb declared an
+   * affliction there is nothing here to fire, which is what "protective only
+   * where the verb declared it" means in practice.
+   */
+  mismeaitseail(ionad, suil, fuarthas) {
+    if (fuarthas && fuarthas.k === 'dochar' && comhionann(suil, fuarthas.toradh)) {
+      this.bail.cuir('E523', ionad, ainmCineail(fuarthas.dochar), ainmCineail(fuarthas.toradh));
+      return;
+    }
+    this.bail.cuir('E201', ionad, ainmCineail(suil), ainmCineail(fuarthas));
+  }
+
   argointi(nód, cinealF, scoip, ainm) {
     for (const a of nód.argointi) this.luach(a, scoip);
     if (cinealF.params.length !== nód.argointi.length) {
@@ -1149,7 +1313,7 @@ class Anailiseoir {
     }
     nód.argointi.forEach((a, i) => {
       if (!comhionann(cinealF.params[i], a.cineálSocraithe)) {
-        this.bail.cuir('E201', a.ionad, ainmCineail(cinealF.params[i]), ainmCineail(a.cineálSocraithe));
+        this.mismeaitseail(a.ionad, cinealF.params[i], a.cineálSocraithe);
       }
     });
   }
@@ -1249,6 +1413,16 @@ class Anailiseoir {
         const tS = this.luach(e.sealbhoir, scoip, FOIRM.SEIMHITHE, 'ó');
         if (e.ball.cineál !== 'Aitheantóir') {
           this.bail.cuir('E401', e.ball.ionad, '"slonn"', '"ball"');
+          return IASACHT;
+        }
+        // §39 — the same argument E509 makes about a sum: an unidentified
+        // value possesses nothing. A thing that may still be afflicted has not
+        // been identified yet, so there is nothing yet for a member to belong
+        // to, and E205's "this has no members" would be the wrong answer — it
+        // has members, once the affliction is out of the way.
+        if (tS && tS.k === 'dochar') {
+          this.bail.cuir('E523', e.sealbhoir.ionad,
+            ainmCineail(tS.dochar), ainmCineail(tS.toradh));
           return IASACHT;
         }
         // §24.3 — provenance, before agreement. The surface is used in the
@@ -1408,6 +1582,32 @@ class Anailiseoir {
           this.bail.cuir('E512', e.ionad, e.surface, ceart, this.rialuBriathair);
         }
         this.luach(e.abhar, scoip, foirm, oibreoir);
+        return BOOL;
+      }
+
+      // §39 — `tá Earráid ar thoradh`. Still `bí`, so the independent /
+      // dependent agreement is the same check in the same place: the
+      // predication changes what is being asked, not which verb asks it.
+      case 'Dochar': {
+        const ceart = mf.foirmBhriathartha(this.rialuBriathair);
+        if (e.surface !== ceart) {
+          this.bail.cuir('E512', e.ionad, e.surface, ceart, this.rialuBriathair);
+        }
+        // The affliction is named in the base form, as the copula's predicate
+        // is: nothing governs it. `ar` governs what follows it, and lenites.
+        const res = this.reitighFoirm(e.cineal.surface, FOIRM.BUN,
+          (l) => this.cinealacha.has(l), null);
+        if (res.earraid) { this.teip(res, e.cineal.ionad, 'E202'); return BOOL; }
+        const td = this.cinealacha.get(res.lemma);
+        e.cineal.ainm = res.lemma;
+        const t = this.luach(e.abhar, scoip, FOIRM.SEIMHITHE, 'ar');
+        // Protective only where the verb declared it. Asking whether a value
+        // carries an affliction nothing ever put on it is not false — it is
+        // meaningless, and answering `bréagach` would teach the reader that
+        // the question is always available.
+        if (t.k !== 'iasacht' && !(t.k === 'dochar' && comhionann(t.dochar, td))) {
+          this.bail.cuir('E524', e.ionad, ainmCineail(td), ainmCineail(t));
+        }
         return BOOL;
       }
 

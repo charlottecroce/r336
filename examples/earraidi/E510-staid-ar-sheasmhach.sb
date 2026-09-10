@@ -4,7 +4,7 @@
 // (§13). Ní chuirtear staid ar rud atá seasmhach — ní hé nach bhfuil cead
 // agat, ach nach bhfuil sé ina rud a athraíonn.
 
-seasmhach comhaireamh = 0
+comhaireamh seasmhach = 0
 
 gníomh príomh() {
     cuir 1 ar chomhaireamh

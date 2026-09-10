@@ -1,16 +1,14 @@
 {
   "name": "spicebag",
-  "version": "0.10.1",
-  "description": "Teanga ríomhchláraithe atá bunaithe ar ghramadach na Gaeilge — a programming language grounded in Irish grammar.",
-  "bin": {
-    "sbc": "./bin/sbc.js"
-  },
+  "version": "0.11.0",
+  "description": "A programming language grounded in Irish grammar. Compiles to JavaScript.",
   "main": "src/index.js",
-  "engines": {
-    "node": ">=22"
-  },
-  "scripts": {
-    "test": "node test/run.js && node test/contae.js && node test/feidhmchlár.js && node test/suim.js && node test/earraidi.js"
-  },
+  "bin": { "sbc": "bin/sbc.js" },
+  "engines": { "node": ">=22" },
+"scripts": {
+  "test": "node test/run.js && node test/contae.js && node test/feidhmchlár.js && node test/suim.js && node test/inscne.js && node test/earraidi.js",
+  "imirce": "node tools/imirce-inscne.js --scríobh test examples craobh feidhmchlár docs",
+  "imirce:triail": "node tools/imirce-inscne.js test examples craobh feidhmchlár docs"
+},
   "license": "MIT"
 }

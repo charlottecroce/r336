@@ -28,7 +28,7 @@ fógair Duine { ainm: "Charlotte", aois: 20 }
 fógair Duine { ainm: "Séamus", aois: 12 }
 
 // Liostaí. `fad ó dhaoine` — an gaol seilbhe céanna ar chineál ionsuite.
-seasmhach daoine = [
+daoine seasmhach = [
     Duine { ainm: "Charlotte", aois: 20 },
     Duine { ainm: "Séamus", aois: 12 }
 ]

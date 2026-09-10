@@ -69,22 +69,22 @@ it('fógraítear suim, agus is cineál í gach malairt', () => {
 it('is déantús gnáthstruchtúir é déantús malairte', () => {
   // Introduction needed no new syntax and got none (§26.1).
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
-    + 'seasmhach t = Ceart { duine: Duine { ainm: "Cáit" } }'), []);
+    + 't seasmhach = Ceart { duine: Duine { ainm: "Cáit" } }'), []);
   // …with the ordinary field checks, unchanged.
-  assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nseasmhach t = Ceart { }`), ['E204']);
-  assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nseasmhach t = Easpa { cúis: 3 }`), ['E201']);
-  assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nseasmhach t = Easpa { fáth: "x" }`), ['E203', 'E204']);
+  assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nt seasmhach = Ceart { }`), ['E204']);
+  assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nt seasmhach = Easpa { cúis: 3 }`), ['E201']);
+  assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nt seasmhach = Easpa { fáth: "x" }`), ['E203', 'E204']);
 });
 
 it('is leathnú saor é an tabhairt isteach: is Toradh cheana é Ceart', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
-    + 'seasmhach t: Toradh = Easpa { cúis: "x" }'), []);
+    + 't seasmhach: Toradh = Easpa { cúis: "x" }'), []);
 });
 
 it('ní ionann malairt de shuim amháin agus malairt de cheann eile', () => {
   const dhá = `${TORADH}\nsuim Eile {\n    Alt { x: Uimhir }\n    Beart { y: Uimhir }\n}`;
   assert.deepStrictEqual(coid(`${DUINE}\n${dhá}\n`
-    + 'seasmhach t: Toradh = Alt { x: 1 }'), ['E201']);
+    + 't seasmhach: Toradh = Alt { x: 1 }'), ['E201']);
 });
 
 it('is E208 é ainm malairte a athúsáid — gan riail nua', () => {
@@ -136,7 +136,7 @@ it('iompaíonn `mura` an dá chraobh', () => {
 it('ní chaolaítear ceangal sealadach: ní fíor caolú a scriosann `cuir`', () => {
   // Essence narrows; accident does not (§26.3).
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
-    + 'sealadach t: Toradh = Easpa { cúis: "x" }\n'
+    + 't sealadach: Toradh = Easpa { cúis: "x" }\n'
     + 'gníomh f() { más Ceart t { scríobh ainm ó dhuine ó th } }'), ['E205']);
 });
 
@@ -167,21 +167,21 @@ it('téann dhá mhalairt den tsuim chéanna le chéile i liosta', () => {
   // The improvement that did arrive: a list of results is `Liosta(Toradh)`
   // and not `Liosta(Iasacht)`, so it can be declared and checked.
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
-    + 'seasmhach xs: Liosta(Toradh) = [Ceart { duine: Duine { ainm: "C" } }, Easpa { cúis: "x" }]'), []);
+    + 'xs seasmhach: Liosta(Toradh) = [Ceart { duine: Duine { ainm: "C" } }, Easpa { cúis: "x" }]'), []);
 });
 
 it('leathnaíonn liosta nach mbuaileann in aon áit fós — agus is gá sin', () => {
   // The reversal, §26.7. `[ainm, aois]` in sonraí.sb is a driver's parameter
   // list: legitimately heterogeneous, and no sum can or should cover it. So
   // E211 stays reserved and the 0.8 brief's prediction was wrong.
-  assert.deepStrictEqual(coid('seasmhach xs = [1, "a"]'), []);
+  assert.deepStrictEqual(coid('xs seasmhach = [1, "a"]'), []);
   assert.deepStrictEqual(
-    coid('seasmhach xs: Liosta(Iasacht) = [1, "a"]'), []);
+    coid('xs seasmhach: Liosta(Iasacht) = [1, "a"]'), []);
 });
 
 it('fanann liosta aonchineálach agus liosta folamh mar a bhí', () => {
-  assert.deepStrictEqual(coid('seasmhach xs = [1, 2, 3]'), []);
-  assert.deepStrictEqual(coid('seasmhach xs = []'), []);
+  assert.deepStrictEqual(coid('xs seasmhach = [1, 2, 3]'), []);
+  assert.deepStrictEqual(coid('xs seasmhach = []'), []);
 });
 
 // ══ 5. E213: ní catagóir í an Iasacht (§26.4) ════════════════════════
@@ -243,7 +243,7 @@ it('coinníonn ualach a chontae féin taobh istigh de shuim eile', () => {
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'suim T as Gaillimh {\n    A { duine: Duine }\n    B { cúis: Teaghrán }\n}\n';
   // Building one is fine from anywhere.
-  assert.deepStrictEqual(coid(`${src}seasmhach t: T = A { duine: Duine { ainm: "C" } }`), []);
+  assert.deepStrictEqual(coid(`${src}t seasmhach: T = A { duine: Duine { ainm: "C" } }`), []);
   // Opening the payload is not, because the payload is still from Cork.
   assert.deepStrictEqual(
     coid(`${src}feidhm f(t: T) -> Teaghrán { más A t { ainm ó dhuine ó th } mura { cúis ó th } }`),
@@ -263,7 +263,7 @@ it('trasnaíonn suim agus a malairtí an teorainn', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'toradh.sb': 'suim T {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
-      'príomh.sb': 'seasmhach m = ó "./toradh.sb"\n'
+      'príomh.sb': 'm seasmhach = ó "./toradh.sb"\n'
         + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }',
     }),
     []);
@@ -273,7 +273,7 @@ it('taistealaíonn éileamh cúige na suime leis an iompórtáil (E603)', () => 
   assert.deepStrictEqual(
     coidTionscadal({
       'toradh.sb': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
-      'príomh.sb': 'seasmhach m = ó "./toradh.sb"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
+      'príomh.sb': 'm seasmhach = ó "./toradh.sb"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
     }),
     ['E603']);
 });
@@ -284,7 +284,7 @@ it('ní éilíonn malairt iompórtáilte cúige di féin', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'toradh.sb': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
-      'príomh.sb': 'as Corcaigh\nseasmhach m = ó "./toradh.sb"\n'
+      'príomh.sb': 'as Corcaigh\nm seasmhach = ó "./toradh.sb"\n'
         + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }',
     }),
     []);
@@ -329,7 +329,7 @@ it('fanann `suimiú` ag obair: níor ghoid an eochairfhocal an t-oibreoir', asyn
 });
 
 it('is aitheantóir fós é "suim" mar chuid d\'fhocal', () => {
-  assert.deepStrictEqual(coid('seasmhach suimeanna = 3'), []);
+  assert.deepStrictEqual(coid('suimeanna seasmhach = 3'), []);
 });
 
 
@@ -358,7 +358,7 @@ it('is leor dhá mhalairt', () => {
 it('ní chuireann E214 cosc ar an gcuid eile den chomhad a sheiceáil', () => {
   // Leantar ar aghaidh i ndiaidh E214 d'aon ghnó: dá stopfaí, cheilfí gach
   // botún eile taobh thiar den chéad cheann.
-  const es = coid('suim T { A { u: Uimhir } }\nseasmhach x: Rud = 1');
+  const es = coid('suim T { A { u: Uimhir } }\nx seasmhach: Rud = 1');
   assert.deepStrictEqual(es, ['E214', 'E202']);
 });
 

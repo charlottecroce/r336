@@ -100,7 +100,7 @@ it('fanann an t-urú gan bhrí: ainm dílis atá i "nGall", ní foirm', () => {
   assert.strictEqual(ctae.isContae('na'), false);
   assert.strictEqual(ctae.isContae('An'), false);
   assert.strictEqual(ctae.isContae('An Mhumhain'), false);
-  assert.deepStrictEqual(coid('as An Mhumhain\nseasmhach x = 1'), ['E602']);
+  assert.deepStrictEqual(coid('as An Mhumhain\nx seasmhach = 1'), ['E602']);
 });
 
 it('freagraíonn an deoraíocht mar chúige di féin', () => {
@@ -144,12 +144,12 @@ it('fágann gach aighneas éalú: níl aon dá chúige dúnta ar a chéile', () 
 
 // ══ 2. `as` san fhoclóir agus sa pharsálaí ════════════════════════════
 it('fógraíonn modúl a chontae uair amháin', () => {
-  assert.deepStrictEqual(coid('as Corcaigh\nseasmhach x = 1'), []);
-  assert.strictEqual(anailiseDe('as Corcaigh\nseasmhach x = 1').contae, 'Corcaigh');
+  assert.deepStrictEqual(coid('as Corcaigh\nx seasmhach = 1'), []);
+  assert.strictEqual(anailiseDe('as Corcaigh\nx seasmhach = 1').contae, 'Corcaigh');
 });
 
 it('is deoraíocht an réamhshocrú', () => {
-  assert.strictEqual(anailiseDe('seasmhach x = 1').contae, ctae.DEORAIOCHT);
+  assert.strictEqual(anailiseDe('x seasmhach = 1').contae, ctae.DEORAIOCHT);
   assert.strictEqual(contaeStruchtuir('struchtúr D { a: Uimhir }', 'D'), ctae.DEORAIOCHT);
 });
 
@@ -170,18 +170,18 @@ it('léitear ainmneacha ilfhoclacha ina n-iomláine', () => {
 it('stopann an léamh santach ag deireadh an ainm', () => {
   const src = 'as Corcaigh\nscríobh 1\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
-    + 'seasmhach d = Duine { ainm: "Cáit" }\nscríobh ainm ó dh';
+    + 'd seasmhach = Duine { ainm: "Cáit" }\nscríobh ainm ó dh';
   assert.deepStrictEqual(coid(src), []);
   assert.strictEqual(anailiseDe(src).contae, 'Corcaigh');
 });
 
 it('fanann "as" ina eochairfhocal gan "asal" a bhriseadh', () => {
-  assert.deepStrictEqual(coid('seasmhach asal = 1\nscríobh asal'), []);
+  assert.deepStrictEqual(coid('asal seasmhach = 1\nscríobh asal'), []);
 });
 
 // ══ 3. Rialú: ní shéimhíonn `as`, agus sin an tseiceáil ═══════════════
 it('is E103 é séimhiú gan údar i ndiaidh "as" — gan chód nua', () => {
-  assert.deepStrictEqual(coid('as Chorcaigh\nseasmhach x = 1'), ['E103']);
+  assert.deepStrictEqual(coid('as Chorcaigh\nx seasmhach = 1'), ['E103']);
   assert.deepStrictEqual(coid('struchtúr D as Chorcaigh { a: Uimhir }'), ['E103']);
   assert.deepStrictEqual(coid('struchtúr D as Dhún na nGall { a: Uimhir }'), ['E103']);
 });
@@ -192,14 +192,14 @@ it('ní shéimhítear ach ceann an fhrása', () => {
 
 // ══ 4. Stór focal iata: E602, E605 ═══════════════════════════════════
 it('níl ann ach na 32 (E602)', () => {
-  assert.deepStrictEqual(coid('as Corcaig\nseasmhach x = 1'), ['E602']);
+  assert.deepStrictEqual(coid('as Corcaig\nx seasmhach = 1'), ['E602']);
   assert.deepStrictEqual(coid('struchtúr D as Yorkshire { a: Uimhir }'), ['E602']);
   assert.deepStrictEqual(coid('struchtúr D as Dún { a: Uimhir }'), ['E602']);
   assert.deepStrictEqual(coid('struchtúr D as Dún na Sí { a: Uimhir }'), ['E602']);
 });
 
 it('ní féidir "as deoraíocht" a scríobh (E605)', () => {
-  assert.deepStrictEqual(coid('as deoraíocht\nseasmhach x = 1'), ['E605']);
+  assert.deepStrictEqual(coid('as deoraíocht\nx seasmhach = 1'), ['E605']);
   assert.deepStrictEqual(coid('struchtúr D as deoraíocht { a: Uimhir }'), ['E605']);
 });
 
@@ -253,7 +253,7 @@ it('níl an deoraíocht eisiach', () => {
 });
 
 it('ní bhíonn téacs as dhá áit (E604)', () => {
-  assert.deepStrictEqual(coid('as Corcaigh\nas Ciarraí\nseasmhach x = 1'), ['E604']);
+  assert.deepStrictEqual(coid('as Corcaigh\nas Ciarraí\nx seasmhach = 1'), ['E604']);
 });
 
 // ══ 6. An teorainn idir modúil ═══════════════════════════════════════
@@ -265,7 +265,7 @@ it('maireann contae an struchtúir trasna na teorann', () => {
 });
 
 it('iompraíonn an síniú contae an mhodúil féin', () => {
-  const t = tionscadalBreige({ 'a.sb': 'as Ciarraí\nseasmhach BEANNACHT = "Dia duit"' });
+  const t = tionscadalBreige({ 'a.sb': 'as Ciarraí\nBEANNACHT seasmhach = "Dia duit"' });
   assert.strictEqual(t.tiomsaigh('/sb/a.sb').siniu.contae, 'Ciarraí');
 });
 
@@ -276,14 +276,14 @@ it('is domhanda an t-éileamh ar chúige (E603 trasna comhad)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'duine.sb': 'struchtúr Duine as Corcaigh { ainm: Teaghrán }',
-      'príomh.sb': 'seasmhach d = ó "./duine.sb"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
+      'príomh.sb': 'd seasmhach = ó "./duine.sb"\nstruchtúr Áit as Ciarraí { ainm: Teaghrán }',
     }),
     ['E603']);
   // …and a free province across the graph is still free.
   assert.deepStrictEqual(
     coidTionscadal({
       'duine.sb': 'struchtúr Duine as Corcaigh { ainm: Teaghrán }',
-      'príomh.sb': 'seasmhach d = ó "./duine.sb"\nstruchtúr Áit as Gaillimh { ainm: Teaghrán }',
+      'príomh.sb': 'd seasmhach = ó "./duine.sb"\nstruchtúr Áit as Gaillimh { ainm: Teaghrán }',
     }),
     []);
 });
@@ -292,7 +292,7 @@ it('ní théann contae an mhodúil trasna na teorann mar riail', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.sb': 'as Gaillimh\nfeidhm beannaigh(a: Teaghrán) -> Teaghrán { "Dia duit, " + a }',
-      'príomh.sb': 'as Corcaigh\nseasmhach f = ó "./foclóir.sb"\nscríobh beannaigh("Cáit")',
+      'príomh.sb': 'as Corcaigh\nf seasmhach = ó "./foclóir.sb"\nscríobh beannaigh("Cáit")',
     }),
     []);
 });
@@ -379,35 +379,35 @@ it('is deoraí é an luach ar iasacht, agus mar sin scarann cúige ón JavaScrip
   assert.deepStrictEqual(
     coid('as Corcaigh\ngníomh g(x: Iasacht) { scríobh fad ó x }'), ['E601']);
   assert.deepStrictEqual(
-    coid('as Corcaigh\nseasmhach p = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), ['E601']);
+    coid('as Corcaigh\np seasmhach = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), ['E601']);
   assert.deepStrictEqual(coid('gníomh g(x: Iasacht) { scríobh fad ó x }'), []);
 });
 
 it('níl an modúl Spicebag ina rud a shealbhaítear', () => {
   assert.deepStrictEqual(
     coidTionscadal({
-      'foclóir.sb': 'as Gaillimh\nseasmhach BEANNACHT = "Dia duit"',
-      'príomh.sb': 'as Corcaigh\nseasmhach foclóir = ó "./foclóir.sb"\n'
+      'foclóir.sb': 'as Gaillimh\nBEANNACHT seasmhach = "Dia duit"',
+      'príomh.sb': 'as Corcaigh\nfoclóir seasmhach = ó "./foclóir.sb"\n'
         + 'gníomh príomh() { scríobh BEANNACHT ó fhoclóir }',
     }), []);
 });
 
 it('ní sheiceáiltear baill liosta ná bunchineálacha', () => {
   assert.deepStrictEqual(coid('as Corcaigh\n'
-    + 'seasmhach xs: Liosta(Uimhir) = [1, 2]\nscríobh fad ó xs\nscríobh céad ó xs'), []);
+    + 'xs seasmhach: Liosta(Uimhir) = [1, 2]\nscríobh fad ó xs\nscríobh céad ó xs'), []);
 });
 
 it('is glas ar an mbosca é an cúige, ní teorainn ar an mbóthar', () => {
   assert.deepStrictEqual(coid(
     'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
-    + 'seasmhach d = Duine { ainm: "Cáit" }'), []);
+    + 'd seasmhach = Duine { ainm: "Cáit" }'), []);
 });
 
 it('feidhmíonn an patrún: blaosc ar deoraíocht, croí curtha', () => {
   const comhaid = {
     'duine.sb': 'as Corcaigh\nstruchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
       + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }',
-    'príomh.sb': 'seasmhach d = ó "./duine.sb"\n'
+    'príomh.sb': 'd seasmhach = ó "./duine.sb"\n'
       + 'gníomh príomh() { scríobh ainmDe(Duine { ainm: "Cáit" }) }',
   };
   assert.deepStrictEqual(coidTionscadal(comhaid), []);
@@ -418,7 +418,7 @@ it('seiceáiltear glao modha, ach ní fhógra modha', () => {
   const coidi = coid('as Corcaigh\n'
     + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
     + 'feidhm beannacht ó Dhuine(féin) -> Teaghrán { ainm ó fhéin }\n'
-    + 'seasmhach d = Duine { ainm: "Cáit" }\nscríobh beannacht ó dh()');
+    + 'd seasmhach = Duine { ainm: "Cáit" }\nscríobh beannacht ó dh()');
   assert.strictEqual(coidi.length, 2, JSON.stringify(coidi));
   assert.ok(coidi.every((c) => c === 'E601'), JSON.stringify(coidi));
 });
@@ -510,7 +510,7 @@ it('ní chuireann an t-aighneas cosc ar aon rud eile', () => {
   // box and not a border on the road.
   assert.deepStrictEqual(coid('as Ciarraí\n'
     + 'struchtúr Foireann as Baile Átha Cliath { ainm: Teaghrán }\n'
-    + 'seasmhach f = Foireann { ainm: "Áth Cliath" }'), []);
+    + 'f seasmhach = Foireann { ainm: "Áth Cliath" }'), []);
 });
 
 // ══ 10. Comhaontuithe ════════════════════════════════════════════════
@@ -577,8 +577,8 @@ it('ní thaistealaíonn comhaontú trasna na teorann', () => {
       + 'struchtúr Duine as Gaillimh { ainm: Teaghrán }\n'
       + 'feidhm ainmDe(duine: Duine) -> Teaghrán { ainm ó dhuine }',
   };
-  assert.deepStrictEqual(coidTionscadal({ ...bun, 'príomh.sb': 'seasmhach d = ó "./duine.sb"' }), []);
-  const olc = { ...bun, 'príomh.sb': 'as Corcaigh\nseasmhach d = ó "./duine.sb"\n'
+  assert.deepStrictEqual(coidTionscadal({ ...bun, 'príomh.sb': 'd seasmhach = ó "./duine.sb"' }), []);
+  const olc = { ...bun, 'príomh.sb': 'as Corcaigh\nd seasmhach = ó "./duine.sb"\n'
     + 'feidhm f(duine: Duine) -> Teaghrán { ainm ó dhuine }' };
   assert.deepStrictEqual(coidTionscadal(olc), ['E601']);
   const ceart = { ...olc, 'príomh.sb': 'comhaontú Corcaigh Gaillimh\n' + olc['príomh.sb'] };
