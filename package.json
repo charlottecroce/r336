@@ -1,14 +1,22 @@
 {
   "name": "r336",
-  "version": "0.11.0",
+  "version": "0.13.0",
   "description": "A programming language grounded in Irish grammar. Compiles to JavaScript.",
   "main": "src/index.js",
   "bin": { "r336c": "bin/r336c.js" },
   "engines": { "node": ">=22" },
-"scripts": {
-  "test": "node test/run.js && node test/contae.js && node test/feidhmchlár.js && node test/suim.js && node test/inscne.js && node test/earraidi.js && node test/stór.js",
-  "imirce": "node tools/imirce-inscne.js --scríobh test examples craobh feidhmchlár docs",
-  "imirce:triail": "node tools/imirce-inscne.js test examples craobh feidhmchlár docs"
-},
+  "files": [
+    "src/",
+    "rt/",
+    "bin/",
+    "docs/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/index.js",
+    "imirce": "node tools/imirce-inscne.js --scríobh test examples craobh feidhmchlár docs",
+    "imirce:triail": "node tools/imirce-inscne.js test examples craobh feidhmchlár docs"
+  },
   "license": "MIT"
 }

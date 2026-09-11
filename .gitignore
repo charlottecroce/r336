@@ -1,1 +1,23 @@
-context.md
+# Working notes
+CONTEXT.md
+docs/PATCHES-*.md
+
+# Dependencies
+node_modules/
+
+# Databases written by the examples
+*.db
+*.db-journal
+*.sqlite
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Logs
+npm-debug.log*
+*.log
+
+# NOTE: examples/*.js and feidhmchlár/*.js are compiled output and are COMMITTED on purpose

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R336 - Store</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <p class="sitename"><a href="index.html">R336</a></p>
+    <p class="tagline">language reference</p>
+    <nav class="mainnav">
+      <a href="index.html">Start</a>
+      <a href="bindings.html">Bindings</a>
+      <a href="structures.html">Structures</a>
+      <a href="verbs.html">Verbs</a>
+      <a href="grammar.html">Grammar</a>
+      <a href="async.html">Async</a>
+      <a href="modules.html">Modules</a>
+      <a href="counties.html">Counties</a>
+      <a href="stór.html" class="at">Store</a>
+      <a href="errors.html">Errors</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <h1 class="pagehead">Store</h1>
+  <p class="pagelede">A declared type may have a table behind it. Rows come
+  back already typed, and the table's name and columns come from the
+  declaration rather than from a string you wrote.</p>
+
+  <div class="slab">
+    <h2 class="slab-head">The marker <span class="head-note">stór</span></h2>
+    <div class="slab-body">
+      <pre class="code">struchtúr Duine firinscneach stór as Corcaigh {
+    ainm: Teaghrán
+    aois: Uimhir
+}</pre>
+      <p>One word in the declaration says this type is stored. The modifier
+      order is fixed - name, gender adjective, marker, provenance - and any
+      other order is <a class="tag" href="errors.html">E401</a>. The adjective
+      agrees with the noun, so it stays beside it; the marker is engineering
+      rather than Irish, so it sits outside the grammatical material;
+      provenance closes, as it already did. See
+      <a href="structures.html">Structures</a> for the slot list.</p>
+      <p>A marked type must have a county
+      (<a class="tag" href="errors.html">E610</a>): a table has to be
+      somewhere.</p>
+      <p><code>stór</code> is <strong>not</strong> a reserved word. It is read
+      as an ordinary identifier in that one slot and nowhere else, which is
+      what lets the same file go on using <code>stór</code> as the name of a
+      binding - as every example on this page does. <code>faigh</code>
+      <em>is</em> reserved, because it takes a type where an expression would
+      otherwise begin and there is nothing for a lookahead to decide against.
+      The cost, paid knowingly: no verb may be named <code>faigh</code>.</p>
+      <p>Only a structure can be marked. A <code>suim</code> cannot, and there
+      is no code for it because the grammar has nowhere to put it - the same
+      answer <a class="tag" href="errors.html">E509</a> gives methods. A sum
+      does not enumerate rows; a table is a possession of an identified
+      thing.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">The table name</h2>
+    <div class="slab-body">
+      <p><code>Duine</code> reads and writes the table <code>duine</code>.
+      Lowercased, fadas kept, and <strong>never pluralised</strong>.</p>
+      <p>Pluralisation in Irish is not a rule the compiler could apply.
+      <em>duine</em> becomes <em>daoine</em>, which is suppletive - no rule
+      reaches it - and it is also the first word anyone tries. Guessing here
+      would be confidently wrong on the worst possible example, so the
+      compiler does not guess. If your table is called <code>daoine</code>,
+      reach it through the untyped path instead.</p>
+      <p>The columns are the declared field list, in declaration order. There
+      is no second place to write them, deliberately: a column list that could
+      drift from the type's fields would be a second source of truth.</p>
+    </div>
+  </div>
+
+  <div class="slab slab--focus">
+    <h2 class="slab-head">Reading <span class="head-note">faigh T as S</span></h2>
+    <div class="slab-body">
+      <pre class="code">ag gníomh liostaigh(stór: Iasacht) {
+    daoine seasmhach: Liosta(Duine) = tar éis faigh Duine as stór
+    déan a bheannaigh ar dhaoine
+}</pre>
+      <p>Every row of the type's table, as a <code>Liosta(T)</code>, already
+      carrying the tag <code>is</code> reads. The result is ongoing, so it
+      needs <code>tar éis</code> to complete it
+      (<a class="tag" href="errors.html">E505</a>) inside an <code>ag</code>
+      verb (<a class="tag" href="errors.html">E504</a>) - the ordinary aspect
+      rules, with nothing added for this feature. Naming a type that has no
+      table is <a class="tag" href="errors.html">E611</a>.</p>
+      <p><code>as</code>, and not the alternatives, for three reasons.
+      <code>ar</code> introduces a verb frame, and <code>déan</code> and
+      <code>cuir</code> are the only built-ins that take one; keeping that
+      sentence true was worth a preposition. <code>ó</code> would parse as a
+      possessive chain - a member read of <code>stór</code> - which is the
+      opposite of what is meant. And <code>as</code> is right on the Irish
+      anyway: a row comes <em>out of</em> a store. It demands the base form,
+      so the government table did not grow, and <code>as shtór</code> is
+      <a class="tag" href="errors.html">E104</a> through the path that already
+      existed.</p>
+    </div>
+  </div>
+
+  <div class="slab slab--focus">
+    <h2 class="slab-head">Writing <span class="head-note">cuir V i S</span></h2>
+    <div class="slab-body">
+      <pre class="code">ag gníomh cláraigh(stór: Iasacht, duine: Duine) {
+    cuir duine i stór
+}</pre>
+      <p>One row, from a typed value, into the type's own table. This is a
+      second prepositional frame on <code>cuir</code> rather than a new
+      command, so it inherits the mood and aspect rules already in force: a
+      command inside a <code>feidhm</code> is
+      <a class="tag" href="errors.html">E502</a>, a write outside an
+      <code>ag</code> verb is <a class="tag" href="errors.html">E504</a>, a
+      target that does not name a store is
+      <a class="tag" href="errors.html">E511</a>, and a type with no table is
+      <a class="tag" href="errors.html">E611</a> from this side too.</p>
+      <p>Unlike <code>cuir … ar …</code>, the write needs no mutable target.
+      <code>ar</code> assigns to a binding and so refuses a
+      <code>seasmhach</code> one (<a class="tag" href="errors.html">E510</a>);
+      <code>i</code> puts a value into something passed in as an argument,
+      where there is no binding to protect.</p>
+      <p><code>i</code> is the preposition of going into, and it
+      <strong>eclipses</strong> its complement - which is what gave eclipsis
+      its first real syntactic slot in the language. It also chooses its own
+      shape from the word after it, <code>i</code> with eclipsis before a
+      consonant and <code>in</code> with the base form before a vowel, exactly
+      as <em>más</em> and <em>murab</em> do. See
+      <a href="grammar.html">Grammar</a>.</p>
+      <pre class="code">cuir d i gcuntas   <span class="c">// consonant: i + eclipsis</span>
+cuir d in áit      <span class="c">// vowel: in + base form</span>
+cuir d i stór      <span class="c">// st- resists eclipsis, so nothing changes</span></pre>
+      <p>One row per call. <code>cuir … i …</code> is a frame and not a verb,
+      so <code>déan</code> cannot distribute it over a list, so bulk writing
+      is not expressible - and a transaction story is not owed until it
+      is.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">A table claims a county</h2>
+    <div class="slab-body">
+      <p>An ordinary placed structure or sum claims a whole
+      <em>province</em>, and there are four. A stored type claims a single
+      <em>county</em>, and there are 32.</p>
+      <table class="listing">
+        <tr><th class="col-word">Claim</th><th>Granularity</th><th class="col-narrow">Slots</th></tr>
+        <tr><td>placed <code>struchtúr</code> / <code>suim</code></td><td>province</td><td>4</td></tr>
+        <tr><td><code>stór</code> <code>struchtúr</code></td><td>county</td><td>32</td></tr>
+      </table>
+      <p>A type is the vocabulary of a region: saying <code>Duine</code> is
+      from Corcaigh says what a whole part of the program is about, and takes
+      An Mhumhain with it. A table is a building in one town. It is a smaller
+      thing, so it claims a smaller place, and that asymmetry is the whole
+      content of the rule.</p>
+      <p><strong>This is not an exemption.</strong> The two claims collide in
+      both directions: a table in Corcaigh blocks any ordinary type from
+      claiming An Mhumhain, and an ordinary type in An Mhumhain blocks a table
+      anywhere in Munster. Either way it is
+      <a class="tag" href="errors.html">E603</a>, and declaration order does
+      not decide it. Two tables in one county is
+      <a class="tag" href="errors.html">E612</a>.</p>
+      <p>So 32 is a ceiling rather than a budget. It is reachable only by a
+      program with no ordinary placed types at all, and a single ordinary type
+      costs a whole province's worth of counties.</p>
+      <p>One consequence arrives free. At county granularity, two
+      <em>rival</em> counties can both hold a table - and then a file from
+      Corcaigh reading Ciarraí's rows is
+      <a class="tag" href="errors.html">E609</a>, which no treaty lifts, while
+      a file anywhere else needs a treaty and can never sign with both. No
+      file in such a program can read both tables. See
+      <a href="counties.html">Counties</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">The shape of a database program</h2>
+    <div class="slab-body">
+      <p>The store abstraction is <code>Iasacht</code>, <code>Iasacht</code>
+      is in exile, and a placed file may not read a member off an exiled value
+      (<a class="tag" href="errors.html">E601</a>). So opening a store and
+      declaring a placed type cannot happen in the same file, and a program
+      splits in two:</p>
+      <table class="listing">
+        <tr><th class="col-word">File</th><th>Does</th></tr>
+        <tr><td>exiled shell</td><td>opens the store, creates the schema, calls into the core</td></tr>
+        <tr><td>placed core</td><td>declares the stored type, runs <code>faigh</code> and <code>cuir</code>, reads fields off rows</td></tr>
+      </table>
+      <p>That split is older than this feature and did not move. What changed
+      is what can cross it. <code>faigh</code> needs the store only as an
+      <em>argument</em>, and passing an argument is not a member read, so the
+      conversion from untyped rows to a declared type now happens in the core
+      where the type lives, instead of being hand-written in the shell.</p>
+      <p>Worked example: <code>examples/stór.r336</code> and
+      <code>examples/stór-croí.r336</code>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">What is deliberately not here</h2>
+    <div class="slab-body">
+      <table class="listing">
+        <tr><th class="col-word">Absent</th><th>Why</th></tr>
+        <tr><td>Generated schemas</td>
+            <td>The compiler will not emit <code>CREATE TABLE</code> from
+            field types. That needs a type-to-column-type mapping, which is
+            another language's vocabulary shipped inside this compiler. Write
+            the schema by hand, through the untyped path, where the seam is
+            visible.</td></tr>
+        <tr><td>Filtering</td>
+            <td><code>faigh Duine as stór</code> is every row. A predicate
+            form is the same shape as the map verb the language has also not
+            built, and it would be built for its own reasons rather than as a
+            side effect of a database feature.</td></tr>
+        <tr><td>Bulk writes and transactions</td>
+            <td>Not expressible, and so not owed.</td></tr>
+        <tr><td>A missing-row type</td>
+            <td><code>faigh</code> returns a list, so emptiness is
+            representable and "this one row is not there" is not. Rather than
+            invent an affliction every read would carry, <code>céad</code> on
+            an empty list refuses: nothing hands R336 an absent value wearing
+            a declared type.</td></tr>
+      </table>
+      <p>What the runtime <em>does</em> answer is disagreement. Before a read
+      or a write, the declared columns are checked against the table on disk,
+      and a column that is not there is refused by name. An extra column on
+      disk stays invisible, because a structure states every field it has and
+      a row with an unfielded extra is not a value of that type.</p>
+    </div>
+  </div>
+
+  <div class="slab">
+    <h2 class="slab-head">Why this exists, and what it is</h2>
+    <div class="slab-body">
+      <p>The reading is Irish. <code>stór</code> is an ordinary noun,
+      <code>faigh X as Y</code> and <code>cuir X i Y</code> are ordinary
+      Irish, <code>as</code> is correctly ungoverned by lenition and
+      <code>i</code> correctly eclipses. The mechanism is a registry, and a
+      registry is exactly what the design rules exist to refuse. So this is a
+      deliberate engineering feature with an Irish reading, labelled as one in
+      the source, in the same way the county system and sum types are - and
+      then enforced as strictly as anything that is grammar. See the
+      <a href="guide.html">Developer Guide</a>.</p>
+      <p>What it did not have to teach anything: aspect, government, the
+      county rules, type equality, the morphology library, the module graph,
+      and the runtime prelude. A stored structure emits byte-for-byte what an
+      unmarked one emits, and there is a test that compares the two whole
+      programs to prove it.</p>
+    </div>
+  </div>
+  <p class="footline">
+  </p>
+</div>
+</body>
+</html>
