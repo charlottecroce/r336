@@ -1,20 +1,16 @@
 'use strict';
 
 /*
- * test/suim.js — cineálacha suime (§26).
- *
- * The suite is organised by the claim it is checking rather than by the file
- * the code lives in, because the interesting failures in 0.8 are all crossings
- * between the type language and the province rule.
+ * Cineálacha suime (§26). Organised by claim rather than by source file,
+ * because the interesting failures are crossings between the type language
+ * and the province rule.
  */
 
 const assert = require('node:assert');
 const path = require('path');
 const { tiomsaigh, Tionscadal, Cnuasach } = require('../src/index');
 
-const tastail = [];
-const it = (ainm, fn) => tastail.push([ainm, fn]);
-let pas = 0, teip = 0;
+const { it, rithSraith } = require('./creatlach');
 
 /** Every diagnostic code a source raises, in order. */
 function coid(src) {
@@ -62,39 +58,44 @@ const TORADH = 'suim Toradh {\n    Ceart { duine: Duine }\n    Easpa { cúis: Te
 const DUINE = 'struchtúr Duine { ainm: Teaghrán }';
 
 // ══ 1. Fógairt agus tógáil ═══════════════════════════════════════════
-it('fógraítear suim, agus is cineál í gach malairt', () => {
+it('fógraítear suim, agus is cineál í gach malairt',
+  'a sum is declared, and every variant is a type', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}`), []);
 });
 
-it('is déantús gnáthstruchtúir é déantús malairte', () => {
+it('is déantús gnáthstruchtúir é déantús malairte',
+  'constructing a variant is constructing an ordinary struct', () => {
   // Introduction needed no new syntax and got none (§26.1).
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 't seasmhach = Ceart { duine: Duine { ainm: "Cáit" } }'), []);
-  // …with the ordinary field checks, unchanged.
+  // Ordinary field checks, unchanged.
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nt seasmhach = Ceart { }`), ['E204']);
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nt seasmhach = Easpa { cúis: 3 }`), ['E201']);
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nt seasmhach = Easpa { fáth: "x" }`), ['E203', 'E204']);
 });
 
-it('is leathnú saor é an tabhairt isteach: is Toradh cheana é Ceart', () => {
+it('is leathnú saor é an tabhairt isteach: is Toradh cheana é Ceart',
+  'introduction is a free widening: a Ceart is already a Toradh', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 't seasmhach: Toradh = Easpa { cúis: "x" }'), []);
 });
 
-it('ní ionann malairt de shuim amháin agus malairt de cheann eile', () => {
+it('ní ionann malairt de shuim amháin agus malairt de cheann eile',
+  'a variant of one sum is not a variant of another', () => {
   const dhá = `${TORADH}\nsuim Eile {\n    Alt { x: Uimhir }\n    Beart { y: Uimhir }\n}`;
   assert.deepStrictEqual(coid(`${DUINE}\n${dhá}\n`
     + 't seasmhach: Toradh = Alt { x: 1 }'), ['E201']);
 });
 
-it('is E208 é ainm malairte a athúsáid — gan riail nua', () => {
-  // Variants live in the type namespace, so the ordinary collision check
-  // catches this with nothing written to make it happen.
+it('is E208 é ainm malairte a athúsáid — gan riail nua',
+  'reusing a variant name is E208 — with no new rule', () => {
+  // Variants live in the type namespace, so the ordinary collision check catches it.
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\nstruchtúr Ceart { x: Uimhir }`), ['E208']);
 });
 
 // ══ 2. Díothú: an chopail a chaolaíonn (§26.3) ═══════════════════════
-it('caolaíonn `más Ceart x` an ceangal sa chraobh', async () => {
+it('caolaíonn `más Ceart x` an ceangal sa chraobh',
+  '`más Ceart x` narrows the binding inside the branch', async () => {
   const src = `${DUINE}\n${TORADH}\n`
     + 'feidhm tuairisc(t: Toradh) -> Teaghrán {\n'
     + '    más Ceart t { ainm ó dhuine ó th } mura { cúis ó th }\n'
@@ -107,40 +108,44 @@ it('caolaíonn `más Ceart x` an ceangal sa chraobh', async () => {
   assert.deepStrictEqual(await rith(src), ['Cáit', 'Gan aimsiú']);
 });
 
-it('ní osclaítear suim gan í a aithint ar dtús (E205)', () => {
-  // You cannot open a box you have not identified. No new code: E205 already
-  // says exactly this, and says it about the right type.
+it('ní osclaítear suim gan í a aithint ar dtús (E205)',
+  'a sum is not opened without being identified first (E205)', () => {
+  // E205 already says this, and says it about the right type.
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 'feidhm f(t: Toradh) -> Teaghrán { cúis ó th }'), ['E205']);
 });
 
-it('caolaíonn an chraobh dhiúltach nuair atá dhá mhalairt ann', () => {
+it('caolaíonn an chraobh dhiúltach nuair atá dhá mhalairt ann',
+  'the negative branch narrows when there are two variants', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 'feidhm f(t: Toradh) -> Teaghrán { más Ceart t { "sea" } mura { cúis ó th } }'), []);
 });
 
-it('ní chaolaíonn sí nuair atá trí cinn ann — agus sin teorainn dhearbhaithe', () => {
+it('ní chaolaíonn sí nuair atá trí cinn ann — agus sin teorainn dhearbhaithe',
+  'it does not narrow when there are three — and that is an asserted limit', () => {
   const trí = 'suim Trí {\n    A { x: Uimhir }\n    B { x: Uimhir }\n    C { x: Uimhir }\n}';
-  // The affirmative branch still narrows…
+  // The affirmative branch narrows.
   assert.deepStrictEqual(coid(`${trí}\nfeidhm f(t: Trí) -> Uimhir { más A t { x ó th } mura { 0 } }`), []);
-  // …and the negative one does not, because "not A" is not the name of
-  // anything when there are three (§26.3).
+  // The negative one does not: "not A" names nothing when there are three (§26.3).
   assert.deepStrictEqual(coid(`${trí}\nfeidhm f(t: Trí) -> Uimhir { más A t { 0 } mura { x ó th } }`), ['E205']);
 });
 
-it('iompaíonn `mura` an dá chraobh', () => {
+it('iompaíonn `mura` an dá chraobh',
+  '`mura` turns the two branches around', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 'feidhm f(t: Toradh) -> Teaghrán { mura Ceart t { cúis ó th } mura { "sea" } }'), []);
 });
 
-it('ní chaolaítear ceangal sealadach: ní fíor caolú a scriosann `cuir`', () => {
+it('ní chaolaítear ceangal sealadach: ní fíor caolú a scriosann `cuir`',
+  'a mutable binding is not narrowed: a narrowing `cuir` can destroy is not true', () => {
   // Essence narrows; accident does not (§26.3).
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 't sealadach: Toradh = Easpa { cúis: "x" }\n'
     + 'gníomh f() { más Ceart t { scríobh ainm ó dhuine ó th } }'), ['E205']);
 });
 
-it('buaileann craobhacha le chéile ag an tsuim seachas teip a thabhairt', () => {
+it('buaileann craobhacha le chéile ag an tsuim seachas teip a thabhairt',
+  'branches meet at the sum instead of failing', () => {
   // One arm `Ceart`, the other `Easpa`, and the value of the `má` is `Toradh`.
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 'feidhm f(b: Bool) -> Toradh {\n'
@@ -149,13 +154,15 @@ it('buaileann craobhacha le chéile ag an tsuim seachas teip a thabhairt', () =>
 });
 
 // ══ 3. E302: aicmiú nach féidir a bheith fíor (curtha in áirithe ó 0.4) ══
-it('is E302 é malairt nach de chuid na suime seo í', () => {
+it('is E302 é malairt nach de chuid na suime seo í',
+  'a variant that does not belong to this sum is E302', () => {
   const dhá = `${TORADH}\nsuim Eile {\n    Alt { x: Uimhir }\n    Beart { y: Uimhir }\n}`;
   assert.deepStrictEqual(coid(`${DUINE}\n${dhá}\n`
     + 'feidhm f(t: Toradh) -> Bool { t is Alt }'), ['E302']);
 });
 
-it('ainmníonn E302 an tsuim agus an mhalairt', () => {
+it('ainmníonn E302 an tsuim agus an mhalairt',
+  'E302 names the sum and the variant', () => {
   const dhá = `${TORADH}\nsuim Eile {\n    Alt { x: Uimhir }\n    Beart { y: Uimhir }\n}`;
   const [e] = earraidiDe(`${DUINE}\n${dhá}\nfeidhm f(t: Toradh) -> Bool { t is Alt }`);
   assert.strictEqual(e.cod, 'E302');
@@ -163,59 +170,64 @@ it('ainmníonn E302 an tsuim agus an mhalairt', () => {
 });
 
 // ══ 4. Liostaí: buaileann malairtí, agus fanann E211 gan sroicheadh ══
-it('téann dhá mhalairt den tsuim chéanna le chéile i liosta', () => {
-  // The improvement that did arrive: a list of results is `Liosta(Toradh)`
-  // and not `Liosta(Iasacht)`, so it can be declared and checked.
+it('téann dhá mhalairt den tsuim chéanna le chéile i liosta',
+  'two variants of the same sum meet in a list', () => {
+  // A list of results is Liosta(Toradh), not Liosta(Iasacht), so it can be declared.
   assert.deepStrictEqual(coid(`${DUINE}\n${TORADH}\n`
     + 'xs seasmhach: Liosta(Toradh) = [Ceart { duine: Duine { ainm: "C" } }, Easpa { cúis: "x" }]'), []);
 });
 
-it('leathnaíonn liosta nach mbuaileann in aon áit fós — agus is gá sin', () => {
-  // The reversal, §26.7. `[ainm, aois]` in sonraí.r336 is a driver's parameter
-  // list: legitimately heterogeneous, and no sum can or should cover it. So
-  // E211 stays reserved and the 0.8 brief's prediction was wrong.
+it('leathnaíonn liosta nach mbuaileann in aon áit fós — agus is gá sin',
+  'a list that meets nowhere still widens — and it has to', () => {
+  // §26.7. `[ainm, aois]` is a driver's parameter list, legitimately
+  // heterogeneous, so E211 stays reserved.
   assert.deepStrictEqual(coid('xs seasmhach = [1, "a"]'), []);
   assert.deepStrictEqual(
     coid('xs seasmhach: Liosta(Iasacht) = [1, "a"]'), []);
 });
 
-it('fanann liosta aonchineálach agus liosta folamh mar a bhí', () => {
+it('fanann liosta aonchineálach agus liosta folamh mar a bhí',
+  'a homogeneous list and an empty list stay as they were', () => {
   assert.deepStrictEqual(coid('xs seasmhach = [1, 2, 3]'), []);
   assert.deepStrictEqual(coid('xs seasmhach = []'), []);
 });
 
 // ══ 5. E213: ní catagóir í an Iasacht (§26.4) ════════════════════════
-it('ní féidir le réimse malairte a bheith ina Iasacht', () => {
+it('ní féidir le réimse malairte a bheith ina Iasacht',
+  'a variant field cannot be an Iasacht', () => {
   assert.deepStrictEqual(coid('suim T {\n    A { x: Iasacht }\n    B { y: Uimhir }\n}'), ['E213']);
   assert.deepStrictEqual(coid('suim T {\n    A { x: Liosta(Iasacht) }\n    B { y: Uimhir }\n}'), ['E213']);
 });
 
-it('ceadaítear Iasacht i réimse struchtúir fós — comhoiriúnacht siar', () => {
-  // The asymmetry is deliberate: a record is a bag of fields, a sum claims to
-  // enumerate. Every 0.4–0.7 program keeps compiling.
+it('ceadaítear Iasacht i réimse struchtúir fós — comhoiriúnacht siar',
+  'Iasacht is still allowed in a struct field — backwards compatibility', () => {
+  // Deliberate asymmetry: a record is a bag of fields, a sum claims to enumerate.
   assert.deepStrictEqual(coid('struchtúr Amharc { sonraí: Iasacht }'), []);
 });
 
-it('is Neamhní an easpa anois, agus tá sí ann cheana', () => {
+it('is Neamhní an easpa anois, agus tá sí ann cheana',
+  'absence is Neamhní now, and it is already there', () => {
   assert.deepStrictEqual(coid(`${DUINE}\n`
     + 'suim Aimsiú {\n    Aimsithe { duine: Duine }\n    Beag { luach: Neamhní }\n}'), []);
 });
 
 // ══ 6. Dúchas: aon chúige amháin ag suim (§26.2) ═════════════════════
-it('éilíonn suim cúige mar a éilíonn struchtúr', () => {
+it('éilíonn suim cúige mar a éilíonn struchtúr',
+  'a sum claims a province as a struct does', () => {
   assert.deepStrictEqual(coid('suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}'), []);
 });
 
-it('tá suim agus struchtúr san iomaíocht ar na ceithre shliotán chéanna', () => {
+it('tá suim agus struchtúr san iomaíocht ar na ceithre shliotán chéanna',
+  'sums and structs compete for the same four slots', () => {
   assert.deepStrictEqual(
     coid('struchtúr D as Corcaigh { a: Uimhir }\n'
       + 'suim T as Ciarraí {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}'),
     ['E603']);
 });
 
-it('ní éilíonn malairt cúige di féin — dá n-éileodh, d\'íosfadh suim dhá shliotán', () => {
-  // The load-bearing decision of §26.2 in one assertion: four provinces are
-  // still four types, however many variants those types have.
+it('ní éilíonn malairt cúige di féin — dá n-éileodh, d\'íosfadh suim dhá shliotán',
+  'a variant claims no province of its own — if it did, a sum would eat two slots', () => {
+  // §26.2 in one assertion: four provinces are four types, whatever the variant count.
   assert.deepStrictEqual(
     coid('suim A as Corcaigh {\n    P { x: Uimhir }\n    Q { x: Uimhir }\n}\n'
       + 'suim B as Cill Dara {\n    R { x: Uimhir }\n    S { x: Uimhir }\n}\n'
@@ -224,33 +236,34 @@ it('ní éilíonn malairt cúige di féin — dá n-éileodh, d\'íosfadh suim d
     []);
 });
 
-it('freagraíonn malairt le contae na suime ag an teorainn', () => {
-  // The sum is placed, so opening a variant from the wrong province is E601
-  // exactly as opening a struct field would be.
+it('freagraíonn malairt le contae na suime ag an teorainn',
+  'a variant answers with the sum\'s county at the border', () => {
+  // The sum is placed, so opening a variant from the wrong province is E601.
   assert.deepStrictEqual(coid('as Gaillimh\n'
     + 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { x: Uimhir }\n}\n'
     + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }'), ['E601']);
-  // …and a treaty opens it, through the machinery that was already there.
+  // And a treaty opens it, through machinery that was already there.
   assert.deepStrictEqual(coid('as Gaillimh\ncomhaontú Gaillimh Corcaigh\n'
     + 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { x: Uimhir }\n}\n'
     + 'feidhm f(t: T) -> Uimhir { más A t { x ó th } mura { 0 } }'), []);
 });
 
-it('coinníonn ualach a chontae féin taobh istigh de shuim eile', () => {
-  // Construction crosses freely — a county is a lock on the box, not a border
-  // on the road (§24.3) — and then the payload is checked on its own terms.
+it('coinníonn ualach a chontae féin taobh istigh de shuim eile',
+  'a payload keeps its own county inside another sum', () => {
+  // Construction crosses freely (§24.3), then the payload is checked on its own terms.
   const src = 'as Gaillimh\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'suim T as Gaillimh {\n    A { duine: Duine }\n    B { cúis: Teaghrán }\n}\n';
   // Building one is fine from anywhere.
   assert.deepStrictEqual(coid(`${src}t seasmhach: T = A { duine: Duine { ainm: "C" } }`), []);
-  // Opening the payload is not, because the payload is still from Cork.
+  // Opening the payload is not: it is still from Cork.
   assert.deepStrictEqual(
     coid(`${src}feidhm f(t: T) -> Teaghrán { más A t { ainm ó dhuine ó th } mura { cúis ó th } }`),
     ['E601']);
 });
 
-it('is E609 é ualach i gcontae a bhfuil seanaighneas leis', () => {
+it('is E609 é ualach i gcontae a bhfuil seanaighneas leis',
+  'a payload in a county with an old feud is E609', () => {
   const src = 'as Ciarraí\n'
     + 'struchtúr Duine as Corcaigh { ainm: Teaghrán }\n'
     + 'suim T as Gaillimh {\n    A { duine: Duine }\n    B { cúis: Teaghrán }\n}\n'
@@ -259,7 +272,8 @@ it('is E609 é ualach i gcontae a bhfuil seanaighneas leis', () => {
 });
 
 // ══ 7. An teorainn idir modúil ═══════════════════════════════════════
-it('trasnaíonn suim agus a malairtí an teorainn', () => {
+it('trasnaíonn suim agus a malairtí an teorainn',
+  'a sum and its variants cross the border', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'toradh.r336': 'suim T {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
@@ -269,7 +283,8 @@ it('trasnaíonn suim agus a malairtí an teorainn', () => {
     []);
 });
 
-it('taistealaíonn éileamh cúige na suime leis an iompórtáil (E603)', () => {
+it('taistealaíonn éileamh cúige na suime leis an iompórtáil (E603)',
+  'the sum\'s claim on a province travels with the import (E603)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'toradh.r336': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
@@ -278,9 +293,9 @@ it('taistealaíonn éileamh cúige na suime leis an iompórtáil (E603)', () => 
     ['E603']);
 });
 
-it('ní éilíonn malairt iompórtáilte cúige di féin', () => {
-  // If a variant carried its own county, importing a two-variant sum would
-  // report E603 against itself. It does not.
+it('ní éilíonn malairt iompórtáilte cúige di féin',
+  'an imported variant claims no province of its own', () => {
+  // A variant carrying its own county would report E603 against itself on import.
   assert.deepStrictEqual(
     coidTionscadal({
       'toradh.r336': 'suim T as Corcaigh {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}',
@@ -291,30 +306,31 @@ it('ní éilíonn malairt iompórtáilte cúige di féin', () => {
 });
 
 // ══ 8. Ní fheiceann an chúlchríoch aon rud de seo ════════════════════
-it('ní shroicheann an tsuim an JavaScript', () => {
+it('ní shroicheann an tsuim an JavaScript',
+  'the sum never reaches the JavaScript', () => {
   const js = jsDe('as Corcaigh\n'
     + 'suim Toradh as Corcaigh {\n    Ceart { x: Uimhir }\n    Easpa { cúis: Teaghrán }\n}\n'
     + 'feidhm f(toradh: Toradh) -> Uimhir { más Ceart toradh { x ó thoradh } mura { 0 } }');
-  // The sum is a statement about which tags are possible, and a statement
-  // about possibility has no run-time shadow: the *name* never appears.
+  // A statement about which tags are possible has no run-time shadow.
   for (const focal of ['Toradh', '__suim', '__malairt', 'Corcaigh', 'An Mhumhain',
     '__contae', '__cúige', 'thoradh']) {
     assert.ok(!js.includes(focal), `${focal} sa JS:\n${js}`);
   }
-  // What is there is the tag `__is` already read, and the constructor a
-  // struct already got. No new backend concept.
+  // The `__is` tag and a struct constructor. No new backend concept.
   assert.ok(js.includes('__is(toradh, "Ceart")'));
   assert.ok(js.includes('Ceart$nua'));
 });
 
-it('níor chuir an tsuim cás nua le `__is`', () => {
+it('níor chuir an tsuim cás nua le `__is`',
+  'the sum added no new case to `__is`', () => {
   const js = jsDe('suim T {\n    A { x: Uimhir }\n    B { y: Uimhir }\n}');
   assert.ok(!js.includes('case "A"'));
   assert.ok(js.includes('luach.__cineál === cineál'));
 });
 
 // ══ 9. Iompar roimh 0.8 gan athrú ════════════════════════════════════
-it('gineann clár 0.7 an cód céanna a ghin sé riamh', async () => {
+it('gineann clár 0.7 an cód céanna a ghin sé riamh',
+  'a 0.7 program emits the code it always did', async () => {
   const src = 'struchtúr Duine { ainm: Teaghrán }\n'
     + 'feidhm beannacht(duine: Duine) -> Teaghrán { "Dia duit, " + ainm ó dhuine }\n'
     + 'gníomh príomh() { scríobh beannacht(Duine { ainm: "Cáit" }) }';
@@ -322,60 +338,65 @@ it('gineann clár 0.7 an cód céanna a ghin sé riamh', async () => {
   assert.deepStrictEqual(await rith(src), ['Dia duit, Cáit']);
 });
 
-it('fanann `suimiú` ag obair: níor ghoid an eochairfhocal an t-oibreoir', async () => {
-  // `suim` the keyword and `suimiú` the operation shared a parser method name
-  // until 0.8. This is the assertion that the rename did not break arithmetic.
+it('fanann `suimiú` ag obair: níor ghoid an eochairfhocal an t-oibreoir',
+  '`suimiú` keeps working: the keyword did not steal the operator', async () => {
+  // `suim` and `suimiú` shared a parser method name until 0.8. This is the rename.
   assert.deepStrictEqual(await rith('gníomh príomh() { scríobh 2 + 3 - 1 }'), ['4']);
 });
 
-it('is aitheantóir fós é "suim" mar chuid d\'fhocal', () => {
+it('is aitheantóir fós é "suim" mar chuid d\'fhocal',
+  '"suim" inside a word is still an identifier', () => {
   assert.deepStrictEqual(coid('suimeanna seasmhach = 3'), []);
 });
 
 
 // ══ E214 — ní suim í suim gan rogha (§26.8) ═══════════════════════════
 
-it('is E214 í suim fholamh', () => {
+it('is E214 í suim fholamh',
+  'an empty sum is E214', () => {
   assert.deepStrictEqual(coid('suim T as Corcaigh { }'), ['E214']);
 });
 
-it('is E214 í suim aonair', () => {
+it('is E214 í suim aonair',
+  'a single-variant sum is E214', () => {
   assert.deepStrictEqual(coid('suim T as Corcaigh { A { u: Uimhir } }'), ['E214']);
 });
 
-it('luaitear cé mhéad malairt a fuarthas, mar is é sin an rud atá le ceartú', () => {
+it('luaitear cé mhéad malairt a fuarthas, mar is é sin an rud atá le ceartú',
+  'how many variants were found is stated, because that is the thing to fix', () => {
   const [folamh] = earraidiDe('suim T { }');
   const [aonair] = earraidiDe('suim T { A { u: Uimhir } }');
   assert.ok(/malairt ar bith/.test(folamh.teachtaireacht), folamh.teachtaireacht);
   assert.ok(/malairt amháin/.test(aonair.teachtaireacht), aonair.teachtaireacht);
 });
 
-it('is leor dhá mhalairt', () => {
+it('is leor dhá mhalairt',
+  'two variants are enough', () => {
   assert.deepStrictEqual(
     coid('suim T { A { u: Uimhir } B { c: Teaghrán } }'), []);
 });
 
-it('ní chuireann E214 cosc ar an gcuid eile den chomhad a sheiceáil', () => {
-  // Leantar ar aghaidh i ndiaidh E214 d'aon ghnó: dá stopfaí, cheilfí gach
-  // botún eile taobh thiar den chéad cheann.
+it('ní chuireann E214 cosc ar an gcuid eile den chomhad a sheiceáil',
+  'E214 does not stop the rest of the file being checked', () => {
+  // Checking continues past E214 on purpose, or the first fault hides the rest.
   const es = coid('suim T { A { u: Uimhir } }\nx seasmhach: Rud = 1');
   assert.deepStrictEqual(es, ['E214', 'E202']);
 });
 
 // ══ Dhá iompar a thit amach, agus atá anois luaite (§26.2, §26.9) ═════
 
-it('ainmníonn malairt cruth, agus mar sin is cineál fógartha í (§26.2)', () => {
-  // Bhí sé seo ag obair ó 0.8 gan é a bheith socraithe ná luaite. Coinnítear
-  // é: ainmníonn malairt cruth, agus is í an tsuim a shealbhaíonn an cúige.
+it('ainmníonn malairt cruth, agus mar sin is cineál fógartha í (§26.2)',
+  'a variant names a shape, and so it is a declared type (§26.2)', () => {
+  // A variant names a shape. The sum is what holds the province.
   assert.deepStrictEqual(coid(
     'suim T { A { u: Uimhir } B { c: Teaghrán } }\n'
     + 'feidhm f(a: A) -> Uimhir { u ó a }\n'
     + 'scríobh f(A { u: 1 })'), []);
 });
 
-it('ní ghlacann suim ná malairt le modh (E509, §26.9)', () => {
-  // Is seilbh é modh, agus ní shealbhaíonn luach neamhaitheanta aon rud.
-  // `ó` séimhíonn a chomhlánú anseo mar a dhéanann sé i ngach áit eile.
+it('ní ghlacann suim ná malairt le modh (E509, §26.9)',
+  'neither a sum nor a variant takes a method (E509, §26.9)', () => {
+  // A method is possession, and an unidentified value possesses nothing.
   assert.deepStrictEqual(coid(
     'suim Toradh { Ceart { u: Uimhir } Easpa { c: Teaghrán } }\n'
     + 'feidhm cuntas ó Thoradh(féin) -> Uimhir { 1 }'), ['E509']);
@@ -385,11 +406,4 @@ it('ní ghlacann suim ná malairt le modh (E509, §26.9)', () => {
 });
 
 // ── rith ──────────────────────────────────────────────────────────────
-(async () => {
-  for (const [ainm, fn] of tastail) {
-    try { await fn(); pas++; }
-    catch (e) { teip++; console.log(`  ✗ ${ainm}\n    ${e.message}`); }
-  }
-  console.log(`\nsuim: ${pas} pas, ${teip} teip`);
-  if (teip) process.exit(1);
-})();
+rithSraith('suim');

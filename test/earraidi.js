@@ -1,21 +1,11 @@
 'use strict';
 
 /*
- * test/earraidi.js — an corpas earráidí.
+ * Every diagnostic code gets a case file in `examples/earraidi/` that fails on
+ * purpose, and every case file fails with exactly the code in its name.
  *
- * Riail an tionscadail ó thús: faigheann gach diagnóis cód, agus faigheann
- * gach cód comhad in `examples/earraidi/` a theipeann d'aon ghnó. Bhí an
- * riail ann agus ní raibh sí á forfheidhmiú — 23 as 60 a bhí clúdaithe nuair
- * a comhaireadh iad den chéad uair i gcéim 0.10.
- *
- * Déanann an comhad seo an dá threo:
- *
- *   1. Teipeann gach cás leis an gcód atá ina ainm, agus leis sin amháin.
- *   2. Tá cás ag gach cód in `diagnostics.js` nach bhfuil curtha in áirithe.
- *
- * Aithnítear cás óna chéad líne: `// E### — …`. Comhad cabhrach — ceann a
- * iompórtáiltear agus a thiomsaíonn go glan — ní thosaíonn sé mar sin, agus
- * mar sin ní chuirtear san áireamh é gan liosta eisceachtaí a choinneáil.
+ * A case is recognised by its first line: `// E### — …`. Helper files do not
+ * start that way, so they need no exception list.
  */
 
 const assert = require('node:assert');
@@ -23,18 +13,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Tionscadal, Earraid, Cnuasach } = require('../src/index');
 
+const { it, rithSraith } = require('./creatlach');
+
 const FILL = path.resolve(__dirname, '..', 'examples', 'earraidi');
-const tastail = [];
-let pas = 0, teip = 0;
-const it = (ainm, fn) => tastail.push([ainm, fn]);
 
 /** Codes with a message and deliberately no way to fire. Each needs a reason. */
 const INAIRITHE = {
-  E108: 'curtha in áirithe ó 0.13: ba é seo an diúltú don urú, agus ó thug an '
-      + 'réamhfhocal `i` slot dó (§5.2) réitítear an fhoirm in ionad í a '
-      + 'dhiúltú. Is é E113 an locht anois nuair nach n-éilíonn an suíomh í. '
-      + 'D\'athródh athúsáid an chóid seo a bhrí, agus is measa cód a athraíonn '
-      + 'brí ná cód a stopann',
+  E108: 'curtha in áirithe ó 0.13: ba é seo an diúltú don urú. Ó tá slot ag an '
+      + 'urú (§5.2) is é E113 an locht anois, agus d\'athródh athúsáid E108 a bhrí',
   E211: 'curtha in áirithe: rinneadh fíor é i gcéim 0.8 agus díshealbhaíodh '
       + 'arís é sa chéim chéanna (§26.7)',
   E506: 'curtha in áirithe: ardaíonn an chúlchríoch craobhacha ilráiteacha '
@@ -74,7 +60,8 @@ function coidDe(ainm) {
 // ── 1. gach cás, agus an cód atá ina ainm amháin ──────────────────────
 
 for (const { cod, comhad } of casanna()) {
-  it(`teipeann ${comhad} le ${cod}, agus leis sin amháin`, () => {
+  it(`teipeann ${comhad} le ${cod}, agus leis sin amháin`,
+    `${comhad} fails with ${cod}, and with that alone`, () => {
     const fuarthas = coidDe(comhad);
     assert.notDeepStrictEqual(fuarthas, [], `níor theip ${comhad} ar chor ar bith`);
     assert.deepStrictEqual(fuarthas, [cod],
@@ -84,7 +71,8 @@ for (const { cod, comhad } of casanna()) {
 
 // ── 2. gach cód, agus cás aige ────────────────────────────────────────
 
-it('tá cás ag gach cód nach bhfuil curtha in áirithe', () => {
+it('tá cás ag gach cód nach bhfuil curtha in áirithe',
+  'every code that is not reserved has a case', () => {
   const clúdaithe = new Set(casanna().map((c) => c.cod));
   const gan = coidUile().filter((c) => !clúdaithe.has(c) && !INAIRITHE[c]);
   assert.deepStrictEqual(gan, [],
@@ -92,21 +80,22 @@ it('tá cás ag gach cód nach bhfuil curtha in áirithe', () => {
     + 'nó cuir in áirithe iad le cúis in INAIRITHE');
 });
 
-it('níl aon chód curtha in áirithe gan chúis, agus ní theipeann ceann acu', () => {
+it('níl aon chód curtha in áirithe gan chúis, agus ní theipeann ceann acu',
+  'no code is reserved without a reason, and none of them fires', () => {
   for (const [cod, cuis] of Object.entries(INAIRITHE)) {
     assert.ok(cuis && cuis.length > 20, `${cod}: teastaíonn cúis uaidh`);
     assert.ok(coidUile().includes(cod), `${cod}: níl sé sa tábla ar chor ar bith`);
   }
-  // Agus níl cás ag ceann ar bith acu: dá mbeadh, ní bheadh sé in áirithe.
+  // A reserved code with a case is not reserved.
   const clúdaithe = new Set(casanna().map((c) => c.cod));
   for (const cod of Object.keys(INAIRITHE)) {
     assert.ok(!clúdaithe.has(cod), `${cod}: tá cás aige, mar sin bain as INAIRITHE é`);
   }
 });
 
-it('clúdaítear gach raon', () => {
-  // Ní fhágtar raon iomlán gan chás: bheadh sin ina chomhartha go bhfuil
-  // fo-chóras iomlán gan tástáil seachas cód aonair ar iarraidh.
+it('clúdaítear gach raon',
+  'every range is covered', () => {
+  // An empty range means a whole subsystem is untested, not one missing code.
   const clúdaithe = new Set(casanna().map((c) => c.cod));
   for (const raon of ['E1', 'E2', 'E3', 'E4', 'E5', 'E6']) {
     assert.ok([...clúdaithe].some((c) => c.startsWith(raon)), `raon ${raon}`);
@@ -114,11 +103,4 @@ it('clúdaítear gach raon', () => {
 });
 
 // ── rith ──────────────────────────────────────────────────────────────
-(async () => {
-  for (const [ainm, fn] of tastail) {
-    try { await fn(); pas++; }
-    catch (e) { teip++; console.log(`  ✗ ${ainm}\n    ${e.message}`); }
-  }
-  console.log(`\nearraidi: ${pas} pas, ${teip} teip`);
-  if (teip) process.exit(1);
-})();
+rithSraith('earraidi');

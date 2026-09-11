@@ -6,9 +6,7 @@ const path = require('path');
 const { tiomsaigh, Tionscadal, Cnuasach, Earraid } = require('../src/index');
 const mf = require('../src/morphology');
 
-let pas = 0, teip = 0;
-const tastail = [];
-const it = (ainm, fn) => tastail.push([ainm, fn]);
+const { it, rithSraith } = require('./creatlach');
 
 /** Compile + run, capturing scríobh output. Awaits `príomh` if exported. */
 async function rith(src) {
@@ -37,7 +35,8 @@ function coid(src) {
 const jsDe = (src) => tiomsaigh(src, 'tástáil.r336').js;
 
 // ══ 1. Moirfeolaíocht ═════════════════════════════════════════════════
-it('séimhiú ar na naoi gconsan', () => {
+it('séimhiú ar na naoi gconsan',
+  'lenition on the nine consonants', () => {
   for (const [a, b] of [['bord', 'bhord'], ['cat', 'chat'], ['duine', 'dhuine'],
     ['fear', 'fhear'], ['gorm', 'ghorm'], ['máthair', 'mháthair'],
     ['post', 'phost'], ['sráid', 'shráid'], ['teach', 'theach']]) {
@@ -46,14 +45,16 @@ it('séimhiú ar na naoi gconsan', () => {
   }
 });
 
-it('ní shéimhítear gutaí, l, n, r, h', () => {
+it('ní shéimhítear gutaí, l, n, r, h',
+  'vowels, l, n, r and h are not lenited', () => {
   for (const w of ['ainm', 'éan', 'oíche', 'litir', 'nead', 'rud', 'halla']) {
     assert.strictEqual(mf.inSeimhithe(w).ok, false, w);
     assert.strictEqual(mf.foirmDe(w, mf.FOIRM.SEIMHITHE), w, w);
   }
 });
 
-it('ní shéimhítear sc-, sf-, sm-, sp-, st-', () => {
+it('ní shéimhítear sc-, sf-, sm-, sp-, st-',
+  'sc-, sf-, sm-, sp- and st- are not lenited', () => {
   for (const w of ['scoil', 'sféar', 'smaoineamh', 'spéir', 'stór', 's']) {
     assert.strictEqual(mf.inSeimhithe(w).ok, false, w);
     assert.strictEqual(mf.inSeimhithe(w).cuis, 'cnuasach-s');
@@ -63,21 +64,22 @@ it('ní shéimhítear sc-, sf-, sm-, sp-, st-', () => {
   }
 });
 
-it('coinnítear an cás: Duine -> Dhuine', () => {
+it('coinnítear an cás: Duine -> Dhuine',
+  'case is preserved: Duine -> Dhuine', () => {
   assert.strictEqual(mf.seimhigh('Duine'), 'Dhuine');
   assert.strictEqual(mf.lemmaTuairim('Dhuine'), 'Duine');
 });
 
-it('ní shéimhítear rud atá séimhithe cheana', () => {
+it('ní shéimhítear rud atá séimhithe cheana',
+  'something already lenited is not lenited again', () => {
   assert.strictEqual(mf.inSeimhithe('dhuine').ok, false);
   assert.strictEqual(mf.inSeimhithe('dhuine').cuis, 'seimhithe-cheana');
 });
 
-it('éilíonn `i` an t-urú, agus fanann an slot folamh folamh (§5.2)', () => {
-  // 0.13 — the slot §10 said did not exist. `foirmDe` produces the eclipsed
-  // form now, and the fallback is the SEIMHITHE arm's fallback: a word with
-  // nothing to change comes back unchanged, which is the rule and not an
-  // exception to it.
+it('éilíonn `i` an t-urú, agus fanann an slot folamh folamh (§5.2)',
+  '`i` requires eclipsis, and the empty slot stays empty (§5.2)', () => {
+  // 0.13, the slot §10 said did not exist. The fallback is the SEIMHITHE arm's:
+  // a word with nothing to change comes back unchanged.
   assert.strictEqual(mf.foirmDe('duine', mf.FOIRM.URAITHE), 'nduine');
   assert.strictEqual(mf.foirmDe('cuntas', mf.FOIRM.URAITHE), 'gcuntas');
   assert.strictEqual(mf.foirmDe('stór', mf.FOIRM.URAITHE), 'stór');
@@ -85,20 +87,21 @@ it('éilíonn `i` an t-urú, agus fanann an slot folamh folamh (§5.2)', () => {
   assert.strictEqual(mf.paraidim('duine').uruFéideartha, 'nduine');
 });
 
-it('roghnaíonn an focal ina dhiaidh foirm na míre, mar a dhéanann an chopail', () => {
-  // The second conditioned government in the language, and the copula is its
-  // model: both rules are regressive, so a lookup table on the preposition
-  // could not produce either answer.
+it('roghnaíonn an focal ina dhiaidh foirm na míre, mar a dhéanann an chopail',
+  'the following word selects the form of the particle, as the copula does', () => {
+  // The second conditioned government in the language, modelled on the copula.
+  // Both rules are regressive, so a table on the preposition cannot produce
+  // either answer.
   assert.deepStrictEqual(mf.mirI('cuntas'), { mir: 'i', foirm: mf.FOIRM.URAITHE });
   assert.deepStrictEqual(mf.mirI('stór'), { mir: 'i', foirm: mf.FOIRM.URAITHE });
   assert.deepStrictEqual(mf.mirI('áit'), { mir: 'in', foirm: mf.FOIRM.BUN });
   assert.deepStrictEqual(mf.mirI('Éire'), { mir: 'in', foirm: mf.FOIRM.BUN });
-  // Before a vowel the particle moves and the noun does not, so `uraigh`'s
-  // vowel branch is still computed and still demanded by nothing.
+  // Before a vowel the particle moves and the noun does not.
   assert.strictEqual(mf.uraigh('áit'), 'n-áit');
 });
 
-it('urú ceart ar na consain agus ar na gutaí', () => {
+it('urú ceart ar na consain agus ar na gutaí',
+  'correct eclipsis on the consonants and on the vowels', () => {
   for (const [a, b] of [['bord', 'mbord'], ['cat', 'gcat'], ['duine', 'nduine'],
     ['fuil', 'bhfuil'], ['gorm', 'ngorm'], ['post', 'bpost'], ['teach', 'dteach'],
     ['áit', 'n-áit'], ['Éire', 'nÉire'], ['Baile', 'mBaile']]) {
@@ -114,15 +117,18 @@ const DUINE = `struchtúr Duine { ainm: Teaghrán aois: Uimhir }
 duine seasmhach = Duine { ainm: "Cáit", aois: 20 }
 `;
 
-it('glacann `ó` leis an bhfoirm shéimhithe', async () => {
+it('glacann `ó` leis an bhfoirm shéimhithe',
+  '`ó` accepts the lenited form', async () => {
   assert.deepStrictEqual(await rith(DUINE + 'scríobh ainm ó dhuine'), ['Cáit']);
 });
 
-it('diúltaíonn `ó` don bhunfhoirm nuair is féidir séimhiú (E102)', () => {
+it('diúltaíonn `ó` don bhunfhoirm nuair is féidir séimhiú (E102)',
+  '`ó` rejects the base form when lenition is possible (E102)', () => {
   assert.deepStrictEqual(coid(DUINE + 'scríobh ainm ó duine'), ['E102']);
 });
 
-it('glactar leis an mbunfhoirm nuair nach féidir séimhiú', async () => {
+it('glactar leis an mbunfhoirm nuair nach féidir séimhiú',
+  'the base form is accepted when lenition is impossible', async () => {
   assert.deepStrictEqual(
     await rith('struchtúr S { ainm: Teaghrán }\náit seasmhach = S { ainm: "Gaillimh" }\nscríobh ainm ó áit'),
     ['Gaillimh']);
@@ -131,27 +137,32 @@ it('glactar leis an mbunfhoirm nuair nach féidir séimhiú', async () => {
     ['Corcaigh']);
 });
 
-it('diúltaítear do shéimhiú lasmuigh de shuíomh rialaithe (E103)', () => {
+it('diúltaítear do shéimhiú lasmuigh de shuíomh rialaithe (E103)',
+  'lenition outside a governed position is rejected (E103)', () => {
   assert.deepStrictEqual(coid(DUINE + 'x seasmhach = dhuine'), ['E103']);
 });
 
-it('diúltaítear do shéimhiú bréige (E104)', () => {
+it('diúltaítear do shéimhiú bréige (E104)',
+  'false lenition is rejected (E104)', () => {
   assert.deepStrictEqual(
     coid('struchtúr S { ainm: Teaghrán }\nstór seasmhach = S { ainm: "x" }\nscríobh ainm ó shtór'),
     ['E104']);
 });
 
-it('ní mór ceangail a fhógairt sa bhunfhoirm (E107)', () => {
+it('ní mór ceangail a fhógairt sa bhunfhoirm (E107)',
+  'bindings must be declared in the base form (E107)', () => {
   assert.deepStrictEqual(coid('dhuine seasmhach = 3'), ['E107']);
 });
 
-it('is aon siombail amháin iad duine/dhuine', () => {
+it('is aon siombail amháin iad duine/dhuine',
+  'duine and dhuine are one and the same symbol', () => {
   const js = jsDe(DUINE + 'scríobh ainm ó dhuine\nscríobh aois ó dhuine');
   assert.ok(!js.includes('dhuine'), 'níor cheart go bhfeicfeadh an chúlchríoch foirm shéimhithe riamh');
   assert.ok(js.includes('duine.ainm') && js.includes('duine.aois'));
 });
 
-it('rialaíonn gach `ó` tús a chomhlánaithe féin', async () => {
+it('rialaíonn gach `ó` tús a chomhlánaithe féin',
+  'every `ó` governs the onset of its own complement', async () => {
   const src = `struchtúr Seoladh { baile: Teaghrán }
 struchtúr Duine { seoladh: Seoladh }
 duine seasmhach = Duine { seoladh: Seoladh { baile: "Corcaigh" } }
@@ -161,45 +172,53 @@ scríobh baile ó sheoladh ó dhuine`;
   assert.deepStrictEqual(coid(src.replace('ó sheoladh', 'ó seoladh')), ['E102']);
 });
 
-it('teastaíonn sealbhóir inséalbhaithe ó `ó` (E205)', () => {
+it('teastaíonn sealbhóir inséalbhaithe ó `ó` (E205)',
+  '`ó` needs a possessor that can possess (E205)', () => {
   assert.deepStrictEqual(coid('x seasmhach = fíor\nscríobh ainm ó x'), ['E205']);
 });
 
 // ══ 3. Cineálacha ═════════════════════════════════════════════════════
-it('seiceáiltear argóintí agus torthaí', () => {
+it('seiceáiltear argóintí agus torthaí',
+  'arguments and results are checked', () => {
   assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Uimhir { x + x }\na seasmhach = f("x")'), ['E201']);
   assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Teaghrán { x + x }'), ['E209']);
   assert.deepStrictEqual(coid('feidhm f(x: Uimhir) -> Uimhir { x }\na seasmhach = f(1, 2)'), ['E206']);
 });
 
-it('seiceáiltear réimsí struchtúir', () => {
+it('seiceáiltear réimsí struchtúir',
+  'struct fields are checked', () => {
   assert.deepStrictEqual(coid('struchtúr D { ainm: Teaghrán }\nd seasmhach = D { }'), ['E204']);
   assert.deepStrictEqual(coid('struchtúr D { ainm: Teaghrán }\nd seasmhach = D { ainm: 3 }'), ['E201']);
 });
 
-it('ní mheasctar Teaghrán agus Uimhir le "+" (E210)', () => {
+it('ní mheasctar Teaghrán agus Uimhir le "+" (E210)',
+  'Teaghrán and Uimhir are not mixed with "+" (E210)', () => {
   assert.deepStrictEqual(coid('x seasmhach = "a" + 1'), ['E210']);
 });
 
-it('caithfidh Bool a bheith ag "má"', () => {
+it('caithfidh Bool a bheith ag "má"',
+  '"má" must have a Bool', () => {
   assert.deepStrictEqual(coid('x seasmhach = 1\nmá x { }'), ['E201']);
 });
 
 // ══ 4. Copail agus briathar substaintigh ══════════════════════════════
-it('is aicmiú é `is`, ní comparáid', async () => {
+it('is aicmiú é `is`, ní comparáid',
+  '`is` is classification, not comparison', async () => {
   const src = 'struchtúr D { }\nd seasmhach = D { }\nmás D d { scríobh "sea" }';
   assert.ok(jsDe(src).includes('__is(d, "D")'));
   assert.ok(!jsDe(src).includes('=== D'));
   assert.deepStrictEqual(await rith(src), ['sea']);
 });
 
-it('is ceist bheithe é `bí`', async () => {
+it('is ceist bheithe é `bí`',
+  '`bí` is a question of existence', async () => {
   const src = 'x seasmhach = 1\nmá tá x { scríobh "ann" }';
   assert.ok(jsDe(src).includes('__bí(x)'));
   assert.deepStrictEqual(await rith(src), ['ann']);
 });
 
-it('freagraíonn foirm an bhriathair shubstaintigh don cháithnín', async () => {
+it('freagraíonn foirm an bhriathair shubstaintigh don cháithnín',
+  'the form of the substantive verb answers to the particle', async () => {
   assert.deepStrictEqual(coid('x seasmhach = 1\nmá tá x { }'), []);
   assert.deepStrictEqual(coid('x seasmhach = 1\nmura bhfuil x { }'), []);
   assert.deepStrictEqual(coid('x seasmhach = 1\nmá bhfuil x { }'), ['E512']);
@@ -212,35 +231,41 @@ it('freagraíonn foirm an bhriathair shubstaintigh don cháithnín', async () =>
   assert.ok(!b.includes('bhfuil'));
 });
 
-it('is é "neamhní" an easpa a thuairiscíonn "bí"', async () => {
+it('is é "neamhní" an easpa a thuairiscíonn "bí"',
+  '"neamhní" is the absence that "bí" reports', async () => {
   assert.deepStrictEqual(
     await rith('x sealadach: Iasacht = neamhní\ngníomh príomh() { scríobh tá x  cuir 3 ar x  scríobh tá x }'),
     ['false', 'true']);
 });
 
-it('scarann `is` agus `bí` ó chéile', () => {
+it('scarann `is` agus `bí` ó chéile',
+  '`is` and `bí` stand apart from each other', () => {
   const js = jsDe('struchtúr D { }\nd seasmhach = D { }\na seasmhach = d is D\nb seasmhach = tá d');
   assert.ok(js.includes('__is(') && js.includes('__bí('));
 });
 
-it('ní uimhir é NaN don chopail', async () => {
+it('ní uimhir é NaN don chopail',
+  'NaN is not a number to the copula', async () => {
   const src = 'feidhm f(x: Iasacht) -> Teaghrán { más Uimhir x { "uimhir" } mura { "níl" } }\n'
     + 'scríobh f(0 / 0)\nscríobh f(3)';
   assert.deepStrictEqual(await rith(src), ['níl', 'uimhir']);
 });
 
-it('caithfidh cineál aitheanta a bheith ar dheis na copaile (E202)', () => {
+it('caithfidh cineál aitheanta a bheith ar dheis na copaile (E202)',
+  'the right of the copula must be a known type (E202)', () => {
   assert.deepStrictEqual(coid('x seasmhach = 1\ny seasmhach = x is Rud'), ['E202']);
 });
 
 // ══ 5. Modhanna (§5, ceartaithe) ══════════════════════════════════════
-it('séimhíonn `ó` an chatagóir i bhfógra modha', () => {
+it('séimhíonn `ó` an chatagóir i bhfógra modha',
+  '`ó` lenites the category in a method declaration', () => {
   const src = 'struchtúr Duine { ainm: Teaghrán }\nfeidhm beannacht ó Dhuine(féin) -> Teaghrán { ainm ó fhéin }';
   assert.deepStrictEqual(coid(src), []);
   assert.deepStrictEqual(coid(src.replace('ó Dhuine', 'ó Duine')), ['E102']);
 });
 
-it('seoltar modhanna go statach', async () => {
+it('seoltar modhanna go statach',
+  'methods are dispatched statically', async () => {
   const src = `struchtúr Duine { ainm: Teaghrán aois: Uimhir }
 feidhm beannacht ó Dhuine(féin) -> Teaghrán { "Dia duit, " + ainm ó fhéin }
 feidhm móide ó Dhuine(féin, n: Uimhir) -> Uimhir { aois ó fhéin + n }
@@ -251,88 +276,104 @@ scríobh móide ó dhuine(5)`;
   assert.ok(jsDe(src).includes('Duine$beannacht(duine)'));
 });
 
-it('ní féidir modh a fhógairt ar rud nach struchtúr é (E509)', () => {
+it('ní féidir modh a fhógairt ar rud nach struchtúr é (E509)',
+  'a method cannot be declared on something that is not a struct (E509)', () => {
   assert.deepStrictEqual(coid('feidhm f ó Theaghrán(féin) -> Teaghrán { féin }'), ['E509']);
 });
 
 // ══ 6. Modh: ordaitheach i gcoinne táscaigh (§17) ═════════════════════
-it('ní ainmní é ordú (E501)', () => {
+it('ní ainmní é ordú (E501)',
+  'a command is not a subject (E501)', () => {
   assert.deepStrictEqual(coid('gníomh cláraigh(x: Teaghrán) { scríobh x }\ng seasmhach = cláraigh'), ['E501']);
 });
 
-it('ní dhéanann feidhm gníomh (E502)', () => {
+it('ní dhéanann feidhm gníomh (E502)',
+  'a function performs no action (E502)', () => {
   assert.deepStrictEqual(
     coid('gníomh cláraigh(x: Teaghrán) { scríobh x }\nfeidhm f(x: Teaghrán) -> Teaghrán { cláraigh x  x }'),
     ['E502']);
 });
 
-it('ní chaitear luach i dtraipisí i bhfeidhm (E503)', () => {
+it('ní chaitear luach i dtraipisí i bhfeidhm (E503)',
+  'a value is not discarded inside a function (E503)', () => {
   assert.deepStrictEqual(coid('feidhm f(x: Teaghrán) -> Teaghrán { x + "!"  x }'), ['E503']);
 });
 
-it('ní ghlacann gníomh le cineál toraidh (E404)', () => {
+it('ní ghlacann gníomh le cineál toraidh (E404)',
+  'an action takes no result type (E404)', () => {
   assert.deepStrictEqual(coid('gníomh g() -> Uimhir { }'), ['E404']);
 });
 
-it('tugtar ordú gan lúibíní, VSO', async () => {
+it('tugtar ordú gan lúibíní, VSO',
+  'a command is given without parentheses, VSO', async () => {
   const src = 'gníomh fógair(t: Teaghrán, u: Uimhir) { scríobh t + ": " + "x" }\nfógair "a", 1\nfógair "b", 2';
   assert.deepStrictEqual(await rith(src), ['a: x', 'b: x']);
 });
 
 // ══ 7. Aspect: ag / tar éis (§18) ═════════════════════════════════════
-it('`ag` a ghineann async, `tar éis` a ghineann await', () => {
+it('`ag` a ghineann async, `tar éis` a ghineann await',
+  '`ag` emits async, `tar éis` emits await', () => {
   const js = jsDe('ag feidhm f(comhad: Iasacht) -> Iasacht { tar éis léigh ó chomhad() }');
   assert.ok(js.includes('async function f'), js);
   assert.ok(js.includes('(await comhad.léigh())'), js);
 });
 
-it('teastaíonn "ag" ó "tar éis" (E504)', () => {
+it('teastaíonn "ag" ó "tar éis" (E504)',
+  '"tar éis" needs "ag" (E504)', () => {
   assert.deepStrictEqual(
     coid('ag feidhm g(x: Iasacht) -> Iasacht { tar éis x() }\nfeidhm f(x: Iasacht) -> Iasacht { tar éis g(x) }'),
     ['E504']);
 });
 
-it('ní luach é gníomh atá ar siúl (E505)', () => {
+it('ní luach é gníomh atá ar siúl (E505)',
+  'an action in progress is not a value (E505)', () => {
   assert.deepStrictEqual(
     coid('ag feidhm g(x: Iasacht) -> Teaghrán { tar éis x() }\n'
       + 'ag feidhm f(x: Iasacht) -> Teaghrán { a seasmhach = g(x)  a }'),
     ['E505']);
 });
 
-it('críochnaíonn "tar éis" gníomh ar siúl', () => {
+it('críochnaíonn "tar éis" gníomh ar siúl',
+  '"tar éis" completes an action in progress', () => {
   assert.deepStrictEqual(
     coid('ag feidhm g(x: Iasacht) -> Teaghrán { tar éis x() }\n'
       + 'ag feidhm f(x: Iasacht) -> Teaghrán { tar éis g(x) }'),
     []);
 });
 
-it('níl aon rud le críochnú i luach socair (E508)', () => {
+it('níl aon rud le críochnú i luach socair (E508)',
+  'there is nothing to complete in a settled value (E508)', () => {
   assert.deepStrictEqual(coid('ag feidhm f() -> Uimhir { tar éis 3 }'), ['E508']);
 });
 
-it('críochnaítear ordú leanúnach go huathoibríoch', () => {
+it('críochnaítear ordú leanúnach go huathoibríoch',
+  'a continuous command is completed automatically', () => {
   const js = jsDe('ag gníomh a(x: Iasacht) { tar éis x() }\nag gníomh b(x: Iasacht) { a x }');
   assert.ok(/await a\(x\)/.test(js), js);
   assert.deepStrictEqual(coid('ag gníomh a(x: Iasacht) { tar éis x() }\ngníomh b(x: Iasacht) { a x }'), ['E504']);
 });
 
 // ══ 8. Bunús: modúil mar shealbhóirí (Céim 4) ═════════════════════════
-it('`ó "modúl"` a ghineann require', () => {
+it('`ó "modúl"` a ghineann require',
+  '`ó "modúl"` emits require', () => {
   const js = jsDe('e seasmhach = ó "express"\nR seasmhach = Router ó "express"');
   assert.ok(js.includes('require("express")'));
   assert.ok(js.includes('require("express").Router'));
 });
 
-it('athscríobhtar .r336 go .js i gconairí', () => {
+it('athscríobhtar .r336 go .js i gconairí',
+  '.r336 is rewritten to .js in paths', () => {
   assert.ok(jsDe('s seasmhach = ó "./sonraí.r336"').includes('require("./sonraí.js")'));
 });
 
-it('is Iasacht gach rud a thagann trasna na teorann', async () => {
+it('is Iasacht gach rud a thagann trasna na teorann',
+  'everything that crosses the border is Iasacht', async () => {
   const src = 'p seasmhach = ó "node:path"\nscríobh basename ó ph("/a/b/c.txt")';
   assert.deepStrictEqual(await rith(src), ['c.txt']);
 });
 
-it('tá tiontuithe sa leabharlann, ní sa teanga', async () => {
+it('tá tiontuithe sa leabharlann, ní sa teanga',
+  'conversions live in the library, not in the language', async () => {
   const src = 'bun seasmhach = ó "../rt/bunúsach.js"\n'
     + 'feidhm cad(x: Iasacht) -> Teaghrán { más Uimhir x { "uimhir" } mura { "níl" } }\n'
     + 'scríobh cad(uimhir ó bhun("42"))\nscríobh cad(uimhir ó bhun("abc"))';
@@ -340,35 +381,41 @@ it('tá tiontuithe sa leabharlann, ní sa teanga', async () => {
 });
 
 // ══ 9. Liostaí agus má-mar-shlonn ═════════════════════════════════════
-it('fad, folamh, céad tríd an ngaol `ó`', async () => {
+it('fad, folamh, céad tríd an ngaol `ó`',
+  'length, empty and first through the `ó` relation', async () => {
   const src = 'xs seasmhach = [3, 1, 4]\nscríobh fad ó xs\nscríobh céad ó xs\nys seasmhach: Liosta(Uimhir) = []\nscríobh folamh ó ys';
   assert.deepStrictEqual(await rith(src), ['3', '3', 'true']);
 });
 
-it('leathnaítear liosta ilchineálach go Liosta(Iasacht)', () => {
+it('leathnaítear liosta ilchineálach go Liosta(Iasacht)',
+  'a mixed list widens to Liosta(Iasacht)', () => {
   assert.deepStrictEqual(coid('xs seasmhach = [1, "a"]'), []);
 });
 
-it('is slonn é "má" nuair a thugann gach craobh luach', async () => {
+it('is slonn é "má" nuair a thugann gach craobh luach',
+  '"má" is an expression when every branch gives a value', async () => {
   const src = 'feidhm f(u: Uimhir) -> Teaghrán { má u > 0 { "dearfach" } mura { "eile" } }\nscríobh f(1)\nscríobh f(0)';
   assert.ok(jsDe(src).includes('?'));
   assert.deepStrictEqual(await rith(src), ['dearfach', 'eile']);
 });
 
-it('is "mura" an diúltach, ní "eile if"', async () => {
+it('is "mura" an diúltach, ní "eile if"',
+  '"mura" is the negative, not "else if"', async () => {
   const src = 'feidhm f(u: Uimhir) -> Teaghrán { má u == 1 { "a" } mura u == 2 { "b" } mura { "c" } }\n'
     + 'scríobh f(1)\nscríobh f(2)\nscríobh f(3)';
   assert.deepStrictEqual(await rith(src), ['a', 'c', 'b']);
   assert.ok(jsDe(src).includes('!('));
 });
 
-it('is ráiteas é "mura" ina aonar', async () => {
+it('is ráiteas é "mura" ina aonar',
+  '"mura" on its own is a statement', async () => {
   assert.deepStrictEqual(
     await rith('xs seasmhach: Liosta(Uimhir) = []\nmura folamh ó xs { scríobh "lán" }\nmura bhfuil xs { scríobh "as" }'),
     []);
 });
 
-it('ardaítear craobhacha ilráiteacha isteach i sealadach', async () => {
+it('ardaítear craobhacha ilráiteacha isteach i sealadach',
+  'multi-statement branches are lifted into a mutable binding', async () => {
   const src = `feidhm f(u: Uimhir) -> Teaghrán {
     má u > 0 { t seasmhach = "dear" + "fach"  t } mura { t seasmhach = "diúl"  t + "tach" }
   }
@@ -378,32 +425,38 @@ it('ardaítear craobhacha ilráiteacha isteach i sealadach', async () => {
   assert.ok(/let __t0;/.test(jsDe(src)), jsDe(src));
 });
 
-it('ní ardaítear más simplí nuair é', () => {
+it('ní ardaítear más simplí nuair é',
+  'nothing is lifted when it is simple', () => {
   const js = jsDe('feidhm f(u: Uimhir) -> Uimhir { má u > 0 { 1 } mura { 2 } }');
   assert.ok(js.includes('?') && !js.includes('__t0'));
 });
 
-it('teastaíonn craobh "mura" lom ó "má" mar shlonn (E507)', () => {
+it('teastaíonn craobh "mura" lom ó "má" mar shlonn (E507)',
+  '"má" as an expression needs a bare "mura" branch (E507)', () => {
   assert.deepStrictEqual(coid('x seasmhach = má fíor { 1 }'), ['E507']);
   assert.deepStrictEqual(coid('feidhm f(u: Uimhir) -> Teaghrán { má u > 0 { "a" } }'), ['E503', 'E209']);
 });
 
 // ══ 13. Staid: seasmhach i gcoinne sealadach ══════════════════════════
-it('ní athraítear rud seasmhach (E510)', () => {
+it('ní athraítear rud seasmhach (E510)',
+  'a constant is not changed (E510)', () => {
   assert.deepStrictEqual(coid('x seasmhach = 0\ngníomh g() { cuir 1 ar x }'), ['E510']);
   assert.deepStrictEqual(coid('x sealadach = 0\ngníomh g() { cuir 1 ar x }'), []);
 });
 
-it('is ordú é an t-athrú, mar sin tá sé faoi na rialacha modha (E502)', () => {
+it('is ordú é an t-athrú, mar sin tá sé faoi na rialacha modha (E502)',
+  'assignment is a command, so it falls under the mood rules (E502)', () => {
   assert.deepStrictEqual(coid('x sealadach = 0\nfeidhm f() -> Uimhir { cuir 1 ar x  x }'), ['E502']);
 });
 
-it('séimhíonn "ar" a chomhlánú, mar a dhéanann "ó"', () => {
+it('séimhíonn "ar" a chomhlánú, mar a dhéanann "ó"',
+  '"ar" lenites its complement, as "ó" does', () => {
   assert.deepStrictEqual(coid('duine sealadach = 0\ngníomh g() { cuir 1 ar dhuine }'), []);
   assert.deepStrictEqual(coid('duine sealadach = 0\ngníomh g() { cuir 1 ar duine }'), ['E102']);
 });
 
-it('athraítear réimse trí cheangal sealadach', async () => {
+it('athraítear réimse trí cheangal sealadach',
+  'a field is changed through a mutable binding', async () => {
   const src = `struchtúr C { luach: Uimhir }
 gníomh ardaigh(c sealadach: C) { cuir luach ó ch + 1 ar luach ó ch }
 gníomh príomh() { c sealadach = C { luach: 0 }  ardaigh c  ardaigh c  scríobh luach ó ch }`;
@@ -411,30 +464,35 @@ gníomh príomh() { c sealadach = C { luach: 0 }  ardaigh c  ardaigh c  scríobh
   assert.deepStrictEqual(coid(src.replace('c sealadach: C', 'c: C')), ['E510']);
 });
 
-it('gineann let sealadach, agus const seasmhach', () => {
+it('gineann let sealadach, agus const seasmhach',
+  'sealadach emits let, and seasmhach emits const', () => {
   const js = jsDe('a seasmhach = 1\nb sealadach = 2');
   assert.ok(js.includes('const a = 1;') && js.includes('let b = 2;'));
   assert.ok(js.includes('Object.defineProperty(module.exports, "b"'), js);
 });
 
 // ══ 14. Ainmniú: a + briathar ═════════════════════════════════════════
-it('ainmníonn "a" briathar, agus séimhíonn sé é', async () => {
+it('ainmníonn "a" briathar, agus séimhíonn sé é',
+  '"a" names a verb, and lenites it', async () => {
   const src = `gníomh fógair(x: Iasacht) { scríobh x }
 gníomh príomh() { xs seasmhach: Iasacht = ["a", "b"]  forEach ó xs(a fhógair) }`;
   assert.deepStrictEqual(await rith(src), ['a', 'b']);
   assert.deepStrictEqual(coid(src.replace('a fhógair', 'a fógair')), ['E102']);
 });
 
-it('gan "a", is E501 fós é', () => {
+it('gan "a", is E501 fós é',
+  'without "a" it is still E501', () => {
   assert.deepStrictEqual(coid('gníomh cláraigh(x: Iasacht) { scríobh x }\nf seasmhach = cláraigh'), ['E501']);
 });
 
-it('fanann "a" ina aitheantóir gnáth', async () => {
+it('fanann "a" ina aitheantóir gnáth',
+  '"a" stays an ordinary identifier', async () => {
   assert.deepStrictEqual(await rith('a seasmhach = 3\nscríobh a'), ['3']);
 });
 
 // ══ 10. Céim 6: teibíocht an stóir ════════════════════════════════════
-it('tugann teibíocht an stóir turas iomlán', async () => {
+it('tugann teibíocht an stóir turas iomlán',
+  'the store abstraction makes a full round trip', async () => {
   const { oscail } = require('../rt/stór.js');
   const stór = await oscail(':memory:');
   await stór.scéim('CREATE TABLE daoine (id INTEGER PRIMARY KEY, ainm TEXT, aois INTEGER)');
@@ -445,7 +503,8 @@ it('tugann teibíocht an stóir turas iomlán', async () => {
   await stór.dún();
 });
 
-it('níl aon ghné teanga a bhaineann le tiománaí ar leith (Céim 6)', () => {
+it('níl aon ghné teanga a bhaineann le tiománaí ar leith (Céim 6)',
+  'no language feature is tied to a particular driver (Stage 6)', () => {
   const fs = require('fs');
   for (const c of ['../src/lexer.js', '../src/parser.js', '../src/analyzer.js', '../src/codegen.js']) {
     const téacs = fs.readFileSync(path.join(__dirname, c), 'utf8');
@@ -453,12 +512,13 @@ it('níl aon ghné teanga a bhaineann le tiománaí ar leith (Céim 6)', () => {
       assert.ok(!new RegExp(focal, 'i').test(téacs), `${c}: ${focal}`);
     }
   }
-  // Is ag an teibíocht amháin atá eolas ar thiománaithe.
+  // Only the abstraction knows about drivers.
   assert.deepStrictEqual(Object.keys(require('../rt/stór.js').TIOMANAITHE), ['sqlite']);
 });
 
 // ══ 11. Céim 4/5: an feidhmchlár ══════════════════════════════════════
-it('freastalaíonn an feidhmchlár ar bhealaí R336', async function () {
+it('freastalaíonn an feidhmchlár ar bhealaí R336',
+  'the application serves R336 routes', async function () {
   let tóg;
   try { tóg = require('../feidhmchlár/freastalaí.js').tóg; }
   catch { console.log('    (ar lár: npm install san fheidhmchlár)'); return; }
@@ -476,7 +536,8 @@ it('freastalaíonn an feidhmchlár ar bhealaí R336', async function () {
 });
 
 // ══ 12. An clár samplach ó §24 ════════════════════════════════════════
-it('cuirtear an clár samplach ó §24 i gcrích', async () => {
+it('cuirtear an clár samplach ó §24 i gcrích',
+  'the sample program from §24 runs to completion', async () => {
   const src = `struchtúr Duine { ainm: Teaghrán aois: Uimhir }
 feidhm beannacht(duine: Duine) -> Teaghrán { "Dia duit, " + ainm ó dhuine }
 duine seasmhach = Duine { ainm: "Charlotte", aois: 20 }
@@ -536,7 +597,8 @@ gníomh fáiltigh(ainm: Teaghrán) { scríobh beannaigh(ainm) }
 `;
 
 // ══ 15. An teorainn idir modúil (DEARADH.md §19) ═════════════════════════════════
-it('maireann cineál, modh agus aspect trasna na teorann', () => {
+it('maireann cineál, modh agus aspect trasna na teorann',
+  'type, mood and aspect survive across the border', () => {
   const t = tionscadalBreige({ 'a.r336': FOCLOIR });
   const { siniu } = t.tiomsaigh('/sb/a.r336');
   assert.strictEqual(siniu.onnmhairi.get('beannaigh').kind, 'feidhm');
@@ -545,7 +607,8 @@ it('maireann cineál, modh agus aspect trasna na teorann', () => {
   assert.deepStrictEqual([...siniu.gniomhartha], ['fáiltigh']);
 });
 
-it('is ordú é ordú iasachta, gan cháiliú', async () => {
+it('is ordú é ordú iasachta, gan cháiliú',
+  'a foreign command is a command, without qualification', async () => {
   assert.deepStrictEqual(
     await rithTionscadal({
       'foclóir.r336': FOCLOIR,
@@ -554,7 +617,8 @@ it('is ordú é ordú iasachta, gan cháiliú', async () => {
     ['Dia duit, Cáit']);
 });
 
-it('rialaíonn `ó` sealbhóir modúil fós', async () => {
+it('rialaíonn `ó` sealbhóir modúil fós',
+  '`ó` still governs a module possessor', async () => {
   const comhaid = {
     'foclóir.r336': FOCLOIR,
     'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\n'
@@ -565,7 +629,8 @@ it('rialaíonn `ó` sealbhóir modúil fós', async () => {
   assert.deepStrictEqual(coidTionscadal(olc), ['E102', 'E102']);
 });
 
-it('ní ainmní é ordú iasachta ach oiread (E501)', () => {
+it('ní ainmní é ordú iasachta ach oiread (E501)',
+  'a foreign command is not a subject either (E501)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.r336': FOCLOIR,
@@ -575,7 +640,8 @@ it('ní ainmní é ordú iasachta ach oiread (E501)', () => {
     ['E501']);
 });
 
-it('ní ghlacann ordú le sealbhóir (E516)', () => {
+it('ní ghlacann ordú le sealbhóir (E516)',
+  'a command takes no possessor (E516)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.r336': FOCLOIR,
@@ -584,7 +650,8 @@ it('ní ghlacann ordú le sealbhóir (E516)', () => {
     ['E516']);
 });
 
-it('tagann struchtúir iasachta isteach mar chineálacha', async () => {
+it('tagann struchtúir iasachta isteach mar chineálacha',
+  'foreign structs come in as types', async () => {
   assert.deepStrictEqual(
     await rithTionscadal({
       'cineál.r336': 'struchtúr Duine { ainm: Teaghrán }\nfeidhm nua(a: Teaghrán) -> Duine { Duine { ainm: a } }',
@@ -595,9 +662,10 @@ it('tagann struchtúir iasachta isteach mar chineálacha', async () => {
     ['Cáit']);
 });
 
-it('téann ball dúchasach trí chomhaontú, murab ionann agus ball iasachta', () => {
-  // A foreign name has no mutation slot at all — you do not get to rename
-  // someone else's API. A native member is an Irish lemma and is governed.
+it('téann ball dúchasach trí chomhaontú, murab ionann agus ball iasachta',
+  'a native member goes through a treaty, unlike a foreign one', () => {
+  // A foreign name has no mutation slot: you do not rename someone else's API.
+  // A native member is an Irish lemma and is governed.
   assert.deepStrictEqual(coid('R seasmhach = Router ó "express"'), []);
   assert.deepStrictEqual(
     coidTionscadal({
@@ -613,7 +681,8 @@ it('téann ball dúchasach trí chomhaontú, murab ionann agus ball iasachta', (
     ['E203']);
 });
 
-it('is E208 é ceangal áitiúil a bhuaileann le hiompórtáil', () => {
+it('is E208 é ceangal áitiúil a bhuaileann le hiompórtáil',
+  'a local binding that collides with an import is E208', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'foclóir.r336': FOCLOIR,
@@ -622,7 +691,8 @@ it('is E208 é ceangal áitiúil a bhuaileann le hiompórtáil', () => {
     ['E208']);
 });
 
-it('dhá mhodúl, an lemma céanna (E106)', () => {
+it('dhá mhodúl, an lemma céanna (E106)',
+  'two modules, the same lemma (E106)', () => {
   assert.deepStrictEqual(
     coidTionscadal({
       'a.r336': 'gníomh fógair(t: Teaghrán) { scríobh t }',
@@ -632,7 +702,8 @@ it('dhá mhodúl, an lemma céanna (E106)', () => {
     ['E106']);
 });
 
-it('modúl ar iarraidh (E109) agus timthriall (E110)', () => {
+it('modúl ar iarraidh (E109) agus timthriall (E110)',
+  'a missing module (E109) and a cycle (E110)', () => {
   assert.deepStrictEqual(
     coidTionscadal({ 'príomh.r336': 'x seasmhach = ó "./níl-ann.r336"' }),
     ['E109']);
@@ -645,32 +716,35 @@ it('modúl ar iarraidh (E109) agus timthriall (E110)', () => {
     ['E110']);
 });
 
-it('is Iasacht fós é modúl JavaScript', () => {
-  // Nothing about the graph reaches a foreign origin: `ó "express"` is
-  // unchanged, and a .js path is not a R336 module.
+it('is Iasacht fós é modúl JavaScript',
+  'a JavaScript module is still Iasacht', () => {
+  // Nothing about the graph reaches a foreign origin, and a .js path is not a module.
   const js = jsDe('e seasmhach = ó "express"\nR seasmhach = Router ó "express"');
   assert.ok(js.includes('require("express").Router'));
   assert.deepStrictEqual(coid('p seasmhach = ó "node:path"\nscríobh basename ó ph("/a/b.txt")'), []);
 });
 
-it('gan tionscadal, is Iasacht gach iompórtáil — iompar 0.4', () => {
-  // The single-source entry point is unchanged, which is why the 0.4 suite
-  // still passes without touching a line of it.
+it('gan tionscadal, is Iasacht gach iompórtáil — iompar 0.4',
+  'with no project, every import is Iasacht — 0.4 behaviour', () => {
+  // The single-source entry point is unchanged, which is why the 0.4 suite still passes.
   assert.deepStrictEqual(coid('s seasmhach = ó "./sonraí.r336"\nscríobh aonrud ó s'), []);
 });
 
 // ══ 16. Cineál an bhriathair (DEARADH.md §20) ════════════════════════════════════
-it('is féidir cineál briathair a scríobh, agus tá an modh ann', () => {
+it('is féidir cineál briathair a scríobh, agus tá an modh ann',
+  'a verb type can be written, and the mood is part of it', () => {
   assert.deepStrictEqual(coid('gníomh g(f: feidhm(Uimhir) -> Uimhir) { scríobh f(1) }'), []);
   assert.deepStrictEqual(coid('gníomh g(x: gníomh(Uimhir), xs: Liosta(Uimhir)) { déan x ar xs }'), []);
   assert.deepStrictEqual(coid('feidhm f(g: ag gníomh(Uimhir)) -> Uimhir { 1 }'), []);
 });
 
-it('ní ghlacann cineál gnímh le toradh (E404)', () => {
+it('ní ghlacann cineál gnímh le toradh (E404)',
+  'an action type takes no result (E404)', () => {
   assert.deepStrictEqual(coid('gníomh g(x: gníomh(Uimhir) -> Uimhir) { }'), ['E404']);
 });
 
-it('is cuid den chineál é an modh (E201)', () => {
+it('is cuid den chineál é an modh (E201)',
+  'the mood is part of the type (E201)', () => {
   assert.deepStrictEqual(
     coid('feidhm dúbail(u: Uimhir) -> Uimhir { u + u }\n'
       + 'gníomh g(x: gníomh(Uimhir), xs: Liosta(Uimhir)) { déan x ar xs }\n'
@@ -678,7 +752,8 @@ it('is cuid den chineál é an modh (E201)', () => {
     ['E201']);
 });
 
-it('seiceáiltear paraiméadair agus toradh an bhriathair-chineáil', () => {
+it('seiceáiltear paraiméadair agus toradh an bhriathair-chineáil',
+  'the parameters and the result of a verb type are checked', () => {
   const bun = 'feidhm dúbail(u: Uimhir) -> Uimhir { u + u }\n';
   assert.deepStrictEqual(
     coid(bun + 'feidhm cur(f: feidhm(Uimhir) -> Uimhir) -> Uimhir { f(1) }\n'
@@ -688,7 +763,8 @@ it('seiceáiltear paraiméadair agus toradh an bhriathair-chineáil', () => {
       + 'scríobh cur(a dhúbail)'), ['E201']);
 });
 
-it('feidhmíonn briathar mar luach sa dá mhodh', async () => {
+it('feidhmíonn briathar mar luach sa dá mhodh',
+  'a verb works as a value in both moods', async () => {
   const src = `gníomh fógair(t: Teaghrán) { scríobh t }
 gníomh faoiDhó(g: gníomh(Teaghrán), xs: Liosta(Teaghrán)) { déan g ar xs  déan g ar xs }
 feidhm dúbail(u: Uimhir) -> Uimhir { u + u }
@@ -697,19 +773,22 @@ gníomh príomh() { faoiDhó a fhógair, ["a"]  scríobh cur(a dhúbail, 21) }`;
   assert.deepStrictEqual(await rith(src), ['a', 'a', '42']);
 });
 
-it('is E501 é briathar a luaitear gan é a chomhlíonadh', () => {
+it('is E501 é briathar a luaitear gan é a chomhlíonadh',
+  'a verb mentioned without being carried out is E501', () => {
   assert.deepStrictEqual(coid('gníomh f(g: gníomh(Uimhir)) { g }'), ['E501']);
   assert.deepStrictEqual(coid('gníomh fógair(u: Uimhir) { scríobh u }\ngníomh f() { a fhógair }'), ['E501']);
 });
 
 // ══ 17. Atriall: déan … ar … (DEARADH.md §21) ════════════════════════════════════
-it('dáileann `déan` an gníomh ar bhaill an bhailiúcháin', async () => {
+it('dáileann `déan` an gníomh ar bhaill an bhailiúcháin',
+  '`déan` distributes the action over the members of the collection', async () => {
   const src = `gníomh fógair(t: Teaghrán) { scríobh t }
 gníomh príomh() { xs seasmhach: Liosta(Teaghrán) = ["a", "b", "c"]  déan a fhógair ar xs }`;
   assert.deepStrictEqual(await rith(src), ['a', 'b', 'c']);
 });
 
-it('séimhíonn "ar" agus "a" san atriall, tríd an gcód céanna', () => {
+it('séimhíonn "ar" agus "a" san atriall, tríd an gcód céanna',
+  '"ar" and "a" lenite in the loop, through the same code', () => {
   const bun = 'gníomh fógair(u: Uimhir) { scríobh u }\n'
     + 'gníomh príomh() { daoine seasmhach: Liosta(Uimhir) = [1]  déan a fhógair ar dhaoine }';
   assert.deepStrictEqual(coid(bun), []);
@@ -717,35 +796,40 @@ it('séimhíonn "ar" agus "a" san atriall, tríd an gcód céanna', () => {
   assert.deepStrictEqual(coid(bun.replace('a fhógair', 'a fógair')), ['E102']);
 });
 
-it('roghnaíonn an briathar a réamhfhocal (E514, E515)', () => {
+it('roghnaíonn an briathar a réamhfhocal (E514, E515)',
+  'the verb selects its own preposition (E514, E515)', () => {
   assert.deepStrictEqual(
     coid('gníomh fógair(u: Uimhir) { scríobh u }\ngníomh príomh() { déan a fhógair }'), ['E514']);
   assert.deepStrictEqual(
     coid('gníomh fógair(u: Uimhir) { scríobh u }\ngníomh príomh() { fógair 1 ar 2 }'), ['E515']);
 });
 
-it('ní mór don bhriathar a bheith ag teacht le mír an liosta (E201)', () => {
+it('ní mór don bhriathar a bheith ag teacht le mír an liosta (E201)',
+  'the verb must agree with the element type of the list (E201)', () => {
   assert.deepStrictEqual(
     coid('gníomh fógair(u: Uimhir) { scríobh u }\n'
       + 'gníomh príomh() { xs seasmhach: Liosta(Teaghrán) = ["a"]  déan a fhógair ar xs }'),
     ['E201']);
 });
 
-it('ní ghlacann `déan` le feidhm: caitear a toradh i dtraipisí', () => {
+it('ní ghlacann `déan` le feidhm: caitear a toradh i dtraipisí',
+  '`déan` takes no function: its result would be discarded', () => {
   assert.deepStrictEqual(
     coid('feidhm dúbail(u: Uimhir) -> Uimhir { u + u }\n'
       + 'gníomh príomh() { xs seasmhach: Liosta(Uimhir) = [1]  déan a dhúbail ar xs }'),
     ['E201']);
 });
 
-it('is ordú é an t-atriall, mar sin tá sé faoi na rialacha modha (E502)', () => {
+it('is ordú é an t-atriall, mar sin tá sé faoi na rialacha modha (E502)',
+  'iteration is a command, so it falls under the mood rules (E502)', () => {
   assert.deepStrictEqual(
     coid('gníomh fógair(u: Uimhir) { scríobh u }\n'
       + 'feidhm f(xs: Liosta(Uimhir)) -> Uimhir { déan a fhógair ar xs  1 }'),
     ['E502']);
 });
 
-it('is é aspect an bhriathair aspect na lúibe (E504)', () => {
+it('is é aspect an bhriathair aspect na lúibe (E504)',
+  'the aspect of the verb is the aspect of the loop (E504)', () => {
   const bun = 'ag gníomh sábháil(u: Uimhir) { tar éis moill(u) }\n'
     + 'ag feidhm moill(u: Uimhir) -> Uimhir { u }\n';
   const js = jsDe(bun + 'ag gníomh príomh() { xs seasmhach: Liosta(Uimhir) = [1]  déan a shábháil ar xs }');
@@ -755,7 +839,8 @@ it('is é aspect an bhriathair aspect na lúibe (E504)', () => {
     ['E504']);
 });
 
-it('atriallann `déan` ar Iasacht freisin', async () => {
+it('atriallann `déan` ar Iasacht freisin',
+  '`déan` iterates over Iasacht too', async () => {
   assert.deepStrictEqual(
     await rith('gníomh fógair(x: Iasacht) { scríobh x }\n'
       + 'gníomh príomh() { xs seasmhach: Iasacht = ["a", "b"]  déan a fhógair ar xs }'),
@@ -763,7 +848,8 @@ it('atriallann `déan` ar Iasacht freisin', async () => {
 });
 
 // ══ 18. Ní fheiceann an chúlchríoch gramadach ═════════════════════════
-it('ní shroicheann foirm ghramadaí an t-aschur, fiú trasna modúl', async () => {
+it('ní shroicheann foirm ghramadaí an t-aschur, fiú trasna modúl',
+  'grammatical form never reaches the output, even across modules', async () => {
   const t = tionscadalBreige({
     'foclóir.r336': 'gníomh fógair(duine: Teaghrán) { scríobh duine }',
     'príomh.r336': 'foclóir seasmhach = ó "./foclóir.r336"\n'
@@ -776,9 +862,10 @@ it('ní shroicheann foirm ghramadaí an t-aschur, fiú trasna modúl', async () 
   }
 });
 
-it('níl aon eolas ar thiománaí sa ghraf modúl ach oiread (Céim 6)', () => {
-  // src/modúil.js is a compiler file and belongs under the same rule as the
-  // other four: nothing above rt/stór.js knows what a driver is.
+it('níl aon eolas ar thiománaí sa ghraf modúl ach oiread (Céim 6)',
+  'the module graph knows nothing of a driver either (Stage 6)', () => {
+  // src/modúil.js is a compiler file under the same rule as the other four:
+  // nothing above rt/stór.js knows what a driver is.
   const fs = require('fs');
   const téacs = fs.readFileSync(path.join(__dirname, '../src/modúil.js'), 'utf8');
   for (const focal of ['prisma', 'sqlite', 'sql']) {
@@ -789,18 +876,19 @@ it('níl aon eolas ar thiománaí sa ghraf modúl ach oiread (Céim 6)', () => {
 
 // ══ 12. Céim 0.9: paraidím na copaile (§31) ═══════════════════════════
 //
-// Déantar tástáil ar an moirfeolaíocht ar leithligh ón teanga, mar a
-// dhéantar ar an séimhiú: níl aon eolas ag `morphology.js` ar an gcomhréir,
-// agus ní mór dó na foirmeacha a thabhairt gan cheist a chur.
+// Morphology is tested apart from the language, as lenition is: `morphology.js`
+// knows no syntax and must give the forms without asking.
 
-it('tugann an chopail na trí fhoirm bheo', () => {
+it('tugann an chopail na trí fhoirm bheo',
+  'the copula gives the three live forms', () => {
   const R = mf.RIALU_COPAIL;
   assert.strictEqual(mf.foirmChopail(R.BUN, 'Duine'), 'is');
   assert.strictEqual(mf.foirmChopail(R.MA, 'Duine'), 'más');
   assert.strictEqual(mf.foirmChopail(R.MA, 'Easpa'), 'más');
 });
 
-it('roghnaíonn tús an fhocail ina diaidh idir "mura" agus "murab"', () => {
+it('roghnaíonn tús an fhocail ina diaidh idir "mura" agus "murab"',
+  'the onset of the following word chooses between "mura" and "murab"', () => {
   const R = mf.RIALU_COPAIL;
   for (const c of ['Duine', 'Ceart', 'Bua', 'Teaghrán']) {
     assert.strictEqual(mf.foirmChopail(R.MURA, c), 'mura', c);
@@ -810,12 +898,13 @@ it('roghnaíonn tús an fhocail ina diaidh idir "mura" agus "murab"', () => {
   }
 });
 
-it('caitheann na cealla nach bhfuil brí acu, mar a chaitheann an t-urú (§5.2, §5.5)', () => {
+it('caitheann na cealla nach bhfuil brí acu, mar a chaitheann an t-urú (§5.2, §5.5)',
+  'cells with no meaning are discarded, as eclipsis discards them (§5.2, §5.5)', () => {
   const R = mf.RIALU_COPAIL;
   for (const r of [R.DIULTACH, R.CEISTEACH, R.CEISTEACH_DIULTACH, R.FAISNEISEACH]) {
     assert.throws(() => mf.foirmChopail(r, 'Duine'), /§5.5/, r);
   }
-  // Agus fós taispeántar iad: sin an difríocht idir diúltú agus dearmad.
+  // And they are still shown: refusing is not forgetting.
   const p = mf.paraidimChopail('Easpa');
   assert.strictEqual(p.length, 7);
   assert.strictEqual(p.filter((x) => x.beo).length, 3);
@@ -823,7 +912,8 @@ it('caitheann na cealla nach bhfuil brí acu, mar a chaitheann an t-urú (§5.2,
     ['ní hEaspa', 'an Easpa', 'nach Easpa', 'gur Easpa']);
 });
 
-it('cuireann "ní" h roimh ghuta, an riail chéanna atá ag "le" in E201', () => {
+it('cuireann "ní" h roimh ghuta, an riail chéanna atá ag "le" in E201',
+  '"ní" puts h before a vowel, the same rule "le" has in E201', () => {
   const frasa = (c, r) => mf.paraidimChopail(c).find((x) => x.rialu === r).frasa;
   assert.strictEqual(frasa('Easpa', mf.RIALU_COPAIL.DIULTACH), 'ní hEaspa');
   assert.strictEqual(frasa('Duine', mf.RIALU_COPAIL.DIULTACH), 'ní Duine');
@@ -833,39 +923,46 @@ it('cuireann "ní" h roimh ghuta, an riail chéanna atá ag "le" in E201', () =>
 const SUIM = 'suim T { Ceart { u: Uimhir } Easpa { c: Teaghrán } }\n'
   + 'tor seasmhach: T = Ceart { u: 1 }\n';
 
-it('ritheann "más" agus caolaíonn sé, mar a rinne an seanord', async () => {
+it('ritheann "más" agus caolaíonn sé, mar a rinne an seanord',
+  '"más" runs and narrows, as the old order did', async () => {
   assert.deepStrictEqual(
     await rith(SUIM + 'feidhm f() -> Uimhir { más Ceart tor { u ó thor } mura { 0 } }\n'
       + 'scríobh f()'), ['1']);
 });
 
-it('caolaíonn "murab" an chraobh eile', async () => {
+it('caolaíonn "murab" an chraobh eile',
+  '"murab" narrows the other branch', async () => {
   assert.deepStrictEqual(
     await rith(SUIM + 'feidhm f() -> Uimhir { murab Easpa tor { u ó thor } mura { 0 } }\n'
       + 'scríobh f()'), ['1']);
 });
 
-it('is E517 é an seanord focal, agus insítear an fhoirm cheart', () => {
+it('is E517 é an seanord focal, agus insítear an fhoirm cheart',
+  'the old word order is E517, and the correct form is given', () => {
   const es = coid(SUIM + 'feidhm f() -> Uimhir { má tor is Ceart { 1 } mura { 0 } }');
   assert.deepStrictEqual(es, ['E517']);
 });
 
-it('is E517 é an t-allamorf mícheart, sa dá threo', () => {
+it('is E517 é an t-allamorf mícheart, sa dá threo',
+  'the wrong allomorph is E517, in both directions', () => {
   assert.deepStrictEqual(
     coid(SUIM + 'feidhm f() -> Uimhir { mura Easpa tor { 1 } mura { 0 } }'), ['E517']);
   assert.deepStrictEqual(
     coid(SUIM + 'feidhm f() -> Uimhir { murab Ceart tor { 1 } mura { 0 } }'), ['E517']);
 });
 
-it('is E517 é mír cheangailte gan aicmiú', () => {
+it('is E517 é mír cheangailte gan aicmiú',
+  'a bound particle with no classification is E517', () => {
   assert.deepStrictEqual(coid('feidhm f() -> Uimhir { más 1 > 0 { 1 } mura { 0 } }'), ['E517']);
 });
 
-it('fanann an fhoirm neamhspleách gan mhír', () => {
+it('fanann an fhoirm neamhspleách gan mhír',
+  'the independent form stays free of a particle', () => {
   assert.deepStrictEqual(coid('struchtúr D { }\nd seasmhach = D { }\na seasmhach = d is D'), []);
 });
 
-it('ní shroicheann foirm na copaile an JavaScript', () => {
+it('ní shroicheann foirm na copaile an JavaScript',
+  'the form of the copula never reaches the JavaScript', () => {
   const js = jsDe(SUIM + 'feidhm f() -> Uimhir { más Ceart tor { 1 } mura { 0 } }\n'
     + 'feidhm g() -> Uimhir { murab Easpa tor { 1 } mura { 0 } }');
   for (const foirm of ['más', 'murab', 'mura', 'copail']) {
@@ -875,17 +972,18 @@ it('ní shroicheann foirm na copaile an JavaScript', () => {
   assert.ok(js.includes('__is(tor, "Easpa")'));
 });
 
-it('ní mheascann an mhír chopaileach glao le hainmní (an chuardach dhá chomhartha)', async () => {
-  // `má óg(duine)` — dhá chomhartha IDENT NOD, ní dhá shlonn. Bhris an
-  // chéad leagan den chuardach seo an feidhmchlár, agus is í an tástáil seo
-  // an chosaint air.
+it('ní mheascann an mhír chopaileach glao le hainmní (an chuardach dhá chomhartha)',
+  'the copular particle does not confuse a call with a subject (the two-token lookahead)', async () => {
+  // `má óg(duine)` is IDENT NOD, not two expressions. The first version of
+  // this lookahead broke the application, and this test is the guard on it.
   const src = 'struchtúr D { aois: Uimhir }\nd seasmhach = D { aois: 9 }\n'
     + 'feidhm óg(x: D) -> Bool { aois ó x < 18 }\n'
     + 'feidhm f() -> Teaghrán { má óg(d) { "óg" } mura { "aosta" } }\nscríobh f()';
   assert.deepStrictEqual(await rith(src), ['óg']);
 });
 
-it('fanann dealú ina dhealú i ndiaidh na míre', async () => {
+it('fanann dealú ina dhealú i ndiaidh na míre',
+  'subtraction stays subtraction after the particle', async () => {
   assert.deepStrictEqual(
     await rith('x seasmhach = 5\ny seasmhach = 3\n'
       + 'feidhm f() -> Teaghrán { má x - y > 1 { "mór" } mura { "beag" } }\nscríobh f()'),
@@ -895,25 +993,27 @@ it('fanann dealú ina dhealú i ndiaidh na míre', async () => {
 
 // ══ 13. Céim 0.10: an briathar saor (§37) ═════════════════════════════
 //
-// An chéad phéire tástálacha ar mhoirfeolaíocht tháirgiúil. Ní tábla é seo a
-// bhfuiltear ag cuardach ann — is riail réimnithe í a chuirtear i bhfeidhm ar
-// fhréamh ar bith a fhógraíonn an t-údar.
+// Productive morphology: a conjugation rule applied to whatever root the
+// author declares, not a table being searched.
 
-it('réimníonn an chéad réimniú, leathan agus caol', () => {
+it('réimníonn an chéad réimniú, leathan agus caol',
+  'the first conjugation conjugates, broad and slender', () => {
   const c = [['scríobh', 'scríobhtar'], ['mol', 'moltar'], ['déan', 'déantar'],
     ['dún', 'dúntar'], ['fág', 'fágtar'], ['ól', 'óltar'],
     ['cuir', 'cuirtear'], ['bris', 'bristear']];
   for (const [a, b] of c) assert.strictEqual(mf.foirmShaor(a), b, a);
 });
 
-it('slogtar -th agus -gh sa deireadh', () => {
+it('slogtar -th agus -gh sa deireadh',
+  '-th and -gh are swallowed at the end', () => {
   for (const [a, b] of [['caith', 'caitear'], ['ith', 'itear'],
     ['léigh', 'léitear'], ['nigh', 'nitear'], ['suigh', 'suitear']]) {
     assert.strictEqual(mf.foirmShaor(a), b, a);
   }
 });
 
-it('réimníonn an dara réimniú, agus titeann -(a)igh', () => {
+it('réimníonn an dara réimniú, agus titeann -(a)igh',
+  'the second conjugation conjugates, and -(a)igh drops', () => {
   for (const [a, b] of [['ceannaigh', 'ceannaítear'], ['bailigh', 'bailítear'],
     ['imigh', 'imítear'], ['liostaigh', 'liostaítear'],
     ['aimsigh', 'aimsítear'], ['críochnaigh', 'críochnaítear']]) {
@@ -921,10 +1021,11 @@ it('réimníonn an dara réimniú, agus titeann -(a)igh', () => {
   }
 });
 
-it('coimrítear na fréamhacha in -il, -in, -ir, -is', () => {
-  // Seo an chuid is deacra den riail, agus an chuid a chruthaíonn gur riail í:
-  // athraíonn an coimriú leithne na fréimhe, agus leanann an deireadh an
-  // fhréamh nua. Tá `fógair` caol agus tá `fógr-` leathan.
+it('coimrítear na fréamhacha in -il, -in, -ir, -is',
+  'roots in -il, -in, -ir and -is syncopate', () => {
+  // The hardest part of the rule, and what proves it is a rule: syncope changes
+  // the breadth of the root and the ending follows the new root. `fógair` is
+  // slender, `fógr-` is broad.
   for (const [a, b] of [['fógair', 'fógraítear'], ['oscail', 'osclaítear'],
     ['imir', 'imrítear'], ['inis', 'insítear'],
     ['ceangail', 'ceanglaítear'], ['codail', 'codlaítear'],
@@ -933,29 +1034,33 @@ it('coimrítear na fréamhacha in -il, -in, -ir, -is', () => {
   }
 });
 
-it('fanann iasachtaí in -áil sa chéad réimniú', () => {
+it('fanann iasachtaí in -áil sa chéad réimniú',
+  'loanwords in -áil stay in the first conjugation', () => {
   assert.strictEqual(mf.foirmShaor('sábháil'), 'sábháiltear');
   assert.strictEqual(mf.isDaraReimniu('sábháil'), false);
   assert.strictEqual(mf.isDaraReimniu('fógair'), true);
 });
 
-it('tá tábla ann do na mírialta, mar atá i ngach gramadach', () => {
+it('tá tábla ann do na mírialta, mar atá i ngach gramadach',
+  'there is a table for the irregulars, as in every grammar', () => {
   for (const [a, b] of [['faigh', 'faightear'], ['tabhair', 'tugtar'],
     ['abair', 'deirtear'], ['bí', 'táthar'], ['taispeáin', 'taispeántar']]) {
     assert.strictEqual(mf.foirmShaor(a), b, a);
   }
 });
 
-it('ríomhtar an aimsir chaite, agus ní éilítear riamh í (§37.5)', () => {
+it('ríomhtar an aimsir chaite, agus ní éilítear riamh í (§37.5)',
+  'the past tense is computed, and never demanded (§37.5)', () => {
   assert.strictEqual(mf.foirmShaorChaite('liostaigh'), 'liostaíodh');
   assert.strictEqual(mf.foirmShaorChaite('cuir'), 'cuireadh');
-  // An fhoirm a rinne ainm malairte mí-ábhartha de `Fuarthas` roimh 0.9.
+  // The form that made the variant name `Fuarthas` irrelevant before 0.9.
   assert.strictEqual(mf.foirmShaorChaite('faigh'), 'fuarthas');
   const p = mf.paraidimShaor('liostaigh');
   assert.deepStrictEqual(p.map((x) => x.beo), [true, false]);
 });
 
-it('diúltaítear d\'fhocal nach féidir a réimniú', () => {
+it('diúltaítear d\'fhocal nach féidir a réimniú',
+  'a word that cannot be conjugated is refused', () => {
   assert.strictEqual(mf.inShaor('xyz').ok, false);
   assert.throws(() => mf.foirmShaor('xyz'));
 });
@@ -963,49 +1068,56 @@ it('diúltaítear d\'fhocal nach féidir a réimniú', () => {
 // ── an teanga ─────────────────────────────────────────────────────────
 const SAOR = 'saor liostaigh(m: Teaghrán) { scríobh m }\n';
 
-it('is í an fhoirm shaor a scríobhtar i suíomh ráitis', async () => {
+it('is í an fhoirm shaor a scríobhtar i suíomh ráitis',
+  'the autonomous form is what is written in statement position', async () => {
   assert.deepStrictEqual(
     await rith(SAOR + 'gníomh príomh() { liostaítear "a" }'), ['a']);
 });
 
-it('is E518 é an fhréamh mar ordú', () => {
+it('is E518 é an fhréamh mar ordú',
+  'the bare root as a command is E518', () => {
   assert.deepStrictEqual(coid(SAOR + 'gníomh príomh() { liostaigh "a" }'), ['E518']);
 });
 
-it('is E519 í an aimsir chaite: aithnítear í chun í a dhiúltú', () => {
+it('is E519 í an aimsir chaite: aithnítear í chun í a dhiúltú',
+  'the past tense is E519: it is recognised in order to be refused', () => {
   assert.deepStrictEqual(coid(SAOR + 'gníomh príomh() { liostaíodh "a" }'), ['E519']);
 });
 
-it('is E520 é faighteoir ar bhriathar saor', () => {
+it('is E520 é faighteoir ar bhriathar saor',
+  'a receiver on an autonomous verb is E520', () => {
   assert.deepStrictEqual(coid('struchtúr D { }\nsaor f ó D(féin) { }'), ['E520']);
 });
 
-it('is E521 é fréamh nach féidir a réimniú', () => {
+it('is E521 é fréamh nach féidir a réimniú',
+  'a root that cannot be conjugated is E521', () => {
   assert.deepStrictEqual(coid('saor xyz(m: Teaghrán) { scríobh m }'), ['E521']);
 });
 
-it('ní ghlacann briathar saor le cineál toraidh (E404)', () => {
+it('ní ghlacann briathar saor le cineál toraidh (E404)',
+  'an autonomous verb takes no result type (E404)', () => {
   assert.deepStrictEqual(coid('saor f(x: Uimhir) -> Uimhir { x }'), ['E404']);
 });
 
-it('is féidir briathar saor a ainmniú le "a"', () => {
-  // Sin an t-aon slí a bhaintear amach é: cuirtear in aithne don saol
-  // lasmuigh é, agus déanann sin é.
+it('is féidir briathar saor a ainmniú le "a"',
+  'an autonomous verb can be named with "a"', () => {
+  // The only way it is reached: introduce it to the world outside.
   assert.deepStrictEqual(coid(
     SAOR + 'freastal seasmhach = ó "../rt/freastal.js"\n'
     + 'gníomh cláraigh(app: Iasacht) { bealach ó fhreastal(app, "/", a liostaigh) }'), []);
 });
 
-it('ní féidir briathar saor a thabhairt do bhriathar R336', () => {
-  // An toradh is tábhachtaí sa ghné. Dá nglacfadh gníomh leis, d\'fhéadfadh
-  // sé glaoch air — agus dhéanfadh sin déantóir de rud nach bhfuil déantóir
-  // aige. Níl fágtha mar cheann scríbe ach `Iasacht`, agus is í an teorainn í.
+it('ní féidir briathar saor a thabhairt do bhriathar R336',
+  'an autonomous verb cannot be handed to an R336 verb', () => {
+  // If a `gníomh` accepted one it could call it, making a constructor of
+  // something that has none. `Iasacht` is the only destination left.
   assert.deepStrictEqual(coid(
     SAOR + 'gníomh cláraigh(g: gníomh(Teaghrán)) { }\n'
     + 'gníomh príomh() { cláraigh a liostaigh }'), ['E201']);
 });
 
-it('ní shroicheann an fhoirm shaor an JavaScript', () => {
+it('ní shroicheann an fhoirm shaor an JavaScript',
+  'the autonomous form never reaches the JavaScript', () => {
   const js = jsDe(SAOR + 'gníomh príomh() { liostaítear "a" }');
   for (const f of ['liostaítear', 'liostaíodh', 'saor']) {
     assert.ok(!js.includes(f), `${f} sa JavaScript`);
@@ -1016,41 +1128,41 @@ it('ní shroicheann an fhoirm shaor an JavaScript', () => {
 
 // ══ 14. Dhá chód a bhí marbh, agus atá beo anois (§38) ════════════════
 
-it('is urú gan údar é foirm uraithe i suíomh nach n-éilíonn í (E113, §5.2)', () => {
-  // Ba é E108 a bhí anseo: aithníodh an fhoirm uraithe chun í a dhiúltú as a
-  // hainm, mar nach raibh brí ríomhchláraithe ag an urú. Ó tá slot ag an urú
-  // (§5.2) réitítear an fhoirm chéanna anois in ionad í a dhiúltú, agus is í an
-  // cheist a chuirtear ná ar cheadaigh an suíomh seo í. Tá E108 curtha in
-  // áirithe: d'athródh a athúsáid brí an chóid, agus is measa sin ná cód a
-  // stopann.
+it('is urú gan údar é foirm uraithe i suíomh nach n-éilíonn í (E113, §5.2)',
+  'an eclipsed form where nothing requires it is unwarranted eclipsis (E113, §5.2)', () => {
+  // E108 was here: the eclipsed form was recognised by name in order to be
+  // refused. Now that eclipsis has a slot (§5.2) the form is resolved and the
+  // question is whether the position licensed it. E108 stays reserved.
   assert.deepStrictEqual(coid('baile seasmhach = 3\ngníomh p() { scríobh mbaile }'), ['E113']);
   assert.deepStrictEqual(coid('cat seasmhach = 3\ngníomh p() { scríobh gcat }'), ['E113']);
   assert.deepStrictEqual(coid('duine seasmhach = 3\ngníomh p() { scríobh nduine }'), ['E113']);
-  // Agus fanann E101 mar atá nuair nach bhfuil lemma ar bith taobh thiar de.
+  // E101 stands when there is no lemma behind it.
   assert.deepStrictEqual(coid('gníomh p() { scríobh mbaile }'), ['E101']);
 });
 
-it('rialaíonn `i` a chomhlánú, agus is é `reitighFoirm` a dhéanann é (§5.2)', () => {
+it('rialaíonn `i` a chomhlánú, agus is é `reitighFoirm` a dhéanann é (§5.2)',
+  '`i` governs its complement, and `reitighFoirm` is what does it (§5.2)', () => {
   const D = 'struchtúr D stór as Corcaigh { ainm: Teaghrán }\n';
   const corp = (s) => `as Corcaigh\n${D}ag gníomh f(cuntas: Iasacht, áit: Iasacht, stór: Iasacht, d: D) {\n    ${s}\n}`;
   assert.deepStrictEqual(coid(corp('cuir d i gcuntas')), []);
   assert.deepStrictEqual(coid(corp('cuir d in áit')), []);
-  // Tá slot folamh ag `stór` sa DÁ athrú tosaigh — seasann s in aghaidh an
-  // tséimhithe in `st-` agus níl foirm uraithe ar bith aige — agus mar sin ní
-  // thaispeánann an frása is tábhachtaí sa ghné seo athrú ar bith.
+  // `stór` has an empty slot in both initial mutations, so the most important
+  // phrase in this feature shows no change at all.
   assert.deepStrictEqual(coid(corp('cuir d i stór')), []);
   assert.deepStrictEqual(coid(corp('cuir d i cuntas')), ['E112']);
   assert.deepStrictEqual(coid(corp('cuir d i shtór')), ['E104']);
 });
 
-it('bíonn an mhír féin mícheart uaireanta, agus ní hé an t-ainmfhocal (E111)', () => {
+it('bíonn an mhír féin mícheart uaireanta, agus ní hé an t-ainmfhocal (E111)',
+  'sometimes the particle itself is wrong, and not the noun (E111)', () => {
   const D = 'struchtúr D stór as Corcaigh { ainm: Teaghrán }\n';
   const corp = (s) => `as Corcaigh\n${D}ag gníomh f(cuntas: Iasacht, áit: Iasacht, d: D) {\n    ${s}\n}`;
   assert.deepStrictEqual(coid(corp('cuir d in gcuntas')), ['E111']);
   assert.deepStrictEqual(coid(corp('cuir d i áit')), ['E111']);
 });
 
-it('inbhéartaítear an t-urú go tacar, mar nach mapáil aonair é', () => {
+it('inbhéartaítear an t-urú go tacar, mar nach mapáil aonair é',
+  'eclipsis inverts to a set, because it is not a one-to-one mapping', () => {
   assert.deepStrictEqual(mf.lemmaiFaoiUru('mbaile'), ['baile']);
   assert.deepStrictEqual(mf.lemmaiFaoiUru('gcat'), ['cat']);
   assert.deepStrictEqual(mf.lemmaiFaoiUru('bhfuil'), ['fuil']);
@@ -1058,29 +1170,25 @@ it('inbhéartaítear an t-urú go tacar, mar nach mapáil aonair é', () => {
   assert.deepStrictEqual(mf.lemmaiFaoiUru('baile'), []);
 });
 
-it('is E513 é "a" roimh rud nach briathar é', () => {
+it('is E513 é "a" roimh rud nach briathar é',
+  '"a" before something that is not a verb is E513', () => {
   assert.deepStrictEqual(coid('uimhir seasmhach = 3\ngníomh p() { scríobh a uimhir }'), ['E513']);
 });
 
-it('fanann "a" ina aitheantóir dlisteanach', () => {
-  // An chúis nár eochairfhocal riamh é. Is é an cruth a chinneann — dhá
-  // aitheantóir taobh le taobh — agus ní tábla.
+it('fanann "a" ina aitheantóir dlisteanach',
+  '"a" stays a legitimate identifier', () => {
+  // Why it was never a keyword: the shape decides, two identifiers side by
+  // side, not a table.
   assert.deepStrictEqual(coid('a seasmhach = 3\ngníomh p() { scríobh a }'), []);
   assert.deepStrictEqual(coid('a seasmhach = 3\nb seasmhach = a + 1'), []);
 });
 
-it('fanann "a" roimh bhriathar ina ainmniú', () => {
+it('fanann "a" roimh bhriathar ina ainmniú',
+  '"a" before a verb stays a naming', () => {
   assert.deepStrictEqual(coid(
     'gníomh fógair(t: Teaghrán) { scríobh t }\n'
     + 'gníomh p() { déan a fhógair ar ["a", "b"] }'), []);
 });
 
 // ── rith ──────────────────────────────────────────────────────────────
-(async () => {
-  for (const [ainm, fn] of tastail) {
-    try { await fn(); pas++; console.log(`  ✓ ${ainm}`); }
-    catch (e) { teip++; console.log(`  ✗ ${ainm}\n      ${e.message.split('\n')[0]}`); }
-  }
-  console.log(`\n${pas} rite, ${teip} teipthe`);
-  process.exit(teip ? 1 : 0);
-})();
+rithSraith('run');
