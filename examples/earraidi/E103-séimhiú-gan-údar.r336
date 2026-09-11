@@ -1,7 +1,7 @@
-// E103 — séimhiú gan údar.
+// E103 — unlicensed lenition.
 //
-// A mhalairt de E102. Tá an fhoirm shéimhithe scríofa i suíomh nach n-iarrann
-// í: ní shéimhíonn `scríobh` a argóint, agus mar sin níl aon fhoras leis.
+// The reverse of E102: lenited form written where it's not called for.
+// "scríobh" doesn't lenite its argument, so there's no basis for it.
 
 duine seasmhach = 3
 

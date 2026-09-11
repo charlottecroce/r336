@@ -1,7 +1,6 @@
-// E504 — gníomh atá ar siúl á ghlaoch as gníomh nach bhfuil.
+// E504 — an ongoing action called from one that isn't.
 //
-// Críochnaíonn ordú do ghníomh atá ar siúl é féin, agus mar sin caithfidh an
-// glaoiteoir a bheith ar siúl chomh maith. Cuir `ag` roimh an bhfógra.
+// Completing a command auto-awaits it, so the caller must be `ag` too.
 
 ag gníomh sábháil(t: Teaghrán) {
     scríobh t

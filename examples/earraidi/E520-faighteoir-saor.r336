@@ -1,9 +1,7 @@
-// E520 — ní ghlacann briathar saor le faighteoir.
+// E520 — an autonomous verb can't take a receiver.
 //
-// Is seilbh é modh, agus is déantóir é an faighteoir: `féin` an focal féin.
-// Sin go díreach an rud nach gcuireann an fhoirm shaor in iúl, mar sin ní
-// féidir an dá rud a bheith le chéile. Diúltú gramadaí é seo seachas
-// srianadh.
+// A method's receiver is an agent, and the autonomous form has none by
+// definition. This is a grammatical impossibility, not a policy.
 
 struchtúr Duine {
     ainm: Teaghrán

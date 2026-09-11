@@ -1,14 +1,8 @@
 'use strict';
 
-/*
- * freastalaí.js — an tosú (Céim 4 agus 5).
- *
- * Fanann an comhad seo i JavaScript d'aon ghnó, agus tá sé níos giorra anois:
- * ó chéim 0.4 déanann R336 clárú na mbealaí é féin le `a <briathar>`.
- * Níl fágtha anseo ach an tosú — Express a chruthú, EJS a shocrú, éisteacht.
- *
- * Ní gá Express ná EJS a athscríobh (§29, §30).
- */
+// freastalaí.js — startup only (§4/§5). Stays in JavaScript on purpose:
+// R336 handles route registration itself via `a <briathar>` since 0.4.
+// This just builds Express, configures EJS, and listens.
 
 const path = require('path');
 const express = require('express');

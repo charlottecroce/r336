@@ -1,5 +1,6 @@
-// E516 — ordú le sealbhóir. Tógann `ó` frása ainmfhoclach agus ní ainmní é
-// ordú (E501); tá an briathar iasachta san fhoclóir gan cháiliú cheana féin,
-// mar sin scríobh `fáiltigh "Cáit"`.
+// E516 — a command with a possessor.
+//
+// "ó" builds a noun phrase and a command isn't a noun (E501). The borrowed
+// verb already joined the vocabulary unqualified: write `fáiltigh "Cáit"`.
 foclóir seasmhach = ó "../modúil/foclóir.r336"
 gníomh príomh() { fáiltigh ó fhoclóir("Cáit") }

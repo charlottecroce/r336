@@ -1,8 +1,7 @@
-// E508 — níl aon rud le críochnú anseo.
+// E508 — nothing to complete here.
 //
-// Ní chríochnaíonn `tar éis` ach gníomh atá ar siúl: is aspect é, agus
-// teastaíonn gníomhaíocht uaidh le bheith críochnaithe. Níl aon rud ar siúl
-// in uimhir.
+// "tar éis" only completes an ongoing action. A plain number has nothing
+// ongoing about it.
 
 ag gníomh príomh() {
     x seasmhach = tar éis 3

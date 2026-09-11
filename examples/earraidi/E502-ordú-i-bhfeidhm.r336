@@ -1,7 +1,6 @@
-// E502 — ordú taobh istigh d'fheidhm.
+// E502 — a command inside a feidhm.
 //
-// Ní dhéanann feidhm gníomh. Sa mhodh táscach luaitear rudaí; sa mhodh
-// ordaitheach a dhéantar iad.
+// feidhm states things; gníomh does them. Mixing moods isn't allowed.
 
 gníomh fógair(t: Teaghrán) {
     scríobh t

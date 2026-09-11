@@ -1,21 +1,10 @@
-// atriall.r336 — an gníomh á dháileadh ar bhailiúchán (DEARADH.md §21).
+// atriall.r336 — distributing an action over a collection (§21).
 //
-// `déan` an briathar éadrom a chuireann gníomh in iúl as ainmfhocal briathartha:
-//
-//     déan scrúdú ar na cáipéisí     rinne sé iniúchadh orthu
-//     déan cur síos ar an áit        déan dearmad air
-//
-// Ainmníonn an t-ainmfhocal briathartha an gníomh, agus comharthaíonn `ar` an
-// rud a ndéantar leis é. Le hiolra, scaiptear an gníomh ar na baill — agus sin
-// lúb.
-//
-// Níl aon rud nua sa ghramadach anseo:
-//     déan        fréamh lom an ordaitheach (§17)
-//     a fhógair   an cháithnín ainmniúcháin atá sa teanga cheana (§13)
-//     ar dhaoine  an réamhfhocal a rialaíonn `cuir … ar …` cheana, agus a
-//                 shéimhíonn tríd an gcód céanna (§12)
-//
-// Níl ann ach fíric fhoclóireachta: roghnaíonn `déan` an réamhfhocal `ar`.
+// `déan <verbal noun> ar <collection>` is the light-verb construction
+// ("déan scrúdú ar" = examine); with a plural object it becomes a loop.
+// Nothing new grammatically: `déan` is a bare imperative root, `a fhógair`
+// the existing nominalising particle, `ar` the same preposition `cuir … ar
+// …` uses. Just a lexical fact: `déan` selects `ar`.
 
 struchtúr Duine {
     ainm: Teaghrán

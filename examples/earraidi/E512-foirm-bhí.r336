@@ -1,10 +1,8 @@
-// E512 — foirm mhícheart den bhriathar substaintigh.
+// E512 — wrong form of the substantive verb.
 //
-// Roghnaíonn an mhír an fhoirm. Tógann `má` an fhoirm neamhspleách `tá`;
-// tógann `mura` an fhoirm spleách, agus uraíonn sí í: `bhfuil`. Ní athraíonn
-// an bhrí — is comhaontú é seo, ní brí (§14).
-//
-// Léigh le E517 é: is í an fhadhb chéanna í ag an gcopail.
+// The particle picks the form: má takes tá (independent), mura takes
+// bhfuil (dependent, eclipsed). Agreement, not meaning (§14). Same fault
+// as E517, for the copula.
 
 x seasmhach = 1
 

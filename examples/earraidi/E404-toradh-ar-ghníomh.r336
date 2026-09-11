@@ -1,7 +1,6 @@
-// E404 — ní ghlacann gníomh le cineál toraidh.
+// E404 — gníomh can't declare a result type.
 //
-// Ní thugann ordú aon rud ar ais. Sin an difríocht idir an dá mhodh, agus ní
-// srianadh é ach an rud a chiallaíonn "ordaitheach".
+// A command returns nothing; that's what "imperative" means here.
 
 gníomh fógair(t: Teaghrán) -> Uimhir {
     scríobh t

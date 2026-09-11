@@ -1,6 +1,6 @@
-// E511 — ní sprioc bhailí do "cuir … ar" é seo.
+// E511 — invalid target for "cuir … ar".
 //
-// Teastaíonn ceangal nó réimse: rud a bhfuil staid aige. Níl staid ag uimhir.
+// Needs a binding or field, something with state. A bare number has none.
 
 gníomh príomh() {
     cuir 1 ar 3

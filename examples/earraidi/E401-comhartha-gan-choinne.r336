@@ -1,7 +1,6 @@
-// E401 — comhartha gan choinne.
+// E401 — unexpected token.
 //
-// Earráid chomhréire. Insítear an dá rud a theastaíonn ón léitheoir: an rud a
-// fuarthas, agus an rud a bhí ag teastáil ina áit.
+// A syntax error. Reports what was found and what was expected instead.
 
 feidhm suim(a: Uimhir, b: Uimhir) -> Uimhir {
     a +

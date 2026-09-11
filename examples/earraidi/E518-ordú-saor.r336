@@ -1,13 +1,8 @@
-// E518 — ní ordaítear do bhriathar saor.
+// E518 — an autonomous verb can't be commanded.
 //
-// Is é a mhalairt de E501 é, agus is fiú an dá cheann a léamh le chéile:
-//
-//   E501  ní féidir gníomh a lua      — déantar é, ní ainmnítear é
-//   E518  ní féidir briathar saor a ordú — luaitear é, ní ordaítear é
-//
-// Ní cosc é ceachtar acu. Is í an fhoirm féin a dhiúltaíonn: labhraíonn an
-// mhodh ordaitheach le déantóir, agus is é an rud a chuireann an fhoirm shaor
-// in iúl ná nach bhfuil aon déantóir ann le labhairt leis.
+// Mirror of E501: E501 says a gníomh can't be mentioned (it's done, not
+// named); E518 says an autonomous verb can't be commanded (it's named, not
+// done) — there's no agent for the imperative to address.
 
 saor liostaigh(mír: Teaghrán) {
     scríobh mír

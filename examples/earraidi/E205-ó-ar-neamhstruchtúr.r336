@@ -1,6 +1,6 @@
-// E205 — ní féidir "ó" a úsáid ar an gcineál seo.
+// E205 — "ó" can't be used on this type.
 //
-// Is caidreamh sealbhaíochta é `ó`, agus ní shealbhaíonn uimhir aon rud.
+// "ó" is a possession relation; a number possesses nothing.
 
 uimhir seasmhach = 3
 

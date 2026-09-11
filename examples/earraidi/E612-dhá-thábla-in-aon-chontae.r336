@@ -1,16 +1,11 @@
-// E612 — tá an contae seo tógtha cheana ag tábla eile.
+// E612 — this county's table is already taken.
 //
-// Éilíonn tábla contae, agus ní chúige. Sin an difríocht idir é agus
-// gnáthchineál curtha: is é cineál stór focal réigiúin, agus ní hé tábla
-// ach foirgneamh in aon bhaile amháin. Rud níos lú é agus éilíonn sé áit
-// níos lú.
+// A table claims a county, not a whole province, unlike an ordinary placed
+// type. But the two claims still collide: a table in Corcaigh blocks any
+// ordinary type from claiming An Mhumhain, and vice versa, so `stór` isn't
+// a backdoor around E603.
 //
-// Ach buaileann an dá éileamh faoi chéile, agus sin an rud a chuireann cosc
-// leis an marc a bheith ina dhoras cúil ar E603: coisceann tábla i gCorcaigh
-// gnáthchineál ar bith ó An Mhumhain a éileamh, agus a mhalairt.
-//
-// Dhá cheann is tríocha an uasteorainn, agus ní bhaintear amach í ach i
-// gclár nach bhfuil aon ghnáthchineál curtha ann ar chor ar bith.
+// Ceiling is 32, reachable only in a program with no ordinary placed types.
 
 struchtúr Duine stór as Corcaigh {
     ainm: Teaghrán

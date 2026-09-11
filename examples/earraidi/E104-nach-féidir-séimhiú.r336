@@ -1,8 +1,7 @@
-// E104 — ní féidir an t-aitheantóir a shéimhiú.
+// E104 — this identifier can't be lenited.
 //
-// Tosaíonn `scoil` le cnuasach s + consan, agus ní ghlacann a leithéid le
-// séimhiú sa Ghaeilge. Níl an bhunfhoirm ina rogha anseo: is í an t-aon
-// fhoirm atá ag an bhfocal.
+// "scoil" starts with an s + consonant cluster, which never lenites in
+// Irish. The base form isn't a choice here, it's the only form the word has.
 
 scoil seasmhach = 3
 

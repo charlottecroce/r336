@@ -1,8 +1,7 @@
-// E510 — tá an ceangal seasmhach.
+// E510 — the binding is seasmhach.
 //
-// `seasmhach` i gcoinne `sealadach`: an deighilt idir eisint agus timpiste
-// (§13). Ní chuirtear staid ar rud atá seasmhach — ní hé nach bhfuil cead
-// agat, ach nach bhfuil sé ina rud a athraíonn.
+// seasmhach vs sealadach: essence vs accident (§13). Not a permission
+// issue, it's that a seasmhach value isn't a thing that changes.
 
 comhaireamh seasmhach = 0
 

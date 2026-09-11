@@ -1,8 +1,8 @@
-// E507 — slabhra "má" gan chríoch.
+// E507 — unterminated "má" chain.
 //
-// Mar shlonn, caithfidh gach cosán luach a thabhairt. Teastaíonn craobh
-// `mura` lom uaidh — an chraobh nach bhfuil coinníoll uirthi — mar níl aon
-// fhocal sa Ghaeilge ar "else" ach an chraobh dheireanach den slabhra (§17).
+// As an expression, every path must produce a value, which needs a bare
+// "mura" branch — Irish has no word for "else", only the chain's final
+// unconditional branch (§17).
 
 feidhm rang(aois: Uimhir) -> Teaghrán {
     ainm seasmhach = má aois > 65 { "sinsear" } mura aois > 17 { "duine fásta" }

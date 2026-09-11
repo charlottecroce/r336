@@ -1,24 +1,23 @@
-// modh.r336 — an modh ordaitheach i gcoinne an mhodh tháscaigh (§17).
+// modh.r336 — imperative vs indicative mood (§17).
 //
-// Sa Ghaeilge is é fréamh an bhriathair an modh ordaitheach: "scríobh!",
-// "déan!", "fan!". Ní ainmní é ordú, ní ghlacann sé le hainmní, agus tagann
-// sé ar dtús san abairt. Sin an fáth go dtugtar orduithe gan lúibíní i
-// R336 agus nach féidir iad a úsáid mar shlonn.
+// The verb root is the Irish imperative: "scríobh!", "déan!". A command is
+// obeyed, not named, which is why R336 commands take no parens and can't
+// be used as expressions.
 //
-//   feidhm  → luaitear rud : tugann sí ainmní ar ais
-//   gníomh  → déantar rud  : ní thugann sé aon rud ar ais
+//   feidhm  — states a thing, returns a value
+//   gníomh  — does a thing, returns nothing
 
 struchtúr Duine {
     ainm: Teaghrán
     aois: Uimhir
 }
 
-// Táscach: ríomhann sí luach agus ní dhéanann sí faic.
+// Indicative: computes a value, does nothing.
 feidhm céim ó Dhuine(féin) -> Teaghrán {
     má aois ó fhéin >= 18 { "aosta" } mura { "óg" }
 }
 
-// Ordaitheach: ní thugann sé luach ar ais, agus tugtar mar ordú é.
+// Imperative: no return value, given as a command.
 gníomh fógair(duine: Duine) {
     scríobh "── " + ainm ó dhuine
     scríobh "   céim: " + céim ó dhuine()
@@ -27,7 +26,7 @@ gníomh fógair(duine: Duine) {
 fógair Duine { ainm: "Charlotte", aois: 20 }
 fógair Duine { ainm: "Séamus", aois: 12 }
 
-// Liostaí. `fad ó dhaoine` — an gaol seilbhe céanna ar chineál ionsuite.
+// Lists: "fad ó dhaoine" is the same possessive relation on a built-in type.
 daoine seasmhach = [
     Duine { ainm: "Charlotte", aois: 20 },
     Duine { ainm: "Séamus", aois: 12 }

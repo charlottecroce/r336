@@ -1,21 +1,12 @@
-// copail.r336 — `is` i gcoinne `bí`, agus paraidím na copaile (§13, §14, §31).
+// copail.r336 — `is` vs `bí`, and the copula's paradigm (§13, §14, §31).
 //
-//   is  →  aitheantas / aicmiú : cén rud é?      (§13)
-//   bí  →  bheith / staid      : an bhfuil sé ann? (§14)
+//   is  — identity/classification: what is it?
+//   bí  — existence/state: is it there?
 //
-// Ní hionann iad, agus ní féidir ceann amháin a chur in ionad an chinn eile.
-//
-// Ó chéim 0.9 tá foirm ar an gcopail chomh maith le brí. Ceanglaíonn sí leis
-// an mír a rialaíonn í, mar a dhéanann sí sa Ghaeilge:
-//
-//   is Duine é          ceann a haisnéise féin      → an fhoirm neamhspleách
-//   má  + is  → más     faoin mír réadúil
-//   mura + is → mura    faoin mír neamhréadúil
-//             → murab     … agus -b roimh ghuta
-//
-// Sin an dara paraidím sa teanga. Ní athraíonn brí na copaile in aon cheann
-// de na foirmeacha: aicmiú atá inti i gcónaí, díreach mar a chiallaíonn `bí`
-// an rud céanna i `tá` agus i `bhfuil`.
+// Since 0.9 the copula also has form, fusing with its governing particle
+// like real Irish: is → más under má, → mura/murab under mura (murab
+// before a vowel). Meaning never changes across forms, same as tá/bhfuil
+// for bí.
 
 struchtúr Duine {
     ainm: Teaghrán
@@ -23,13 +14,12 @@ struchtúr Duine {
 
 duine seasmhach = Duine { ainm: "Charlotte" }
 
-// Faoin mír: `má` + `is` ina aon fhocal amháin, agus an fhaisnéis chun tosaigh
-// ar an ainmní, mar a chuireann an chopail í.
+// Under a particle: má + is fuse into one word, predicate before subject.
 más Duine duine {
     scríobh "Is duine é: " + ainm ó dhuine
 }
 
-// Gan mhír: an fhoirm neamhspleách, agus is slonn Boole í.
+// Ungoverned: the independent form, a Bool expression.
 isDuine seasmhach = duine is Duine
 scríobh isDuine
 
@@ -39,24 +29,23 @@ má tá duine {
     scríobh "Níl duine ar bith ann."
 }
 
-// Aicmiú ar luach bunúsach.
+// Classifying a primitive value.
 aois seasmhach = 20
 más Uimhir aois {
     scríobh "Is uimhir í an aois."
 }
 
-// An dá allamorf. Roghnaíonn an chéad litir den chineál a leanann an chopail
-// idir `mura` agus `murab`, agus is í an mhoirfeolaíocht a roghnaíonn — ní
-// gá don anailíseoir ach an cheist a chur.
+// Two allomorphs: the type name's first letter picks mura vs murab;
+// morphology decides, the analyzer just asks.
 struchtúr Áit {
     logainm: Teaghrán
 }
 
 áit seasmhach = Áit { logainm: "Cill Chainnigh" }
 
-// Ná cuir an dá cheann seo taobh le taobh: leanann `mura` lom an bhloc roimhe
-// mar chraobh eile (§17), agus mar sin shlogfadh an chéad cheann an dara
-// ceann. Is í an mhír an fáth, ní an chopail — bhí sé amhlaidh roimh 0.9.
+// Don't put these two back to back: a bare "mura" after a block reads as
+// another branch (§17) and would swallow the next one. That's the
+// particle's doing, not the copula's — true before 0.9 too.
 feidhm ganDuine(a: Áit) -> Teaghrán {
     mura Duine a { "Ní duine í an áit." } mura { "?" }
 }

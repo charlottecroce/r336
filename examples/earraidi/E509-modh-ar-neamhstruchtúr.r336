@@ -1,8 +1,8 @@
-// E509 — ní féidir modh a fhógairt ar rud nach struchtúr é.
+// E509 — a method declared on a non-struct.
 //
-// Is seilbh é modh: sealbhaíonn an faighteoir é mar a shealbhaíonn struchtúr
-// réimse. Ní shealbhaíonn suim aon rud go dtí go gcaolaítear í, agus ní
-// shealbhaíonn malairt aon rud riamh — ainmníonn sí cruth (§26.9).
+// A method is a possession: the receiver holds it like a struct holds a
+// field. A sum holds nothing until narrowed, and a variant never holds
+// anything, it just names a shape.
 
 suim Toradh {
     Ceart { luach: Uimhir }

@@ -1,11 +1,10 @@
-// E611 — níl tábla ag an gcineál seo.
+// E611 — this type has no table.
 //
-// Ní dhearbhaigh `Duine` gur `stór` é, mar sin níl tábla ann le léamh as.
+// `Duine` was never declared `stór`, so there's nothing to read.
 //
-// Diúltú atá ann agus ní liosta folamh. D'fhéadfaí `Liosta(Duine)` folamh a
-// thabhairt ar ais — níl aon rón ann, tar éis an tsaoil — ach chiallódh sin
-// go bhfuil an cheist i gcónaí ar fáil, agus dá bhrí sin nach gciallaíonn an
-// dearbhú faic. An chruth chéanna le E302 agus le E524.
+// A refusal, not an empty list: returning `Liosta(Duine)` empty would make
+// the question always answerable, which would make the declaration mean
+// nothing. Same shape as E302 and E524.
 
 struchtúr Duine {
     ainm: Teaghrán

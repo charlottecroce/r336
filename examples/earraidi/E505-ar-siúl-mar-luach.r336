@@ -1,7 +1,6 @@
-// E505 — gníomh atá ar siúl á úsáid mar luach.
+// E505 — an ongoing action used as a value.
 //
-// Ní luach é gníomh atá ar siúl ach gealltanas. Úsáid `tar éis` chun é a
-// chríochnú.
+// It's a promise, not a value yet. Complete it with `tar éis`.
 
 ag feidhm aois() -> Uimhir {
     20

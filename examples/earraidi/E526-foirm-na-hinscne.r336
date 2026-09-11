@@ -1,18 +1,12 @@
-// E526 — deir an aidiacht rud amháin agus tá sí scríofa mar rud eile.
+// E526 — the adjective says one thing and is written as another.
 //
-// Aidiachtaí iad `firinscneach` agus `baininscneach`, agus réitíonn aidiacht
-// lena hainmfhocal mar a dhéanann gach aidiacht eile ó chéim 0.11. Ciallaíonn
-// sin go seiceálann an fógra é féin: má tá `Aois` baininscneach, éilíonn sí
-// séimhiú ar an aidiacht a leanann í, agus is í an aidiacht sin an ceann atá
-// á rá gur baininscneach í.
+// firinscneach/baininscneach are adjectives, and an adjective agrees with
+// its own noun: a feminine Aois demands lenition on the adjective that
+// declares it feminine. Two ways to fail this, same fault: `Aois
+// baininscneach` (masculine form saying "feminine") and `Duine
+// fhirinscneach` (feminine form saying "masculine").
 //
-// Dhá bhealach chun teip air, agus is é an locht céanna iad: `Aois
-// baininscneach` (an fhoirm fhirinscneach ag rá "baininscneach") agus `Duine
-// fhirinscneach` (an fhoirm bhaininscneach ag rá "firinscneach").
-//
-// Níl aon rud anseo ach `foirmDe(…, SEIMHITHE)` á ghairm — an mheicníocht
-// chéanna a rialaíonn `ó`, `ar`, `a` agus `as`. Níor cuireadh cúigiú
-// mheicníocht leis.
+// Just `foirmDe(…, SEIMHITHE)`, the same mechanism ó/ar/a/as already use.
 
 struchtúr Aois baininscneach {
     luach: Uimhir

@@ -1,11 +1,9 @@
-// E111 — foirm mhícheart den réamhfhocal `i`
+// E111 — wrong form of the preposition "i".
 //
-// Roghnaíonn an focal ina dhiaidh foirm na míre, agus ní roghnaíonn an
-// scríbhneoir í: `i` roimh chonsan agus urú ina dhiaidh, `in` roimh ghuta
-// agus an bhunfhoirm ina dhiaidh. Is é sin riail na copaile ar fad —
-// `más`/`murab` — curtha i bhfeidhm ar réamhfhocal (§5.2).
-//
-// `áit` a thosaíonn le guta, mar sin is é `in áit` atá ceart.
+// The following word picks the form, not the writer: "i" + eclipsis
+// before a consonant, "in" + base form before a vowel. Same rule as
+// más/murab (§5.2), applied to a preposition. "áit" starts with a vowel,
+// so "in áit" is correct.
 
 as Corcaigh
 

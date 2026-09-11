@@ -1,20 +1,14 @@
-// aspect.r336 — an aidiacht bhriathartha mar mhúnla comhthreomhaireachta (§18).
+// aspect.r336 — the verbal noun as promise, modeling async (§18).
 //
-// Níl aimsir láithreach leanúnach ag an nGaeilge. Ina háit sin cuirtear an
-// gníomh in ainmfhocal agus suitear i staid bheithe é:
+// Irish has no present continuous; the action becomes a noun placed in a
+// state of being: "Tá sé ag scríobh" (ongoing, a promise) vs. "Tá sé tar
+// éis scríobh" (completed, a value).
 //
-//     Tá sé ag scríobh.        an gníomh ar siúl   → gealltanas
-//     Tá sé tar éis scríobh.   an gníomh curtha i gcrích → luach
+//     ag feidhm f() -> T     calling f returns an ongoing action
+//     tar éis f()            completes it, yields T
 //
-// Sin go díreach an rud is gealltanas ann: gníomh atá déanta ina rud is
-// féidir a choinneáil. Mar sin:
-//
-//     ag feidhm f() -> T     tugann glaoch ar f gníomh ar siúl ar ais
-//     tar éis f()            críochnaíonn sé, agus tagann T as
-//
-// Ní luach é gníomh atá ar siúl go fóill: E505 má bhaintear úsáid as gan
-// "tar éis". Agus ní féidir rud a chríochnú mura bhfuil sé ar siúl: E504 má
-// úsáidtear "tar éis" gan "ag" ar an bhfógra.
+// An ongoing action isn't a value yet: E505 without `tar éis`, E504 if
+// `tar éis` is used where the verb isn't `ag`.
 
 stórlann seasmhach = ó "../rt/stór.js"
 
@@ -29,7 +23,6 @@ ag gníomh príomh() {
 
     rónna seasmhach: Liosta(Iasacht) = tar éis ainmneacha(stór)
     scríobh "líon: " + comhaireamh(fad ó rónna)
-    // `céad` inséimhithe ina dhiaidh sin: "ainm ó chéad ó rónna".
     scríobh "an chéad cheann: " + ainm ó chéad ó rónna
 
     tar éis dún ó stór()

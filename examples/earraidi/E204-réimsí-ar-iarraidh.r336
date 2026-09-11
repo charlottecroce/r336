@@ -1,7 +1,7 @@
-// E204 — réimsí ar iarraidh sa struchtúr.
+// E204 — missing fields in a struct literal.
 //
-// Ní ghlactar le taifead neamhiomlán. Ní hionann struchtúr agus mála: dearbhú
-// atá ann faoi na rudaí atá i luach, agus caithfidh siad ar fad a bheith ann.
+// A struct is a declaration of what a value contains, not a bag; every
+// field is required.
 
 struchtúr Duine {
     ainm: Teaghrán

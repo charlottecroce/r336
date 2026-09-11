@@ -1,18 +1,15 @@
-// cineálBriathair.r336 — cineál an bhriathair (DEARADH.md §20).
+// cineálBriathair.r336 — verb types (§20).
 //
-// Is é cineál briathair a fhógra gan an t-ainm, mar sin is é an modh cuid den
-// chineál: is rud eile ar fad é `gníomh(T)` agus `feidhm(T) -> U`. Ní bhratach
-// ar chineál amháin é an modh; is airí foclóireachta den bhriathar é (§17),
-// agus mar sin baineann sé lena chineál.
+// A verb's type is its declaration minus the name, so mood is part of the
+// type: `gníomh(T)` and `feidhm(T) -> U` are different types entirely.
 //
-//     feidhm(Uimhir) -> Uimhir      táscach: tugann sé ainmní
-//     gníomh(Teaghrán)              ordaitheach: ní thugann sé faic
-//     ag feidhm(Iasacht) -> Bool    ar siúl
+//     feidhm(Uimhir) -> Uimhir      indicative: returns a value
+//     gníomh(Teaghrán)              imperative: returns nothing
+//     ag feidhm(Iasacht) -> Bool    ongoing
 //
-// Ní féidir gníomh a ghlaoch mar shlonn (E501), agus mar sin níl ach aon
-// tomhaltóir amháin ag luach de chineál `gníomh`: `déan`. Sin an freagra
-// ceart — is ainmfhocal é ordú ainmnithe, agus is é `déan` an tslí a
-// dhéantar gníomh de arís.
+// A gníomh can't be called as an expression (E501), so `déan` is the only
+// consumer of a gníomh-typed value: it turns the named noun back into an
+// action.
 
 gníomh fógair(t: Teaghrán) { scríobh t }
 

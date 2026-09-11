@@ -1,17 +1,10 @@
-// staid.r336 — seasmhach i gcoinne sealadach, agus "cuir … ar …".
+// staid.r336 — seasmhach vs sealadach, and "cuir … ar …" (§13, §14).
 //
-// Is é an scaradh céanna atá idir `is` agus `bí` an scaradh atá idir an dá
-// chineál ceangail (§13, §14):
-//
-//   seasmhach → an rud atá ann go buan  : ní athraíonn sé
-//   sealadach → an rud atá ann faoi láthair : féadann sé athrú
-//
-// Agus is ordú é an t-athrú féin. "Cuir uisce ar an bplanda" — cuireann tú
-// staid ar rud. Toisc gur ordú é, tá sé faoi na rialacha modha atá ann
-// cheana: ní féidir "cuir" a úsáid taobh istigh d'fheidhm (E502), agus ní
-// féidir staid a chur ar rud seasmhach (E510).
-//
-// Séimhíonn `ar` a chomhlánú, díreach mar a dhéanann `ó`.
+// Same split as is/bí: seasmhach is permanent essence, sealadach is
+// current state, and mutation is itself a command ("cuir uisce ar an
+// bplanda" — put water on the plant). Being a command, it follows the
+// usual mood rules: no `cuir` inside a feidhm (E502), no state on a
+// seasmhach binding (E510). `ar` lenites its complement like `ó` does.
 
 struchtúr Cuntas {
     úinéir: Teaghrán
@@ -22,7 +15,7 @@ gníomh taisc(cuntas sealadach: Cuntas, méid: Uimhir) {
     cuir iarmhéid ó chuntas + méid ar iarmhéid ó chuntas
 }
 
-// Ní athraíonn feidhm aon rud: ní dhéanann sí ach an luach a lua.
+// A feidhm changes nothing, it only states a value.
 feidhm saibhir ó Chuntas(féin) -> Bool {
     iarmhéid ó fhéin >= 100
 }
@@ -47,8 +40,7 @@ feidhm tuairisc(cuntas: Cuntas) -> Teaghrán {
     má saibhir ó chuntas() { "saibhir" } mura { "bocht" }
 }
 
-// `mura <c>` is "if NOT c", not "else if c" — that is what the Irish word
-// means, and the compiler does not pretend otherwise. Positive alternatives
+// `mura <c>` means "if NOT c", not "else if c" — positive alternatives
 // nest inside a bare `mura`.
 feidhm focal(u: Uimhir) -> Teaghrán {
     má u == 1 { "aon" } mura {
@@ -56,8 +48,7 @@ feidhm focal(u: Uimhir) -> Teaghrán {
     }
 }
 
-// The natural use of `mura` with a condition is plain negation: R336 has
-// no `!` operator, because Irish negates with a particle, not an operator.
+// R336 has no "!" operator; negate with mura instead.
 gníomh tuairiscigh(cuntas: Cuntas) {
     mura saibhir ó chuntas() {
         scríobh úinéir ó chuntas + " is ag teastáil tuilleadh uaidh."

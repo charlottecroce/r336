@@ -1,13 +1,10 @@
-// E523 — an luach buailte á úsáid sula bhfuil an dochar curtha as an áireamh.
+// E523 — an afflicted value used before the affliction is ruled out.
 //
-// Seo an chosaint ar fad, agus níl sí ann ach san áit ar fhógair briathar í.
-// Ní iarrtar ar an nglaoiteoir gach cás a scrúdú mar a iarrfadh cineál suime
-// air — ní iarrtar air ach an t-aon rud amháin a dúradh leis a d'fhéadfadh
-// titim amach.
+// The whole protection, and it only applies where a verb declared it: the
+// caller only has to rule out the one thing named, not every possible case.
 //
-// Is é an leigheas ná an cheist a chur: `má tá Earráid ar thoradh { … }
-// mura { … }`. Sa chraobh dhiúltach is Uimhir lom é, agus téann sé áit ar
-// bith a dtéann Uimhir.
+// Fix: `má tá Earráid ar thoradh { … } mura { … }`. The negative branch
+// narrows to a plain Uimhir.
 
 struchtúr Earráid {
     cúis: Teaghrán

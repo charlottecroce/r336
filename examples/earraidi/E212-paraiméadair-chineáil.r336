@@ -1,6 +1,5 @@
-// E212 — líon mícheart paraiméadar cineáil.
+// E212 — wrong number of type parameters.
 //
-// Tá paraiméadar amháin ag `Liosta`, agus níl aon athróg chineáil sa teanga
-// go fóill le ceann eile a líonadh.
+// `Liosta` takes exactly one; there's no second type variable to fill yet.
 
 xs seasmhach: Liosta(Uimhir, Teaghrán) = [1, 2]

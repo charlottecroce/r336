@@ -1,9 +1,7 @@
-// E607 — athrá ar chomhaontú.
+// E607 — duplicate treaty.
 //
-// Is ionann comhaontú ón dá thaobh: is é an péire sórtáilte an eochair, mar
-// sin ainmníonn `comhaontú Gaillimh Corcaigh` an comhaontú céanna a
-// ainmníodh cheana. Níl san dara fógra ach athrá, agus deirtear sin leat
-// seachas é a shlogadh.
+// A treaty is symmetric (keyed by the sorted pair), so `comhaontú Gaillimh
+// Corcaigh` names the same treaty as `comhaontú Corcaigh Gaillimh`.
 
 as Corcaigh
 

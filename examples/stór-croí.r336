@@ -1,38 +1,33 @@
-// stór-croí.r336 — an croí curtha (§41).
+// stór-croí.r336 — the placed core (§41).
 //
-// Tá an comhad seo as Corcaigh, agus tá `Duine` as Corcaigh, mar sin is
-// féidir leis na réimsí a léamh. Sin an t-aon riail atá i gceist, agus is í
-// an riail chéanna a bhí ann roimh §41.
+// This file and `Duine` are both from Corcaigh, so fields can be read;
+// same rule as always.
 //
-// An rud atá nua: tagann na rónna isteach mar `Duine` cheana féin. Roimhe
-// seo b'éigean an tiontú ó `Iasacht` a scríobh de láimh sa bhlaosc — féach
-// `aimsigh` i bealaí.r336 — mar nach bhféadfadh an croí labhairt leis an
-// mbunachar ar chor ar bith. Ní labhraíonn sé leis fós: glacann sé leis an
-// stór mar argóint, agus is argóint í nach léitear ball ar bith aisti.
+// What's new: rows arrive already typed as `Duine`, instead of the shell
+// hand-converting from `Iasacht` (see `aimsigh` in bealaí.r336). The core
+// still doesn't talk to the database directly, it just takes the store as
+// an opaque argument.
 //
-// Sin an fáth a bhfuil `as` ceart agus `ó` mícheart. Ní seilbh atá i gceist:
-// níl an rón sa stór mar atá ainm i nduine. As an stór a thagann sé.
+// `as`, not `ó`, because this isn't possession — the row doesn't come from
+// the store the way a name comes from a person.
 
 as Corcaigh
 
-// An t-ainm, an aidiacht, an marc innealtóireachta, an tionscnamh. Sin an
-// t-ord agus léitear mar Ghaeilge é.
+// Name, adjective, engineering marker, provenance — fixed order.
 struchtúr Duine firinscneach stór as Corcaigh {
     ainm: Teaghrán
     aois: Uimhir
 }
 
-// `duine` an tábla, ní `daoine`. Ní dhéanann an tiomsaitheoir uimhir iolra a
-// thomhas, agus is é `duine → daoine` an chúis: foirm fhorlíontach atá ann
-// agus ní shroicheann riail ar bith í. Sin teagmháil §40 leis an inscne, ó
-// bhóthar eile.
+// Table is "duine", not "daoine": pluralization is suppletive and no rule
+// reaches it, so the compiler never guesses.
 ag gníomh liostaigh(stór: Iasacht) {
     daoine seasmhach: Liosta(Duine) = tar éis faigh Duine as stór
     déan a bheannaigh ar dhaoine
 }
 
-// `aois` gan léamh anseo, agus tá sí sa liosta colún mar sin féin: is é an
-// liosta réimsí dearbhaithe an liosta colún, agus níl dara háit lena scríobh.
+// "aois" isn't read here but is still a column: the declared field list is
+// the column list, nowhere else to write it.
 gníomh beannaigh(duine: Duine) {
     scríobh "Dia duit, " + ainm ó dhuine
     scríobh aois ó dhuine

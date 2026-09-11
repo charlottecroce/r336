@@ -1,9 +1,7 @@
-// E501 — is gníomh é seo, ní ainmní.
+// E501 — this is a command, not a noun.
 //
-// Déantar ordú; ní luaitear é. Léigh le E518 é: ní ordaítear do bhriathar
-// saor, agus ní luaitear gníomh. Is í an fhoirm a dhiúltaíonn sa dá chás.
-//
-// Tá an cháithnín `a` ann chun briathar a ainmniú: `a fhógair`.
+// A command is done, not mentioned. Use `a <briathar>` to name one as a
+// value: `a fhógair`. See E518 for the mirror case.
 
 gníomh fógair(t: Teaghrán) {
     scríobh t

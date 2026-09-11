@@ -1,17 +1,10 @@
-// sonraí.r336 — an ciseal sonraí (Céim 6).
+// sonraí.r336 — the data layer (§6). Knows nothing about SQLite; only talks
+// to the R336 Stór abstraction, which owns the driver.
 //
-// Ní eol don mhodúl seo cad is SQLite ann. Labhraíonn sé le teibíocht Stór
-// R336 amháin, agus is ag an teibíocht sin atá an tiománaí.
-//
-// Tabhair faoi deara an scaradh idir modh:
-//   ceistigh → cuireann sí ceist agus tugann sí freagra : feidhm
-//   cuir     → tugtar ordú di agus ní thugann sí faic   : gníomh
-//
-// Agus an scaradh idir aspect: tá gach oibríocht bunachair "ar siúl" (`ag`)
-// go dtí go gcuirtear i gcrích í le "tar éis".
-//
-// Ó chéim 0.5 i leith téann an scaradh sin trasna na teorann idir modúil:
-// feiceann bealaí.r336 gur gníomh é `cuirDuine`, agus ní luach.
+// Mood tracks the verb: `ceistigh` asks and answers (feidhm), `cuir` just
+// commands (gníomh). Every DB op is ongoing (`ag`) until completed with
+// `tar éis`, and that carries across the module boundary: bealaí.r336 sees
+// `cuirDuine` as a gníomh, not a value.
 
 stórlann seasmhach = ó "../rt/stór.js"
 

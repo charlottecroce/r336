@@ -1,24 +1,22 @@
-// príomh.r336 — an modúl a fhoghlaimíonn é (DEARADH.md §19).
+// príomh.r336 — the importing module (§19).
 //
-// Tagann briathar iasachta isteach san fhoclóir gan cháiliú, mar a thagann i
-// nGaeilge: nuair a thógann an Ghaeilge briathar ó theanga eile, réimníonn sí
-// go dúchasach é agus téann sé isteach san fhoclóir. Ní deirtear "an briathar
-// iasachta X"; deirtear X. Mar sin is ordú é `fáiltigh "Cáit"`.
+// A borrowed verb joins the vocabulary unqualified, like a loanword in
+// Irish: nobody says "the borrowed verb X," they just say X. So
+// `fáiltigh "Cáit"` is an ordinary command.
 //
-// Is sealbhóir é an modúl fós, agus is é `ó` an gaol céanna a bhí riamh ann —
-// níl ann ach go bhfuil an sealbhóir níos fearr aitheanta anois. Coinníonn
-// `ó shonraí` a shéimhiú, agus tá cineál ceart ag gach ball.
+// The module is still a possessor and `ó` is the same relation as always,
+// just with a better-recognised possessor now.
 
 foclóir seasmhach = ó "./foclóir.r336"
 
 gníomh príomh() {
-    // ball luachmhar tríd an ngaol sealbhach
+    // a value member, through possession
     scríobh BEANNACHT ó fhoclóir
 
-    // feidhm iasachta: is féidir í a ghlaoch gan cháiliú nó tríd an sealbhóir
+    // a borrowed feidhm: callable unqualified or through the possessor
     scríobh beannaigh("Cáit")
     scríobh beannaigh ó fhoclóir("Oisín")
 
-    // gníomh iasachta: ordú atá ann, agus tugtar mar ordú é
+    // a borrowed gníomh: it's a command, given as one
     fáiltigh "Aoife"
 }

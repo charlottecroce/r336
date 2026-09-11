@@ -1,16 +1,15 @@
-// E214 — ní suim í suim nach bhfuil dhá mhalairt inti.
+// E214 — a sum needs at least two variants.
 //
-// Dhá chás, aon chód amháin. Níl luach ar bith sa chéad cheann, agus mar sin
-// ní cineál is féidir a lua é. Tá gach luach den dara ceann ar eolas roimh ré,
-// agus mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
-// éigeantach air. Ní dhearbhaíonn ceachtar acu rogha idir catagóirí, agus is é
-// sin an t-aon rud a dhearbhaíonn suim.
+// Two cases, one code. Empty has no value at all. Single-variant has only
+// one possible value, so `más` on it is ceremony, not a real choice.
+// Either way there's no choice between categories, which is the whole
+// point of a sum.
 
-// Folamh.
+// Empty.
 suim Folamh as Corcaigh {
 }
 
-// Aonair.
+// Single variant.
 suim Aonair as Gaillimh {
     Amháin { luach: Uimhir }
 }

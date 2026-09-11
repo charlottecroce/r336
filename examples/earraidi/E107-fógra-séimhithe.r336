@@ -1,6 +1,6 @@
-// E107 — ní mór aitheantóirí a fhógairt sa bhunfhoirm.
+// E107 — identifiers must be declared in base form.
 //
-// Is í an bhunfhoirm an lemma, agus is é an lemma an rud a théann sa chlár.
-// Fógra i bhfoirm shéimhithe: ní bheadh a fhios ag an gclár cén focal atá ann.
+// The base form is the lemma, and the lemma is what gets bound. A lenited
+// declaration would leave the program not knowing the actual word.
 
 dhuine seasmhach = 3

@@ -1,25 +1,13 @@
-// contae.r336 — an bhlaosc ar deoraíocht.
+// contae.r336 — the exiled shell.
 //
-// Tá trí rud le feiceáil anseo agus ní ghlacann aon cheann acu le
-// heochairfhocal nua:
+// Reads its own data fine: exile-on-exile isn't a border crossing.
+// Construction crosses freely too (a county locks the box, not the road),
+// so this file builds `Imreoir` from primitives and passes it on. The loop
+// is driven from exile but runs its body in place; `fógair` joins the
+// vocabulary unqualified, like a loanword, dispatched via `déan … ar …`.
 //
-//   1. Léann an bhlaosc a cuid sonraí féin. Tá `Iontráil` ar deoraíocht agus
-//      tá an comhad seo ar deoraíocht, agus ní trádáil í deoraíocht ar
-//      dheoraíocht: níl teorainn ar bith idir dhá rud nach as áit ar bith iad.
-//
-//   2. Is í an tógáil an trasnú. Ní sheiceáiltear tógáil, argóintí ná
-//      tuairisceáin — is glas ar an mbosca é an cúige, ní teorainn ar an
-//      mbóthar. Taistealaíonn luachanna áit ar bith; ní osclaítear iad ach sa
-//      bhaile. Mar sin tógann an bhlaosc `Imreoir` as bunchineálacha agus
-//      cuireann sí ar aghaidh é.
-//
-//   3. Tiomáintear an lúb as an deoraíocht agus ritheann an corp san áit.
-//      Tagann `fógair` isteach san fhoclóir gan cháiliú, mar a thagann
-//      briathar iasachta i nGaeilge, agus is é `déan … ar …` a dháileann é.
-//
-// Ní osclaíonn an comhad seo `Imreoir` ná `Foireann` uair ar bith. Ní
-// fhéadfadh: tá sé ar deoraíocht, agus ní dhéanann an deoraíocht comhaontú.
-// Sin an chúis a bhfuil `ainmDe` agus `clúdach` sa chomhad eile.
+// Never opens `Imreoir` or `Foireann` here: exile can't treaty, so it
+// can't. That's why `ainmDe` and `clúdach` live in the other file.
 
 croí seasmhach = ó "./contae-croí.r336"
 

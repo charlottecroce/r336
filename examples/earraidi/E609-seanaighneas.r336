@@ -1,12 +1,8 @@
-// E609 — seanaighneas: ní osclaítear an bosca, fiú sa chúige céanna.
+// E609 — old rivalry: not opened even within the same province.
 //
-// Tá Corcaigh agus Ciarraí araon in An Mhumhain, agus mar sin níl teorainn
-// ar bith eatarthu — d'osclófaí an bosca seo ó Luimneach nó ón gClár gan
-// chomhaontú ar bith. Ní osclaítear ó Chiarraí é.
-//
-// Ritheann an cosc os cionn na gceithre chás, ní istigh i gceann acu: ní
-// dhéanann iomaitheoirí trádáil, thall ná abhus. Níl aon leigheas air —
-// tá comhaontú eatarthu ina earráid inti féin (E608).
+// Corcaigh and Ciarraí share a province, so ordinarily there'd be no
+// border. But they're rivals, so the box stays shut regardless of any
+// treaty — the veto overrides all four border cases, not just one.
 
 as Ciarraí
 

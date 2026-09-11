@@ -1,12 +1,10 @@
-// E601 — dúchas: is bosca as cúige eile é, agus ní osclaítear é.
+// E601 — provenance: a box from another province, unopened.
 //
-// Ó chéim 0.7 is é an cúige an teorainn, ní an contae. Tá Corcaigh in An
-// Mhumhain agus tá Gaillimh i gConnachta, mar sin tá teorainn eatarthu agus
-// níl aon chomhaontú sa chomhad seo. (Dá mba as Luimneach an struchtúr,
-// d'osclófaí é gan chomhaontú ar bith: aon chineál amháin atá ag cúige.)
+// The province is the border, not the county: Corcaigh (An Mhumhain) and
+// Gaillimh (Connachta) are different provinces with no treaty here.
 //
-// Tá cead ag téacs as Corcaigh struchtúr as Gaillimh a fhógairt: níl san
-// fhógra ach ainm a thabhairt air. Is í an oscailt atá faoi rialú.
+// Declaring is fine from any province; only opening (reading a field) is
+// checked.
 
 as Corcaigh
 

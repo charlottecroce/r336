@@ -1,7 +1,7 @@
-// E301 — ní mór gur cineál atá ar dheis na copaile.
+// E301 — the right side of "is" must be a type.
 //
-// Aicmiú atá sa chopail: cuireann sí ceist faoi chatagóir. Ní catagóir é
-// luach, agus mar sin níl aon cheist ann le cur.
+// The copula classifies, asking about a category. A value isn't a
+// category, so there's no question to ask.
 
 duine seasmhach = 3
 

@@ -1,16 +1,8 @@
-// E213 — ní catagóir í an Iasacht.
+// E213 — Iasacht isn't a category.
 //
-// Is é seo an dearmad a dhéanfar go nádúrtha ag teacht ó chéim 0.7, mar sin
-// ba é `Iasacht` an t-aon slí a bhí ann le "b'fhéidir nach bhfuil sé ann" a
-// rá (§25.9). Anois tá `Neamhní` ann, agus tá sé ann ó thús.
-//
-// Dearbhaíonn suim go beacht cad is féidir le luach a bheith. Deir `Iasacht`
-// nach eol cén chatagóir í. Suim nár críochnaíodh a scríobh atá i suim a
-// bhfuil ualach de chatagóir anaithnid inti.
-//
-// Tabhair faoi deara go bhfuil `Iasacht` ceadaithe fós i réimse struchtúir:
-// níor mhaígh taifead riamh go n-áiríonn sé, agus choinneodh riail níos
-// géire gach clár 0.4–0.7 ó thiomsú.
+// A sum declares exactly what a value can be; `Iasacht` means "unknown
+// category," which can't be one of the choices. `Iasacht` is still fine on
+// a struct field, since a record never claimed to enumerate anything.
 
 suim Ceist {
     Freagra { rón: Iasacht }

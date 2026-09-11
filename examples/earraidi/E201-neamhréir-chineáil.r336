@@ -1,7 +1,6 @@
-// E201 — neamhréir chineáil.
+// E201 — type mismatch.
 //
-// An seiceáil is coitianta sa teanga. Tabhair faoi deara go bhfuil an
-// teachtaireacht féin ina Gaeilge cheart: cuireann `le` h- roimh ghuta, agus
-// ritheann an formáiditheoir an mhoirfeolaíocht chéanna a ritheann an teanga.
+// The message text is itself correct Irish: "le" prefixes h- before a
+// vowel, via the same morphology the language runs elsewhere.
 
 aois seasmhach: Uimhir = "fiche"

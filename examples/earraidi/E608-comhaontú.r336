@@ -1,18 +1,13 @@
-// E608 — ní dhéantar comhaontú idir iomaitheoirí.
+// E608 — no treaty between rivals.
 //
-// Seo an botún a dhéanfar: tá `Foireann` i Laighin, tá an téacs seo as
-// Ciarraí, agus is é an comhaontú an chéad rud a shínfear amach chuige. Tá
-// seanaighneas idir Ciarraí agus Baile Átha Cliath, mar sin ní dhéantar é.
+// `Foireann` is in Laighin, this file is from Ciarraí, and
+// Ciarraí/Baile Átha Cliath are old rivals, so no treaty can open it.
+// There's no escape-hatch keyword: the way out is changing county (and
+// therefore province) — try `as Luimneach` instead of `as Ciarraí` and the
+// same treaty works.
 //
-// Níl aon `sos cogaidh` sa teanga: dá mbeadh, is riail a cheanglaítear agus
-// a scaoiltear san aon chomhad amháin a bheadh inti, agus ní riail ar bith í
-// sin. Tá éalú ann cheana, agus is rogha é seachas eochairfhocal — athraigh
-// `as Ciarraí` go `as Luimneach` agus osclóidh an comhaontú céanna an bosca.
-// Caillfidh tú an contae a bhí uait. Sin an praghas (§25.4, §25.5).
-//
-// Cuir `feidhm ainmDe(f: Foireann) -> Teaghrán { ainm ó fh }` leis agus
-// gheobhaidh tú E609 in éineacht leis: ní hé an comhaontú an t-aon rud a
-// theipeann.
+// Adding `feidhm ainmDe(f: Foireann) -> Teaghrán { ainm ó fh }` triggers
+// E609 too: the treaty isn't the only thing that fails here.
 
 as Ciarraí
 

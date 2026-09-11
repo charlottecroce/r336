@@ -1,5 +1,5 @@
-// seilbh.r336 — seilbh iolraithe: `ó` a rialaíonn tús na habairtíne atá ina
-// dhiaidh, díreach mar a dhéanann réamhfhocal sa Ghaeilge.
+// seilbh.r336 — chained possession: each `ó` governs the head of its own
+// complement, like a preposition in Irish.
 
 struchtúr Seoladh {
     baile: Teaghrán
@@ -16,12 +16,12 @@ duine seasmhach = Duine {
     seoladh: Seoladh { baile: "Corcaigh", uimhir: 14 }
 }
 
-// `duine` -> `dhuine`; `seoladh` -> `sheoladh`; `baile` is ceann na habairtíne
-// ar fad, mar sin fanann sé sa bhunfhoirm.
+// duine -> dhuine, seoladh -> sheoladh; baile heads the whole phrase so it
+// stays base form.
 scríobh baile ó sheoladh ó dhuine
 scríobh uimhir ó sheoladh ó dhuine
 
-// Aitheantóir a thosaíonn le guta: níl slot séimhithe aige, agus mar sin is í
-// an bhunfhoirm an fhoirm cheart i ndiaidh "ó".
+// Vowel-initial identifiers have no lenition slot, so the base form is
+// correct after "ó".
 áit seasmhach = Seoladh { baile: "Gaillimh", uimhir: 3 }
 scríobh baile ó áit

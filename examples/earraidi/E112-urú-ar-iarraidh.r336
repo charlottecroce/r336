@@ -1,8 +1,7 @@
-// E112 — éilíonn an suíomh urú, agus scríobhadh an bhunfhoirm
+// E112 — eclipsis required, base form written.
 //
-// Is é seo E102 an uraithe: an fhoirm a bhí ag teastáil, agus nach
-// bhfuarthas. Uraíonn `i` a chomhlánú, mar sin `i gcuntas` agus ní
-// `i cuntas`.
+// The eclipsis version of E102. `i` eclipses its complement: "i gcuntas",
+// not "i cuntas".
 
 as Corcaigh
 

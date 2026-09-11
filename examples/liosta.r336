@@ -1,24 +1,17 @@
-// liosta.r336 — an liosta ilchineálach, agus an bualadh ag an tsuim (§26.5,
-// §26.7).
+// liosta.r336 — heterogeneous lists and meeting at a sum (§26.5, §26.7).
 //
-// Bhí comhad `earraidi/E211-liosta-gan-cheann.r336` anseo go dtí 0.9, agus
-// theip air d'aon ghnó. Rinneadh E211 fíor i gcéim 0.8 agus díshealbhaíodh
-// arís é sa chéim chéanna nuair a tiomsaíodh clár fíor ina choinne (§26.7):
-// is liosta paraiméadar dlisteanach é `[ainm, aois]` ag an teorainn, agus níl
-// aon tsuim ann ba cheart a chumhdach air. Tá E211 curtha in áirithe fós, agus
-// mar sin níl aon chomhad aige in `earraidi/`. Seo an rud a tharlaíonn ina
-// áit.
+// E211 was briefly made real in 0.8 and made unreachable again the same
+// release: `[ainm, aois]` at a driver boundary is a legitimate mixed list
+// with no sum to cover it. Reserved, no case file. Here's what happens
+// instead.
 
-// 1. LEATHNÚ. Níl aon cheann coitianta ag na míreanna seo, mar sin is
-//    `Liosta(Iasacht)` an liosta — sin an rud a chiallaíonn `Iasacht`: níl an
-//    cineál á rianú againn. Ní botún é.
+// 1. WIDEN. No common type among these items, so the list widens to
+//    Liosta(Iasacht) — not an error.
 measctha seasmhach = [1, "a dó", 3]
 scríobh fad ó mheasctha
 
-// 2. BUALADH. Is scéal eile ar fad é seo. Tá ceann coitianta ag an dá mhalairt
-//    — an tsuim féin — agus mar sin ní leathnaíonn an liosta go `Iasacht` ach
-//    buaileann sé le chéile ag `Toradh`. Sin an difríocht a rinne 0.8: is
-//    féidir an cineál a fhógairt agus a sheiceáil anois.
+// 2. MEET. Two variants of the same sum have a common type (the sum
+//    itself), so the list meets at Toradh instead of widening to Iasacht.
 suim Toradh {
     Ceart  { luach: Uimhir }
     Easpa  { cúis: Teaghrán }

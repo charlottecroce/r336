@@ -1,16 +1,13 @@
-// saor.r336 — an briathar saor, an tríú modh (§37).
+// saor.r336 — the autonomous verb, the third mood (§37).
 //
-//   feidhm   luaitear rud     — táscach: tugann sé luach ar ais
-//   gníomh   déantar rud      — ordaitheach: labhraíonn sé le déantóir
-//   saor     déantar é        — saor: níl aon déantóir ann le hainmniú
+//   feidhm  — states, returns a value (indicative)
+//   gníomh  — does, addresses an agent (imperative)
+//   saor    — done, with no nameable agent (autonomous)
 //
-// Níl an fhoirm shaor ina fhoirm chéasta. Ní féidir "ag X" a chur léi ar chor
-// ar bith: ní hé nach luaitear an déantóir, ach nach féidir é a lua. Sin an
-// rud a chuireann an modh in iúl, agus sin an méid a fhorfheidhmíonn an
-// tiomsaitheoir.
+// Not a passive: it's not that the agent is omitted, it's that none can be
+// named. That's the whole distinction the compiler enforces.
 
-// An fhógra. Is í an fhréamh — an fhoirm ordaitheach — an fhoirm luaite, mar
-// is í i gcónaí: `liostaigh`.
+// The declaration uses the root (imperative form): "liostaigh".
 saor liostaigh(mír: Teaghrán) {
     scríobh "· " + mír
 }
@@ -19,12 +16,9 @@ saor fógair(teachtaireacht: Teaghrán) {
     scríobh "! " + teachtaireacht
 }
 
-// An ráiteas. NÍ hí an fhréamh a scríobhtar anseo ach an fhoirm shaor, agus
-// déanann an tiomsaitheoir í: `liostaigh` → `liostaítear` (dara réimniú),
-// `fógair` → `fógraítear` (dara réimniú, coimriú: fógair → fógr-).
-//
-// `liostaigh mír` — sin ordú, agus is E518 é: níl aon duine ann le hordú a
-// thabhairt dó.
+// Usage writes the derived autonomous form, not the root: liostaigh ->
+// liostaítear, fógair -> fógraítear (syncopating). Writing "liostaigh mír"
+// as a command is E518 — there's nobody to command.
 gníomh príomh() {
     liostaítear "arán"
     liostaítear "im"

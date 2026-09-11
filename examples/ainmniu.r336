@@ -1,19 +1,11 @@
-// ainmniú.r336 — an briathar ina ainmfhocal (§18, §20).
+// ainmniú.r336 — the verb as noun (§18, §20).
 //
-// Bhí teannas ann i gcéim 0.3: is é `ag` + ainm briathartha an fhoirm
-// Ghaeilge don ghníomh atá ar siúl (gealltanas) AGUS don ghníomh mar rud
-// (clabhsúr). Tá an teannas réitithe anois, mar nach ionann an dá rud sa
-// Ghaeilge ach an oiread:
+// `ag <ainm bhriathartha>` marks ongoing action; `a <ainm bhriathartha>`
+// names the verb as a value (a closure). They're distinct in Irish too, so
+// there's no conflict. `a` lenites its complement, same rule as `ó`/`ar`.
 //
-//   ag scríobh    an cháithnín aspectach + an t-ainm briathartha : ar siúl
-//   a scríobh     an cháithnín ainmniúcháin + an t-ainm briathartha : an rud
-//
-// Séimhíonn `a` a chomhlánú, mar a dhéanann `ó` agus `ar`. Sin an tríú
-// hoibreoir a rialaíonn foirm, agus an riail chéanna i ngach cás.
-//
-// NÍ hé seo an tuiseal gairmeach (§20): tá an cháithnín `a` ann faoi dhó sa
-// Ghaeilge — ceann chun duine a ghairm, ceann chun briathar a ainmniú — agus
-// is é an dara ceann atá anseo. Ní ghlaotar ar aon rud leis.
+// Not the vocative `a` (§20) — Irish has two: one to address someone, one
+// to nominalise a verb. This is the second; nothing is being called.
 
 bun seasmhach = ó "../rt/bunúsach.js"
 
@@ -26,7 +18,7 @@ gníomh trom(mír: Iasacht) {
 }
 
 gníomh príomh() {
-    // `forEach` is ball ar iasacht: coinníonn sé a ainm iasachta.
+    // `forEach` is a borrowed member: keeps its borrowed name.
     liosta seasmhach: Iasacht = ["Cáit", "Oisín", "Aoife"]
 
     scríobh "gnáth:"

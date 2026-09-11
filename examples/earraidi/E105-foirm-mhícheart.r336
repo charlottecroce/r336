@@ -1,12 +1,9 @@
-// E105 — foirm nach bhfuil bailí don aitheantóir.
+// E105 — form doesn't match any valid paradigm.
 //
-// An cás fágtha, agus is cás cúng é. Tá `DHuine` cosúil le foirm shéimhithe —
-// consan inséimhithe agus `h` ina dhiaidh — agus tá an lemma `Duine` sa
-// chlár. Ach ní hí `DHuine` foirm shéimhithe `Duine`: coinníonn an séimhiú an
-// radacach mar atá agus cuireann `h` beag isteach, mar sin `Dhuine` atá ann.
-//
-// Sin an fáth a bhfuil E105 ann seachas E103 nó E102: níl an fhoirm scríofa
-// mícheart don suíomh, tá sí mícheart don fhocal.
+// A narrow leftover case. "DHuine" looks lenited (leniting consonant + h),
+// and "Duine" is bound, but lenition keeps case on the radical and adds a
+// lowercase h: the real lenited form is "Dhuine", not "DHuine". Wrong for
+// the word, not just the position, hence E105 rather than E102/E103.
 
 struchtúr Taifead {
     ainm: Teaghrán

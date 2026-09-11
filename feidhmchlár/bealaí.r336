@@ -1,34 +1,22 @@
-// bealaí.r336 — loighic agus clárú na mbealaí (Céim 4 agus 5), agus an bhlaosc
-// ar deoraíocht (Céim 0.7).
+// bealaí.r336 — route logic and registration (§4/§5), and the exiled shell
+// (§0.7).
 //
-// Fanann Express agus EJS mar atá. Ó chéim 0.4 i leith is i R336 a
-// chláraítear na bealaí freisin, agus ní dhéanann JavaScript ach an tosú.
+// Express and EJS stay as-is; R336 registers routes itself since 0.4, so
+// JavaScript only does startup.
 //
-// Trí ghné a tháinig isteach i gcéim 0.4:
+// From 0.4: `sealadach` (current state vs. permanent), `cuir … ar …`
+// (mutation as a command, illegal in feidhm), `a <briathar>` (a verb as a
+// noun, the only way to mention a command).
 //
-//   sealadach     staid an mhodúil: an rud atá ann faoi láthair, seachas an
-//                 rud atá ann go buan
-//   cuir … ar …   athrú staide mar ordú: ní féidir é a dhéanamh i bhfeidhm
-//   a <briathar>  an briathar ina ainmfhocal, an t-aon slí a luaitear ordú
+// From 0.5: `cuirDuine …` (a command across a module boundary), `déan … ar
+// …` (distributing an action over a collection).
 //
-// Agus dhá cheann i gcéim 0.5:
-//
-//   cuirDuine …   ordú trasna teorann modúil
-//   déan … ar …   an gníomh á dháileadh ar bhaill an bhailiúcháin
-//
-// AGUS AN CEANN NUA I GCÉIM 0.7. Tá an comhad seo ar deoraíocht agus fanfaidh
-// sé ann. Sin an rud a ligeann dó labhairt leis an domhan lasmuigh: is
-// deoraí gach `Iasacht`, agus ní teorainn í deoraíocht ar dheoraíocht. Trí
-// riail a leanann as sin, agus is fiú iad a rá os ard mar níl aon cheann acu
-// le feiceáil sa chód:
-//
-//   1. Léann an comhad seo réimsí de rónna (`ainm ó thaifead`) gan bhac. Is
-//      deoraithe an dá thaobh.
-//   2. Tógann sé `Duine` as bunchineálacha gan bhac. Ní sheiceáiltear tógáil:
-//      is glas ar an mbosca é an cúige, ní teorainn ar an mbóthar.
-//   3. Ní osclaíonn sé `Duine` uair ar bith, agus ní fhéadfadh. Sin an fáth a
-//      bhfuil `ainmDe` agus `aoisDe` ann thall. Ní seirbhísigh iad: is iad an
-//      trasnú.
+// NEW IN 0.7. This file stays exiled on purpose: that's what lets it talk
+// to the outside world, since every `Iasacht` is exiled and exile-on-exile
+// isn't a border crossing. So it reads row fields (`ainm ó thaifead`)
+// freely, builds `Duine` from primitives freely (construction is never
+// checked, a county locks the box not the road), and never opens `Duine`
+// itself, which is why `ainmDe`/`aoisDe` live on the other side as accessors.
 
 croí seasmhach     = ó "./duine.r336"
 sonraí seasmhach   = ó "./sonraí.r336"
@@ -46,12 +34,11 @@ struchtúr AmharcDuine {
     aimsíodh: Bool
 }
 
-// Níl aon stór ann go dtí go dtosaítear an feidhmchlár, agus sin an rud a
-// insíonn "bí" dúinn.
+// No store exists until the app starts; `bí` tells us that.
 stór sealadach: Iasacht = neamhní
 
-// D'imigh `struchtúr Síol`. Ba chóip de `Duine` é a bhí ann toisc nach raibh
-// aon `Duine` ann le cóipeáil. Anois tá, agus tógtar é anseo sa deoraíocht.
+// `Síol` struct is gone — it was a copy of `Duine` made because none
+// existed yet. Built here in exile now.
 daoine seasmhach: Liosta(Duine) = [
     Duine { ainm: "Charlotte", aois: 20 },
     Duine { ainm: "Séamus", aois: 12 },
@@ -63,11 +50,8 @@ ag gníomh tosaigh(conair: Teaghrán) {
     síolaigh
 }
 
-// SEO AN NÓIMÉAD. Ba é `ainm ó dhuine` a bheadh anseo dá mbeadh cead aige, agus
-// is E601 é: tá an comhad seo ar deoraíocht agus tá `Duine` in An Mhumhain.
-// Glaotar ar an dá bhriathar thall ina áit. Dhá líne bhreise atá i gceist, agus
-// tá an chuma orthu gur trasnú soiléir atá ann seachas cáin — ach féach §25.9:
-// níl ach dhá réimse sa chineál seo, agus scéal eile a bheadh ann le deich gcinn.
+// `ainm ó dhuine` here would be E601: this file is exiled, `Duine` is in An
+// Mhumhain. Calls the two accessors instead.
 ag gníomh cuirSíol(duine: Duine) {
     cuirDuine stór, ainmDe(duine), aoisDe(duine)
 }
@@ -76,8 +60,6 @@ ag gníomh síolaigh() {
     cruthaighScéim stór
     rónna seasmhach: Liosta(Iasacht) = tar éis gachDuine ó shonraí(stór)
     má folamh ó rónna { déan a chuirSíol ar dhaoine }
-    // An lúb á tiomáint as an deoraíocht, an corp á rith san áit. `céim` a
-    // tháinig ó "./duine.r336" agus níl cáiliú ar bith air.
     déan a chéim ar dhaoine
 }
 
@@ -90,9 +72,8 @@ ag saor liostaigh(iarr: Iasacht, freag: Iasacht) {
 }
 
 ag saor taispeáin(iarr: Iasacht, freag: Iasacht) {
-    // Coinníonn ball ar iasacht a ainm iasachta: ní aistrímid API duine eile.
+    // Keeps its borrowed name — we don't rename someone else's API.
     aitheantas seasmhach = uimhir ó bhun(id ó pharams ó iarr)
-    // `is` mar aicmiú: an uimhir í an rud a tháinig isteach? Ní uimhir é NaN.
     más Uimhir aitheantas {
         taifead seasmhach = tar éis duineDeRéir ó shonraí(stór, aitheantas)
         render ó fhreag("duine", AmharcDuine {
@@ -106,40 +87,20 @@ ag saor taispeáin(iarr: Iasacht, freag: Iasacht) {
     }
 }
 
-// `bí` mar cheist bheithe, ní mar aicmiú: an bhfuil aon rud ann?
-//
-// Ní féidir an fheidhm seo a chur thall, agus is é sin an rud is suimiúla a
-// tharla sa chéim seo. Glacann sí le `Iasacht`, mar is `Iasacht` é rón nach
-// bhfuil ann. Níl aon chineál suime sa teanga fós (§22), mar sin is é
-// `Iasacht` an tslí a chuirtear "b'fhéidir nach bhfuil sé ann" in iúl, agus
-// tá `Iasacht` ar deoraíocht. Titeann an teorainn idir curtha agus deoraithe
-// go díreach san áit a bhfuil na cineálacha suime ar iarraidh.
-// Níl fágtha anseo ach an tiontú, agus is é sin obair na blaoisce ó thús: an
-// saol amuigh a léamh agus luach curtha a thógáil as (§24.3). D'imigh an
-// loighic — cad is teideal ann — go dtí `duine.r336`, mar a bhfuil an cineál.
-//
-// Ní fhéadfadh an tiontú seo bogadh anonn, agus is riail é sin seachas
-// timpiste: chuirfeadh E213 cosc ar `Iasacht` i réimse malairte, mar sin
-// caithfidh an tiontú tarlú ar an teorainn. Sin an rud a bhí uainn.
+// `bí`: existence, not classification. Can't move this to the placed side:
+// it takes `Iasacht`, since a missing row is `Iasacht`, and this is the
+// conversion boundary the shell exists for. `Aimsiú`'s field can't be
+// `Iasacht` (E213), so the conversion has to happen right here.
 feidhm aimsigh(taifead: Iasacht) -> Aimsiú {
     má tá taifead {
         Aimsithe { duine: Duine { ainm: ainm ó thaifead, aois: aois ó thaifead } }
     } mura { Uireasa { } }
 }
 
-// `a liostaigh`, `a thaispeáin`: an briathar mar ainmfhocal. Gan an cháithnín
-// seo bheadh E501 ann — ní ainmní é ordú.
-//
-// Ó 0.10 is briathra saora iad an dá cheann (§37), agus sin an rud ceart:
-// glaonn Express orthu, agus ní ghlaonn R336 orthu riamh. Ní ordú é
-// `bealach ó fhreastal(…)` a thugtar dóibh ach clárú — cuirtear in aithne
-// don saol lasmuigh iad, agus déantar iad ansin, ag déantóir nach féidir a
-// ainmniú anseo.
-//
-// Tá dhá rud á bhforfheidhmiú anois nach raibh: ní féidir `liostaigh iarr,
-// freag` a scríobh in aon áit sa mhodúl seo (E518), agus ní féidir ceachtar
-// acu a thabhairt do bhriathar R336 ar bith, mar dhéanfadh sin déantóir
-// de. Níl ach `Iasacht` fágtha mar cheann scríbe, agus is í an teorainn í.
+// `a liostaigh`/`a thaispeáin`: verb as noun, needed or E501. Both are
+// autonomous verbs (§37) since Express calls them and R336 never does:
+// registering them isn't a command, just an introduction to an agent that
+// can't be named here.
 gníomh cláraigh(app: Iasacht) {
     bealach ó fhreastal(app, "/", a liostaigh)
     bealach ó fhreastal(app, "/duine/:id", a thaispeáin)

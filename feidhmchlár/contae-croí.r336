@@ -1,25 +1,17 @@
-// contae-croí.r336 — an croí curtha. Dhá chúige de na ceithre cinn.
+// contae-croí.r336 — the placed core. Two of the four provinces spent.
 //
-// Ní féidir leis an gcomhad seo baint ar bith a bheith aige leis an
-// JavaScript. Tá `Iasacht` ar deoraíocht, agus ní dhéanann an deoraíocht
-// trádáil le duine ar bith, mar sin scarann áit an chomhaid seo ón gcúlchríoch
-// go buan. Sin an brú a bhfuil an gné ann chun é a chur i bhfeidhm.
+// Never touches JavaScript: `Iasacht` is exiled and exile trades with
+// nobody, so this file is permanently cut off from the backend.
 //
-// AN ROGHA A CHOSAIN RUD ÉIGIN
-//
-//   B'é Ciarraí an contae follasach don chineál seo. Ach tá `Foireann` as
-//   Baile Átha Cliath, agus tá seanaighneas idir Ciarraí agus Baile Átha
-//   Cliath: bheadh an comhaontú thíos ina E608, agus ní osclófaí `Foireann`
-//   as an gcomhad seo go deo. Mar sin is as Corcaigh an cineál seo.
-//
-//   Ní chosnaíonn sé sin An Mhumhain — bhí sí le caitheamh ar aon nós. Baineann
-//   sé an t-ainm díom. Sin an cluiche: ní hé "cén contae" ach "cén cúige atá
-//   tuillte ag an gcineál seo, agus cé leis nach labhróidh mé dá bharr".
+// WHY CORCAIGH. Ciarraí was the obvious county, but `Foireann` is in Baile
+// Átha Cliath and Ciarraí/BÁC are old rivals: the treaty below would be
+// E608 and `Foireann` could never be opened here. Corcaigh costs the same
+// province either way, so it's the pick that doesn't also cost a treaty.
 
 as Corcaigh
 
-// Obair fhíor atá sa chomhaontú seo, ní páipéarachas. Gan é, is E601 gach
-// líne a osclaíonn `Foireann` thíos.
+// Real work, not paperwork: without this, every line opening `Foireann`
+// below is E601.
 comhaontú Corcaigh Baile Átha Cliath
 
 struchtúr Imreoir as Corcaigh {
@@ -31,7 +23,6 @@ struchtúr Foireann as Baile Átha Cliath {
     ainm: Teaghrán
 }
 
-// Osclaítear an bosca sa bhaile: An Mhumhain ar An Mhumhain.
 feidhm ainmDe(imreoir: Imreoir) -> Teaghrán {
     ainm ó imreoir
 }
@@ -40,7 +31,7 @@ feidhm óg(imreoir: Imreoir) -> Bool {
     aois ó imreoir < 21
 }
 
-// Osclaítear an bosca seo faoin gcomhaontú: Laighin ar An Mhumhain.
+// Opened via the treaty: Laighin on An Mhumhain.
 feidhm clúdach(foireann: Foireann) -> Teaghrán {
     "Foireann: " + ainm ó fhoireann
 }

@@ -1,7 +1,7 @@
-// E102 — ní mór séimhiú a chur air.
+// E102 — lenition required.
 //
-// Séimhíonn `ó` a chomhlánú. Ní stíl é sin ach rialú: iarrann an suíomh an
-// fhoirm shéimhithe, agus tugtar an bhunfhoirm dó.
+// `ó` lenites its complement. Not a style choice: the position demands the
+// lenited form, and the base form was written instead.
 
 struchtúr Duine {
     ainm: Teaghrán

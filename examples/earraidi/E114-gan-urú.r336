@@ -1,12 +1,10 @@
-// E114 — ní féidir urú a chur ar an bhfocal seo
+// E114 — this word can't take eclipsis.
 //
-// Is é seo E104 an uraithe, agus tagann sé chugainn ón treo céanna: focal a
-// bhfuil urú air cheana níl aon urú eile le cur air. Séimhiú a éilíonn `ar`,
-// agus tá `gcat` scríofa i gcruth uraithe nach féidir leis an lemma a iompar.
+// The eclipsis twin of E104. "ar" demands lenition, and "gcat" is already
+// written in an eclipsed shape the lemma can't carry.
 //
-// Tabhair faoi deara cé chomh cúng is atá an cás. Ní shroicheann an cód seo
-// focal a thosaíonn le l, m, n, r, s ná h — níl aon chruth uraithe
-// inscríofa acu sin ar chor ar bith, mar sin is é E101 a fhaigheann siad.
+// Narrow case: words starting l/m/n/r/s/h have no eclipsed form to write
+// at all, so those get E101 instead.
 
 gcat sealadach = 3
 

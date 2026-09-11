@@ -1,13 +1,8 @@
-// E519 — foirm mhícheart den bhriathar saor.
+// E519 — wrong form of the autonomous verb.
 //
-// Tá `liostaíodh` ina fhoirm shaor cheart — an aimsir chaite. Níl aon aimsir
-// i R336, áfach, agus mar sin níl aon slot aici. An chúis chéanna a
-// choinnigh `ba` amach as tábla na copaile (§31.5): ní dhearbhaítear
-// deighilt nach féidir leis an teanga a chur in iúl.
-//
-// Aithnítear í d'aon ghnó, ionas gur féidir í a dhiúltú faoina hainm. Is
-// freagra níos measa é "aitheantóir gan sainmhíniú" ar rud atá ceart sa
-// Ghaeilge agus mícheart anseo.
+// `liostaíodh` is real Irish (past autonomous), but R336 has no tense, so
+// there's no slot for it. Recognised on purpose so it can be refused by
+// name rather than reported as "unbound identifier".
 
 saor liostaigh(mír: Teaghrán) {
     scríobh mír

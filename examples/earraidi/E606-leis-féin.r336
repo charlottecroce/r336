@@ -1,4 +1,8 @@
-// E606 — ní dhéantar comhaontú le duine féin.
+// E606 — a treaty with yourself.
+//
+// A treaty needs two parties. Corcaigh doesn't need permission to open its
+// own box, and the same-province check runs before any treaty lookup.
 
 as Corcaigh
+
 comhaontú Corcaigh Corcaigh
