@@ -4,7 +4,7 @@
  * fáiltis.js — diagnostics.
  *
  * Messages are Irish. Codes are stable so that tests and tooling survive
- * rewording (§27). The prose should still be reviewed by a fluent speaker;
+ * rewording (§9). The prose should still be reviewed by a fluent speaker;
  * the codes are the contract, the wording is not yet.
  *
  * Ranges:
@@ -13,7 +13,7 @@
  *   3xx  copail / bí     — classification and existence
  *   4xx  comhréir        — lexing and parsing
  *   5xx  modh agus aspect— imperative vs indicative, ongoing vs completed
- *   6xx  dúchas          — province, county, exile, treaty (§24, §25)
+ *   6xx  dúchas          — province, county, exile, treaty (§7, §7)
  */
 
 const { reamhlitirH } = require('./morphology');
@@ -120,27 +120,27 @@ const M = {
   // mhalairt den tsuim chéanna le chéile ag an tsuim ó 0.8 i leith, ach
   // leathnaíonn liosta nach mbuaileann in aon áit go Liosta(Iasacht) mar a
   // rinne sé riamh: is liosta paraiméadar dlisteanach é `[ainm, aois]` ag an
-  // teorainn, agus níor cheart suim a firinscneach chumhdach air (§26.7).
+  // teorainn, agus níor cheart suim a chumhdach air (§6).
   E211: (a, b) => `Ní mór an cineál céanna a bheith ag gach mír i liosta: ${a} agus ${b}.`,
 
   E212: (ainm, suil, fuarthas) =>
     `Tá ${suil} paraiméadar cineáil ag "${ainm}", ach fuarthas ${fuarthas}.`,
 
-  // §26.4 — ní ceadmhach `Iasacht` i réimse malairte.
+  // §6 — ní ceadmhach `Iasacht` i réimse malairte.
   //
-  // Dearbhaíonn suim go firinscneach beacht cad is féidir le luach a bheith; deir
+  // Dearbhaíonn suim go beacht cad is féidir le luach a bheith; deir
   // `Iasacht` nach eol cén chatagóir í. Ualach de chatagóir anaithnid taobh
-  // istigh d'áireamh catagóirí: sin suim nár firinscneach críochnaíodh a scríobh. Ceadaítear
+  // istigh d'áireamh catagóirí: sin suim nár críochnaíodh a scríobh. Ceadaítear
   // é fós i réimse struchtúir, mar nár mhaígh taifead riamh go n-áiríonn sé.
   E213: (suim, malairt, reimse, cineal) =>
     `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad firinscneach is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
 
-  // §26.8 — ní suim í firinscneach suim nach firinscneach bhfuil dhá mhalairt inti.
+  // §6 — ní suim í suim nach bhfuil dhá mhalairt inti.
   //
   // Dhá chás, aon chód amháin, mar is ionann an locht iontu: ní dhéanann an
   // fógra rogha. Suim fholamh — níl luach ar bith inti, agus mar sin ní
   // cineál is féidir a lua í. Suim aonair — tá a fhios roimh ré cad í, agus
-  // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a firinscneach bhfuil `más`
+  // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
   // éigeantach air. Luaitear a bhfuarthas, mar is é sin an rud atá le ceartú.
   E214: (ainm, lion) =>
     `Ní suim í firinscneach "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
@@ -148,7 +148,7 @@ const M = {
   // ── 3xx: copail agus briathar substaintigh ────────────────────────────
   E301: () => `Ní mór gur cineál atá ar dheis na copaile "is".`,
 
-  // Sroichte ó 0.8: dearbhaíonn suim go firinscneach beacht cad is féidir le luach a
+  // Sroichte ó 0.8: dearbhaíonn suim go beacht cad is féidir le luach a
   // bheith, agus mar sin is féidir aicmiú a bhréagnú go statach. Ba é seo an
   // t-aon chód a bhí curtha in áirithe agus a d'éirigh fíor; níor thug an
   // nóta faoi deara é go dtí 0.10.1.
@@ -213,7 +213,7 @@ const M = {
   E516: (ainm) =>
     `Ní ghlacann an t-ordú "${ainm}" le sealbhóir: tógann "ó" frása ainmfhoclach, agus ní ainmní é ordú. Tá briathar iasachta san fhoclóir gan cháiliú — tabhair "${ainm} …" mar ordú.`,
 
-  // §37 — an briathar saor.
+  // §8 — an briathar saor.
   //
   // Ní hionann é seo agus cosc: is é an fhoirm féin a dhiúltaíonn. Ordaítear
   // do dhuine, agus níl aon duine ann. Is é a mhalairt de E501 é — ní féidir
@@ -231,23 +231,23 @@ const M = {
   E521: (ainm, cuis) =>
     `Ní féidir foirm shaor a dhéanamh de "${ainm}" (${cuis === 'gan-ghuta' ? 'níl guta ann' : cuis}): ní réimnítear focal nach bhfuil ina fhréamh bhriathair.`,
 
-  // §31 — foirm na copaile. An comhbhrá céanna le E512, ar an mír seachas ar
+  // §5.5 — foirm na copaile. An comhbhrá céanna le E512, ar an mír seachas ar
   // an mbriathar substaintigh: ceanglaíonn an chopail leis an mír a rialaíonn
   // í, agus roghnaíonn an chéad litir den chineál ina diaidh idir "mura" agus
   // "murab". Ní athraíonn a brí, díreach mar nach n-athraíonn brí "bhfuil".
   E517: (scriofa, ceart) =>
     `Foirm mhícheart den chopail: scríobhadh "${scriofa}", ach is í "${ceart}" an fhoirm atá ag teastáil sa suíomh seo. Ceanglaíonn an chopail leis an mír a rialaíonn í, agus roghnaíonn tús an chineáil ina diaidh an fhoirm.`,
 
-  // §39 — `ar` mar staid dhochrach.
+  // §5.11 — `ar` mar staid dhochrach.
   //
   // Cuireann an Ghaeilge an mí-ádh ort: *tá tinneas cinn orm*, *theip orm*,
   // *tá brón orm*. Ní dhéanann an duine é agus ní leis é — tarlaíonn sé dó.
   // Sin an tríú ball den scoilt: `ag` coimeád, `le` teideal, `ar` dochar.
   //
   // Níl aon mhoirfeolaíocht nua anseo. Séimhíonn `ar` cheana agus téann sé
-  // trí `reitighFoirm` cheana (§12, §21). Is í an bhrí atá nua, agus mar sin
+  // trí `reitighFoirm` cheana (§5.2, §5.8). Is í an bhrí atá nua, agus mar sin
   // caithfear a rá gur ar fhorais shéimeantacha atá an ghné seo bunaithe agus
-  // ní ar fhorais ghramadaí — an chóireáil chéanna a fuair `suim` i §26.1.
+  // ní ar fhorais ghramadaí — an chóireáil chéanna a fuair `suim` i §6.
   E522: (ainm) =>
     `Ní chuirtear dochar ar rud nach bhfuil ann: níl toradh ar bith ag "${ainm}", mar sin níl aon rud ann le bheith buailte. Níl frása "ar" ceadaithe ach ar fheidhm a bhfuil "->" aici.`,
 
@@ -264,10 +264,10 @@ const M = {
   E524: (dochar, cineal) =>
     `Ní bhuailtear ${cineal} le ${dochar}: níor fhógair aon bhriathar an dochar sin air, mar sin tá an cheist gan bhrí. Ní cheistítear ach an rud a d'fhéadfadh a bheith buailte.`,
 
-  // §40 — inscne ghramadaí.
+  // §5.10 — inscne ghramadaí.
   //
   // Ní iompraíonn an inscne brí ar bith. Sin an difríocht idir seo agus an
-  // rud ar dhiúltaigh §36 dó: theastaigh `aige`/`aici` ón úinéireacht chun
+  // rud ar dhiúltaigh §12 dó: theastaigh `aige`/`aici` ón úinéireacht chun
   // sealbhóir amháin a aithint thar cheann eile, agus b'shin catagóir
   // ghramadaí ag iompar ábhair a raibh an clár ag brath air. Ní éilíonn an
   // inscne anseo ach foirm, agus ní athraíonn sí rud ar bith eile.
@@ -279,7 +279,7 @@ const M = {
 
   // ── 6xx: dúchas ───────────────────────────────────────────────────────
   // A new axis, alongside morphology, types, the copula, syntax and mood.
-  // The county system is a bit and the notes say so (§24.1, §25.1); the
+  // The county system is a bit and the notes say so (§7.1, §7.1); the
   // diagnostics are not, and they hold to the same standard as the rest.
   //
   // Three of these are funny, and none of them is written to be. The rule is
@@ -298,10 +298,13 @@ const M = {
   // province that is gone, the county sitting in it, and the struct that put
   // it there. Naming only the county — which is what 0.6 did — is now wrong,
   // because the thing that was taken is not the county that was written.
-  // Ó 0.8 i leith is féidir gur suim atá firinscneach san áititheoir, mar tá suim agus firinscneach
-  // struchtúr san firinscneach iomaíocht chéanna ar na ceithre shliotán (§26.2).
+  // Ó 0.8 i leith is féidir gur suim atá san áititheoir, mar tá suim agus
+  // struchtúr san iomaíocht chéanna ar na ceithre shliotán (§6).
+  //
+  // (Bhí an nóta seo truaillithe ag imirce 0.11: cuireadh "firinscneach"
+  // isteach trí huaire i lár na Gaeilge. Deisithe i 0.12 — féach §0.)
   E603: (cuige, contae, struchtur) =>
-    `Tá ${cuige} tógtha cheana ag an gcineál "${struchtur}", atá as ${contae}. Ní bhíonn ach cineál amháin ag cúige: ceithre chineál churtha atá i gclár, agus is ionann contae a roghnú agus cúige a roghnú.`,
+    `Tá ${cuige} tógtha cheana ag an gcineál "${struchtur}", atá as ${contae}. Éilíonn gnáthchineál curtha cúige iomlán, agus is ionann contae a roghnú agus cúige a roghnú. Ní éilíonn cineál stóir ach contae amháin (E612) — ach ní sháraíonn sin éileamh cúige atá ann cheana, ná a mhalairt.`,
 
   E604: () =>
     `Tá contae an mhodúil fógartha faoi dhó. Ní bhíonn téacs as dhá áit.`,
@@ -315,7 +318,7 @@ const M = {
   E607: (a, b) =>
     `Tá comhaontú idir ${a} agus ${b} sa chomhad seo cheana. Is ionann comhaontú ón dá thaobh, mar sin níl san dara fógra ach athrá.`,
 
-  // §25.4 — an t-iompú. Ní eisceacht sa tábla comhaontuithe é seo: ní
+  // §7.2 — an t-iompú. Ní eisceacht sa tábla comhaontuithe é seo: ní
   // fhéadfadh comhaontú idir iomaitheoirí cead a thabhairt riamh, mar go
   // ritheann an cosc roimh an gcuardach. Insítear anseo é san áit a
   // gceapann an t-údar go bhfuil leigheas ann.
@@ -326,6 +329,29 @@ const M = {
   // not help. Two rivals in one province are still two rivals.
   E609: (ball, contaeBaill, contaeAitiuil) =>
     `Níl cead ag téacs as ${contaeAitiuil} an ball "${ball}" a oscailt: is as ${contaeBaill} é, agus is seanaighneas atá eatarthu. Ní réitíonn comhaontú é seo (E608), ná an cúige céanna.`,
+
+  // ── §7.6: táblaí stóir ──────────────────────────────────────
+  // Two codes, and the pair that is *not* here is worth naming: there is no
+  // code for two tables in one county, because two placed types in one county
+  // are two placed types in one province and E603 has already said so. A
+  // second diagnostic would name the same fault twice.
+
+  // Both ways out are named, because either may be the right one: the author
+  // either meant the type to be somewhere, or did not mean it to have a table.
+  E610: (ainm) =>
+    `Níl contae ag "${ainm}", agus bíonn tábla in áit éigin. Ní áit í an deoraíocht: cuir "as <contae>" leis an dearbhú, nó bain an marc "stór" de. Éilíonn cineál curtha cúige iomlán, agus níl ann ach ceithre cinn.`,
+
+  // A refusal and not a `liosta folamh`, on the E302 and E524 pattern: dá
+  // bhfreagrófaí an cheist do chineál nár dhearbhaigh tábla, bheadh an
+  // cheist ar fáil i gcónaí agus ní chiallódh an dearbhú faic.
+  E611: (ainm) =>
+    `Níl tábla ag "${ainm}". Ní thugtar liosta folamh ar ais: dá bhfreagrófaí an cheist do chineál nár dhearbhaigh ceann, ní bheadh brí ar bith leis an dearbhú. Cuir "stór" le dearbhú "${ainm}".`,
+
+  // The finer of the two placement registries. A tábla is a building in one
+  // town, so it takes one county and not a whole province — but the two
+  // claims collide, and E603 is what says so in the other direction.
+  E612: (contae, struchtur) =>
+    `Tá ${contae} tógtha cheana ag tábla an chineáil "${struchtur}". Ní bhíonn ach tábla amháin ag contae: dhá cheann is tríocha atá ann ar fad, agus ní bhaintear amach an líon sin ach i gclár nach bhfuil aon ghnáthchineál curtha ann.`,
 };
 
 function earraid(cod, ionad, ...args) {

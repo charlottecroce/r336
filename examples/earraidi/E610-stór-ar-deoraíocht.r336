@@ -1,0 +1,17 @@
+// E610 — tábla gan áit: níl contae ag an gcineál seo.
+//
+// Ní háit í an deoraíocht. Sin an rud a fhágann neamheisiach í, an rud a
+// fhágann nach féidir léi conradh a shíniú, agus an rud a fhágann nach
+// bhfuil sí ina céile comhraic ag aon duine (§25.4). Tá tábla áit éigin,
+// mar sin ní féidir le cineál gan chontae ceann a bheith aige.
+//
+// Ní srian innealtóireachta é seo a cuireadh air ó thaobh amuigh. Is é an
+// t-aon áit a bhfuil an tábla scaipthe: ceithre thábla ar a mhéad in aon
+// chlár, mar go n-éilíonn cineál curtha cúige iomlán (E603) agus níl ann
+// ach ceithre cinn. Dá gceadófaí tábla ar deoraíocht bheadh a mhéid gan
+// teorainn agus ní bheadh sa mharc ach focal.
+
+struchtúr Duine stór {
+    ainm: Teaghrán
+    aois: Uimhir
+}

@@ -73,9 +73,9 @@ it('ní shéimhítear rud atá séimhithe cheana', () => {
   assert.strictEqual(mf.inSeimhithe('dhuine').cuis, 'seimhithe-cheana');
 });
 
-it('níl brí ríomhchláraithe ag an urú (§12)', () => {
+it('níl brí ríomhchláraithe ag an urú (§5.2)', () => {
   // The morphology exists; no syntactic slot ever demands it of an identifier.
-  assert.throws(() => mf.foirmDe('duine', mf.FOIRM.URAITHE), /§12/);
+  assert.throws(() => mf.foirmDe('duine', mf.FOIRM.URAITHE), /§5.2/);
   assert.strictEqual(mf.paraidim('duine').uruFéideartha, 'nduine');
 });
 
@@ -791,10 +791,10 @@ it('roghnaíonn tús an fhocail ina diaidh idir "mura" agus "murab"', () => {
   }
 });
 
-it('caitheann na cealla nach bhfuil brí acu, mar a chaitheann an t-urú (§12, §31)', () => {
+it('caitheann na cealla nach bhfuil brí acu, mar a chaitheann an t-urú (§5.2, §5.5)', () => {
   const R = mf.RIALU_COPAIL;
   for (const r of [R.DIULTACH, R.CEISTEACH, R.CEISTEACH_DIULTACH, R.FAISNEISEACH]) {
-    assert.throws(() => mf.foirmChopail(r, 'Duine'), /§31/, r);
+    assert.throws(() => mf.foirmChopail(r, 'Duine'), /§5.5/, r);
   }
   // Agus fós taispeántar iad: sin an difríocht idir diúltú agus dearmad.
   const p = mf.paraidimChopail('Easpa');

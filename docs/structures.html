@@ -41,6 +41,39 @@
   </div>
 
   <div class="slab">
+    <h2 class="slab-head">Modifiers <span class="head-note">name, adjective, marker, provenance</span></h2>
+    <div class="slab-body">
+      <p>Three things may sit between the name and the body, and they sit in
+      one order:</p>
+      <pre class="code">struchtúr Duine firinscneach stór as Corcaigh {
+    ainm: Teaghrán
+    aois: Uimhir
+}</pre>
+      <table class="listing">
+        <tr><th class="col-word">Slot</th><th>What it is</th></tr>
+        <tr><td><span class="term">firinscneach</span> / <span class="term">baininscneach</span></td>
+            <td>Gender. An adjective, so it goes next to its noun and agrees with
+            it. Optional; masculine by default. See
+            <a href="bindings.html">Bindings</a>.</td></tr>
+        <tr><td><span class="term">stór</span></td>
+            <td>This type has a table. Not Irish grammar - an engineering
+            marker, which is why it sits outside the grammatical material.
+            Optional.</td></tr>
+        <tr><td><span class="term">as &lt;contae&gt;</span></td>
+            <td>Provenance. Optional; exile by default. See
+            <a href="counties.html">Counties</a>.</td></tr>
+      </table>
+      <p>Any other order is
+      <a class="tag" href="errors.html">E401</a>. The language has one order
+      and the parser says so rather than accepting several.</p>
+      <p><code>stór</code> is not a reserved word. It is read as a marker in
+      this one slot and is an ordinary name everywhere else, so
+      <code>stór seasmhach = …</code> still binds a variable called
+      <code>stór</code>.</p>
+    </div>
+  </div>
+
+  <div class="slab">
     <h2 class="slab-head">Literal</h2>
     <div class="slab-body">
       <pre class="code">duine seasmhach = Duine { ainm: "Cáit", aois: 20 }</pre>
@@ -60,6 +93,66 @@ baile ó sheoladh ó dhuine</pre>
       left, like possession. The value to the right of <code>ó</code>
       lenites; the chain reads inside out, each <code>ó</code> governing only
       its own complement. See <a href="grammar.html">Grammar</a>.</p>
+    </div>
+  </div>
+
+  <div class="slab slab--focus">
+    <h2 class="slab-head">Tables <span class="head-note">stór</span></h2>
+    <div class="slab-body">
+      <p>A structure marked <code>stór</code> has a table behind it, and its
+      rows can be read as values of that type rather than as
+      <code>Iasacht</code>. Reading is in <a href="verbs.html">Verbs</a>, under
+      <code>faigh</code>.</p>
+
+      <p><strong>A table needs a county.</strong> Exile is not a place, so
+      <code>stór</code> on a type with no <code>as</code> clause is
+      <a class="tag" href="errors.html">E610</a>.</p>
+
+      <p><strong>And it claims only that county</strong>, where an ordinary
+      placed type claims its whole province:</p>
+
+      <table class="listing">
+        <tr><th class="col-word">Claim</th><th>Takes</th><th class="col-narrow">Slots</th></tr>
+        <tr><td>ordinary <code>struchtúr</code> / <code>suim</code></td><td>a province</td><td>4</td></tr>
+        <tr><td><code>stór</code> <code>struchtúr</code></td><td>a county</td><td>32</td></tr>
+      </table>
+
+      <p>A type is the vocabulary of a region. A table is a building in one
+      town. It is a smaller thing, so it claims a smaller place.</p>
+
+      <p><strong>The two claims collide, in both directions.</strong> A table
+      in Corcaigh stops any ordinary type claiming An Mhumhain, and an
+      ordinary type in An Mhumhain stops a table anywhere in Munster - both
+      <a class="tag" href="errors.html">E603</a>. Two tables in the same county
+      are <a class="tag" href="errors.html">E612</a>. So the marker is not a
+      way around the province rule; it changes the shape of the claim, not
+      whether one is made.</p>
+
+      <p><strong>32 is a ceiling, not a budget.</strong> Only a program with no
+      ordinary placed types at all can reach it. One ordinary type costs a
+      whole province's worth of counties.</p>
+
+      <p><strong>Two tables may sit in rival counties</strong> - and then no
+      file anywhere in the program can read both. From one of the two it is
+      <a class="tag" href="errors.html">E609</a>, which no treaty lifts; from
+      anywhere else it is <a class="tag" href="errors.html">E601</a>, and no
+      file can hold a treaty with both. See
+      <a href="counties.html">Counties</a>.</p>
+
+      <p><strong>The table is named after the type, lowercased.</strong>
+      <code>Duine</code> reads from <code>duine</code>. It is never
+      pluralised: <em>duine → daoine</em> is suppletive, no rule reaches it,
+      and a compiler that guessed would be confidently wrong on the first word
+      anyone tried. The columns are the declared fields, in declaration order,
+      and there is nowhere else to write them.</p>
+
+      <p>There is no <code>stór</code> slot on a <code>suim</code>, and none is
+      coming. A sum does not enumerate rows - the same reason a method cannot
+      be declared on one (<a class="tag" href="errors.html">E509</a>).</p>
+    </div>
+    <div class="slab-foot">
+      Read-only. There is no way to write a row, generate a schema, or filter
+      a read.
     </div>
   </div>
 

@@ -1,0 +1,39 @@
+// stór-croí.r336 — an croí curtha (§41).
+//
+// Tá an comhad seo as Corcaigh, agus tá `Duine` as Corcaigh, mar sin is
+// féidir leis na réimsí a léamh. Sin an t-aon riail atá i gceist, agus is í
+// an riail chéanna a bhí ann roimh §41.
+//
+// An rud atá nua: tagann na rónna isteach mar `Duine` cheana féin. Roimhe
+// seo b'éigean an tiontú ó `Iasacht` a scríobh de láimh sa bhlaosc — féach
+// `aimsigh` i bealaí.r336 — mar nach bhféadfadh an croí labhairt leis an
+// mbunachar ar chor ar bith. Ní labhraíonn sé leis fós: glacann sé leis an
+// stór mar argóint, agus is argóint í nach léitear ball ar bith aisti.
+//
+// Sin an fáth a bhfuil `as` ceart agus `ó` mícheart. Ní seilbh atá i gceist:
+// níl an rón sa stór mar atá ainm i nduine. As an stór a thagann sé.
+
+as Corcaigh
+
+// An t-ainm, an aidiacht, an marc innealtóireachta, an tionscnamh. Sin an
+// t-ord agus léitear mar Ghaeilge é.
+struchtúr Duine firinscneach stór as Corcaigh {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+// `duine` an tábla, ní `daoine`. Ní dhéanann an tiomsaitheoir uimhir iolra a
+// thomhas, agus is é `duine → daoine` an chúis: foirm fhorlíontach atá ann
+// agus ní shroicheann riail ar bith í. Sin teagmháil §40 leis an inscne, ó
+// bhóthar eile.
+ag gníomh liostaigh(stór: Iasacht) {
+    daoine seasmhach: Liosta(Duine) = tar éis faigh Duine as stór
+    déan a bheannaigh ar dhaoine
+}
+
+// `aois` gan léamh anseo, agus tá sí sa liosta colún mar sin féin: is é an
+// liosta réimsí dearbhaithe an liosta colún, agus níl dara háit lena scríobh.
+gníomh beannaigh(duine: Duine) {
+    scríobh "Dia duit, " + ainm ó dhuine
+    scríobh aois ó dhuine
+}

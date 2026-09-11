@@ -1,0 +1,17 @@
+// E611 — níl tábla ag an gcineál seo.
+//
+// Ní dhearbhaigh `Duine` gur `stór` é, mar sin níl tábla ann le léamh as.
+//
+// Diúltú atá ann agus ní liosta folamh. D'fhéadfaí `Liosta(Duine)` folamh a
+// thabhairt ar ais — níl aon rón ann, tar éis an tsaoil — ach chiallódh sin
+// go bhfuil an cheist i gcónaí ar fáil, agus dá bhrí sin nach gciallaíonn an
+// dearbhú faic. An chruth chéanna le E302 agus le E524.
+
+struchtúr Duine {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+
+ag feidhm gach(stór: Iasacht) -> Liosta(Duine) {
+    tar éis faigh Duine as stór
+}

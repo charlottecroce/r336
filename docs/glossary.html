@@ -27,7 +27,8 @@
 
   <h1 class="pagehead">Glossary</h1>
   <p class="pagelede">Every Irish word used across this reference, in
-  alphabetical order, with an English meaning.</p>
+  alphabetical order, with an English meaning. Fadas are ignored for
+  ordering.</p>
 
   <div class="glossary">
     <div class="glossary-col">
@@ -35,12 +36,15 @@
         <tr><th class="col-word">Irish</th><th>English</th></tr>
         <tr><td><span class="term">a</span></td><td>particle that turns a verb into a noun (nominalizer)</td></tr>
         <tr><td><span class="term">ag</span></td><td>marks a verb as ongoing (async)</td></tr>
+        <tr><td><span class="term">aidiacht</span></td><td>adjective - follows its noun and agrees with it</td></tr>
+        <tr><td><span class="term">aimsigh</span></td><td>find / locate</td></tr>
         <tr><td><span class="term">ainm</span></td><td>name</td></tr>
         <tr><td><span class="term">ann</span></td><td>there / present</td></tr>
         <tr><td><span class="term">aois</span></td><td>age</td></tr>
-        <tr><td><span class="term">ar</span></td><td>on - governs cuir/déan; lenites its complement</td></tr>
-        <tr><td><span class="term">as</span></td><td>out of / away (absent)</td></tr>
+        <tr><td><span class="term">ar</span></td><td>on - governs cuir/déan, predicates an adverse state, and lenites its complement</td></tr>
+        <tr><td><span class="term">as</span></td><td>out of - provenance (as Corcaigh) and retrieval (faigh … as); does <em>not</em> lenite</td></tr>
         <tr><td><span class="term">baile</span></td><td>town / home</td></tr>
+        <tr><td><span class="term">baininscneach</span></td><td>feminine - declares a type's gender</td></tr>
         <tr><td><span class="term">beannacht</span></td><td>greeting</td></tr>
         <tr><td><span class="term">beannaigh</span></td><td>greet</td></tr>
         <tr><td><span class="term">bhfuil</span></td><td>is/are - bí, dependent form (after mura)</td></tr>
@@ -48,18 +52,32 @@
         <tr><td><span class="term">Bool</span></td><td>boolean type</td></tr>
         <tr><td><span class="term">bréagach</span></td><td>false</td></tr>
         <tr><td><span class="term">céad</span></td><td>first (built-in list member)</td></tr>
+        <tr><td><span class="term">cluiche</span></td><td>game / match</td></tr>
         <tr><td><span class="term">comhaireamh</span></td><td>count</td></tr>
+        <tr><td><span class="term">comhaontú</span></td><td>agreement - a treaty between two counties, file-scoped</td></tr>
         <tr><td><span class="term">conair</span></td><td>path</td></tr>
+        <tr><td><span class="term">contae</span></td><td>county - the provenance a text or a type declares</td></tr>
+        <tr><td><span class="term">craobh</span></td><td>branch; championship</td></tr>
+        <tr><td><span class="term">croí</span></td><td>heart / core - the placed half of a program</td></tr>
+        <tr><td><span class="term">cúige</span></td><td>province - four of them, one placed type each</td></tr>
         <tr><td><span class="term">cuir</span></td><td>put - assignment / mutation command</td></tr>
-        <tr><td><span class="term">daoine</span></td><td>people</td></tr>
+        <tr><td><span class="term">cúis</span></td><td>reason / cause</td></tr>
+        <tr><td><span class="term">daoine</span></td><td>people (suppletive plural of duine - see stór on why it is never computed)</td></tr>
         <tr><td><span class="term">déan</span></td><td>do / make - iteration command</td></tr>
-        <tr><td><span class="term">Dia duit</span></td><td>hello (lit. “God be with you”)</td></tr>
+        <tr><td><span class="term">deoraíocht</span></td><td>exile - the default provenance; not a place, and not writable</td></tr>
+        <tr><td><span class="term">Dia duit</span></td><td>hello (lit. "God be with you")</td></tr>
+        <tr><td><span class="term">dochar</span></td><td>harm - the adverse state a verb may declare with ar</td></tr>
         <tr><td><span class="term">dúbail</span></td><td>double</td></tr>
+        <tr><td><span class="term">dún</span></td><td>close / shut</td></tr>
         <tr><td><span class="term">duine</span></td><td>person</td></tr>
+        <tr><td><span class="term">Earráid</span></td><td>error (a conventional adverse-type name)</td></tr>
+        <tr><td><span class="term">faigh</span></td><td>get - reads every row of a type's table (faigh Duine as stór)</td></tr>
         <tr><td><span class="term">fad</span></td><td>length (built-in list member)</td></tr>
         <tr><td><span class="term">feidhm</span></td><td>function (indicative mood)</td></tr>
+        <tr><td><span class="term">feidhmigh</span></td><td>execute / apply</td></tr>
         <tr><td><span class="term">féin</span></td><td>self - conventional receiver name</td></tr>
         <tr><td><span class="term">fíor</span></td><td>true</td></tr>
+        <tr><td><span class="term">firinscneach</span></td><td>masculine - declares a type's gender; the default</td></tr>
       </table>
     </div>
     <div class="glossary-col">
@@ -67,30 +85,48 @@
         <tr><th class="col-word">Irish</th><th>English</th></tr>
         <tr><td><span class="term">foclóir</span></td><td>dictionary</td></tr>
         <tr><td><span class="term">fógair</span></td><td>announce</td></tr>
+        <tr><td><span class="term">foireann</span></td><td>team (feminine, though it ends broad)</td></tr>
         <tr><td><span class="term">folamh</span></td><td>empty (built-in list member)</td></tr>
         <tr><td><span class="term">gníomh</span></td><td>action (imperative mood)</td></tr>
-        <tr><td><span class="term">Iasacht</span></td><td>loan - type for any foreign / untyped value</td></tr>
+        <tr><td><span class="term">Iasacht</span></td><td>loan - type for any foreign / untyped value; always in exile</td></tr>
+        <tr><td><span class="term">imreoir</span></td><td>player</td></tr>
+        <tr><td><span class="term">inscne</span></td><td>gender - a lenition trigger, and nothing more</td></tr>
+        <tr><td><span class="term">iomaíocht</span></td><td>rivalry - eleven fixed county pairs that no treaty can settle</td></tr>
         <tr><td><span class="term">is</span></td><td>is - copula: classification</td></tr>
+        <tr><td><span class="term">liostaigh</span></td><td>list (verb)</td></tr>
         <tr><td><span class="term">Liosta</span></td><td>list (type)</td></tr>
         <tr><td><span class="term">má</span></td><td>if</td></tr>
+        <tr><td><span class="term">malairt</span></td><td>alternative - one variant of a suim</td></tr>
+        <tr><td><span class="term">más</span></td><td>if … is - má fused with the copula</td></tr>
         <tr><td><span class="term">moill</span></td><td>delay</td></tr>
-        <tr><td><span class="term">mura</span></td><td>if not</td></tr>
+        <tr><td><span class="term">mura</span></td><td>if not; bare, the elided else-branch</td></tr>
+        <tr><td><span class="term">murab</span></td><td>if … is not - mura fused with the copula, before a vowel</td></tr>
         <tr><td><span class="term">neamhní / Neamhní</span></td><td>nothing; the null value and its type</td></tr>
-        <tr><td><span class="term">ó</span></td><td>from / of - possession, origin, import</td></tr>
+        <tr><td><span class="term">ó</span></td><td>from / of - possession, origin, import; lenites</td></tr>
         <tr><td><span class="term">oscail</span></td><td>open</td></tr>
         <tr><td><span class="term">príomh</span></td><td>main / chief - entry point convention</td></tr>
+        <tr><td><span class="term">réimse</span></td><td>field (of a structure)</td></tr>
         <tr><td><span class="term">sábháil</span></td><td>save</td></tr>
+        <tr><td><span class="term">saor</span></td><td>free - the autonomous mood: it happened, and nobody can be named</td></tr>
+        <tr><td><span class="term">scéim</span></td><td>scheme / schema</td></tr>
         <tr><td><span class="term">scríobh</span></td><td>write</td></tr>
         <tr><td><span class="term">sealadach</span></td><td>temporary (mutable binding)</td></tr>
         <tr><td><span class="term">seasmhach</span></td><td>constant (immutable binding)</td></tr>
+        <tr><td><span class="term">séimhiú</span></td><td>lenition - the h after an initial consonant</td></tr>
         <tr><td><span class="term">seoladh</span></td><td>address</td></tr>
-        <tr><td><span class="term">stórlann</span></td><td>store (database library)</td></tr>
+        <tr><td><span class="term">stór</span></td><td>store - marks a structure as having a table; also an ordinary binding name</td></tr>
+        <tr><td><span class="term">stórlann</span></td><td>store (database library). Feminine, from the suffix -lann</td></tr>
         <tr><td><span class="term">struchtúr</span></td><td>structure</td></tr>
+        <tr><td><span class="term">suim</span></td><td>sum - a closed type that is one of several named alternatives</td></tr>
         <tr><td><span class="term">tá</span></td><td>is/are - bí, independent form (after má)</td></tr>
+        <tr><td><span class="term">tábla</span></td><td>table - what a stór structure reads from</td></tr>
         <tr><td><span class="term">tar éis</span></td><td>after - completes an ongoing action (await)</td></tr>
         <tr><td><span class="term">téacs</span></td><td>text</td></tr>
         <tr><td><span class="term">Teaghrán</span></td><td>string (type)</td></tr>
+        <tr><td><span class="term">toradh</span></td><td>result / fruit</td></tr>
         <tr><td><span class="term">Uimhir</span></td><td>number (type)</td></tr>
+        <tr><td><span class="term">Uireasa</span></td><td>lack / absence (a conventional adverse-type name)</td></tr>
+        <tr><td><span class="term">urú</span></td><td>eclipsis - recognised so it can be refused; never produced</td></tr>
       </table>
     </div>
   </div>

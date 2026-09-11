@@ -4,7 +4,7 @@
  * modúil.js — the module graph.
  *
  * This is a compiler problem rather than a language one: `ó "./sonraí.r336"` was
- * already the right syntax (§6), and nothing here adds a keyword. What it adds
+ * already the right syntax (§5.9), and nothing here adds a keyword. What it adds
  * is that the thing on the far side of the preposition is now *known*.
  *
  * Order is forced by the grammar, not chosen for convenience. `lexeain` exists

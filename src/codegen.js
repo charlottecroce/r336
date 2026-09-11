@@ -6,7 +6,7 @@
  * By the time we get here, morphology is gone. `dhuine` was resolved to the
  * lemma `duine` in the analyzer, so the emitter only ever sees lemmas. That
  * is the test of whether the grammatical layer is real: if the backend had to
- * know about lenition, we would only have written a find-and-replace (§28).
+ * know about lenition, we would only have written a find-and-replace (§2.4).
  *
  * Mood and aspect are gone too. An imperative is a plain function; `ag` is
  * `async`; `tar éis` is `await`; a method is a top-level function taking its
@@ -245,11 +245,26 @@ class Ginteoir {
       case 'Copail': return `__is(${this.slonn(e.abhar)}, ${JSON.stringify(e.cineal.ainm)})`;
       case 'Substaint': return `__bí(${this.slonn(e.abhar)})`;   // tá / bhfuil alike
 
-      // §39 — `tá Earráid ar thoradh`. The backend learns nothing: an
+      // §5.11 — `tá Earráid ar thoradh`. The backend learns nothing: an
       // affliction is a value carrying a tag, and `__is` already reads tags.
       // Nothing at run time knows that the tag was reached through `ar`
-      // rather than through the copula, which is the same erasure §26.5 got.
+      // rather than through the copula, which is the same erasure §6 got.
       case 'Dochar': return `__is(${this.slonn(e.abhar)}, ${JSON.stringify(e.cineal.ainm)})`;
+
+      // §7.6 — `faigh Duine as stór`. The whole of the backend's knowledge of
+      // the feature: a table name, a column list, and a tag. The marker itself
+      // emits nothing — a `stór` struct compiles to exactly the same thing an
+      // ordinary one does — and the query language stayed in `rt/stór.js`,
+      // which is what keeps driver vocabulary out of this file. No constructor
+      // is named, because an imported type's constructor is not in scope here
+      // and the tag is all `__is` ever wanted.
+      case 'Faigh': {
+        const t = e.cineálStoir;
+        const colúin = t.stor.reimsi.map((r) => JSON.stringify(r)).join(', ');
+        return `${this.slonn(e.foinse)}.faigh(${JSON.stringify(t.stor.tabla)}, `
+             + `[${colúin}], ${JSON.stringify(t.ainm)})`;
+      }
+
       case 'Críoch': return `(await ${this.slonn(e.abhar)})`;
 
       case 'Má': {

@@ -21,7 +21,7 @@ const mf = require('./morphology');
 const EOCHAIRFHOCAIL = new Set([
   'feidhm',      // function — produces a nominal
   'gníomh',      // imperative — performs, produces nothing
-  'saor',        // autonomous — performed, by nobody this text can name (§37)
+  'saor',        // autonomous — performed, by nobody this text can name (§8)
   'struchtúr',   // struct
   'suim',        // sum — a type that is one of several named alternatives
   'seasmhach',   // immutable binding
@@ -36,7 +36,7 @@ const EOCHAIRFHOCAIL = new Set([
   'bhfuil',      //   … dependent form, eclipsed by its particle
   'má',          // if — realis particle, selects the independent form
   'mura',        // if…not — selects the dependent form, and eclipses it
-  // The same two particles again, fused with the copula (§31). Irish writes
+  // The same two particles again, fused with the copula (§5.5). Irish writes
   // `má` + `is` as one word, so these are forms of the copula and not new
   // conjunctions: `más` is `má` and `mura`/`murab` is `mura`, which is why
   // the parser normalises them back to the bare particle and hands the
@@ -44,7 +44,7 @@ const EOCHAIRFHOCAIL = new Set([
   'más',         // má   + is           — realis, classifying
   'murab',       // mura + is, before a vowel
   'sealadach',   // mutable binding: what a thing happens to be right now
-  // §40 — the same two adjectives after a feminine noun, and the two that
+  // §5.10 — the same two adjectives after a feminine noun, and the two that
   // declare a type's gender. Inflected forms of a function word live in this
   // table exactly as `bhfuil`, `más` and `murab` do: the parser normalises
   // them back to the base adjective and hands the written form to the
@@ -56,6 +56,18 @@ const EOCHAIRFHOCAIL = new Set([
   'baininscneach',  // declares a type feminine
   'bhaininscneach', //   … and this is the form a feminine name demands
   'cuir',        // "put" — the imperative that changes a state
+  // §7.6 — the second narrow one-off after `déan`. A real keyword and not a
+  // contextual one, because it takes a *type* where an expression would
+  // otherwise begin, so there is nothing for a lookahead to disambiguate
+  // against. The cost is real and is paid knowingly: `faigh` can no longer
+  // name a user verb, and `SAOR_CAITE_MIREGULTA.faigh` (`fuarthas`) is now
+  // reachable only through `--paraidím`. §8's `Fuarthas`/`Aimsithe` history
+  // note is partly archaeology as a result.
+  //
+  // `stór` is deliberately NOT here. It is a contextual marker read in the
+  // struct-declaration slot only, because `stór` is bound as an ordinary name
+  // in `feidhmchlár/sonraí.r336`, `bealaí.r336` and `examples/aspect.r336`.
+  'faigh',
   'ar',          // "on" — the surface an action lands on; lenites
   'fíor',        // true
   'bréagach',    // false
@@ -232,7 +244,7 @@ function lexeain(toks, iasachta = null) {
         const saor = mf.foirmShaor(lemma);
         gniomhartha.add(saor); briathra.add(saor);
         // The past form enters the lexicon so it can be *refused* by name
-        // rather than coming back as an unknown identifier (§37.5).
+        // rather than coming back as an unknown identifier (§8).
         const caite = mf.foirmShaorChaite(lemma);
         if (caite) { gniomhartha.add(caite); briathra.add(caite); }
       } catch { /* unformable; the analyzer reports it */ }

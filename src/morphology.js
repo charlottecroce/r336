@@ -26,7 +26,7 @@ const URU = { b: 'm', c: 'g', d: 'n', f: 'bh', g: 'n', p: 'b', t: 'd' };
 const FOIRM = Object.freeze({
   BUN: 'bun',            // base / citation form
   SEIMHITHE: 'séimhithe', // lenited
-  URAITHE: 'uraithe',    // eclipsed — recognised, deliberately unimplemented (§12)
+  URAITHE: 'uraithe',    // eclipsed — recognised, deliberately unimplemented (§5.2)
 });
 
 const isGuta = (ch) => !!ch && GUTAI.includes(ch.toLowerCase());
@@ -92,11 +92,11 @@ function foirmDe(lemma, foirm) {
     case FOIRM.SEIMHITHE:
       return inSeimhithe(lemma).ok ? seimhigh(lemma) : lemma;
     case FOIRM.URAITHE:
-      // §12 stands: no identifier has an eclipsed form, because eclipsis has
+      // §5.2 stands: no identifier has an eclipsed form, because eclipsis has
       // been given no programming meaning. `uraigh` below exists, and is used
       // only where Irish itself puts eclipsis — on a verb after a
-      // subordinating particle. See DEARADH.md §12.
-      throw new Error('urú: níl brí ríomhchláraithe sannta dó (§12)');
+      // subordinating particle. See CONTEXT.md §5.2.
+      throw new Error('urú: níl brí ríomhchláraithe sannta dó (§5.2)');
     default:
       throw new Error(`foirm anaithnid: ${foirm}`);
   }
@@ -138,7 +138,7 @@ function uraigh(word) {
  * mapping is not one-to-one: `n` before a vowel undoes to nothing (nÉire →
  * Éire), and `ng-` could be an eclipsed `g-` or a word that simply starts
  * `ng-`. Used only to recognise an eclipsed identifier well enough to refuse
- * it by name (E108, §12); the symbol table decides which candidate is real.
+ * it by name (E108, §5.2); the symbol table decides which candidate is real.
  */
 function lemmaiFaoiUru(word) {
   const amach = [];
@@ -163,7 +163,7 @@ function paraidim(lemma) {
     [FOIRM.SEIMHITHE]: can.ok ? seimhigh(lemma) : lemma,
     inSeimhithe: can.ok,
     cuis: can.cuis || null,
-    // Shown but never demanded: no syntactic slot asks for it (§12).
+    // Shown but never demanded: no syntactic slot asks for it (§5.2).
     uruFéideartha: ur.ok ? uraigh(lemma) : null,
   };
 }
@@ -197,7 +197,7 @@ const PARAIDIM_BI = Object.freeze({
 const foirmBhriathartha = (rialu) => PARAIDIM_BI[rialu];
 
 /**
- * The copula `is`. Céim 0.9, §31.
+ * The copula `is`. Céim 0.9, §5.5.
  *
  * The second paradigm in this file, and the first evidence that the design
  * generalises past initial mutation. It has the same shape as `bí` above: one
@@ -219,10 +219,10 @@ const foirmBhriathartha = (rialu) => PARAIDIM_BI[rialu];
  *   ní   → ní h-  before a vowel   (ní Ceart, ní hEaspa)
  *
  * The second is computed and never demanded, exactly as `uraigh` is computed
- * and never demanded (§12). Four of the seven cells have no syntactic slot in
+ * and never demanded (§5.2). Four of the seven cells have no syntactic slot in
  * R336, because the language has no question, no bare negation and no
  * subordinate assertion. `foirmChopail` throws for those, `paraidimChopail`
- * prints them, and `--paraidím` labels them *gan bhrí, §31*.
+ * prints them, and `--paraidím` labels them *gan bhrí, §5.5*.
  */
 const RIALU_COPAIL = Object.freeze({
   BUN: 'bun',                            // is    — independent
@@ -256,9 +256,9 @@ function foirmChopail(rialu, focal = '') {
     case RIALU_COPAIL.CEISTEACH:
     case RIALU_COPAIL.CEISTEACH_DIULTACH:
     case RIALU_COPAIL.FAISNEISEACH:
-      // §31 stands, on the §12 pattern: the form is real Irish and is
+      // §5.5 stands, on the §5.2 pattern: the form is real Irish and is
       // computed below for display, but no slot in the language demands it.
-      throw new Error(`copail: níl brí ríomhchláraithe sannta don fhoirm "${rialu}" (§31)`);
+      throw new Error(`copail: níl brí ríomhchláraithe sannta don fhoirm "${rialu}" (§5.5)`);
     default:
       throw new Error(`rialú copaile anaithnid: ${rialu}`);
   }
@@ -289,7 +289,7 @@ function paraidimChopail(focal = 'Cineál') {
 const FOIRMEACHA_COPAIL = Object.freeze(['is', 'más', 'mura', 'murab']);
 
 /**
- * An briathar saor — the autonomous verb. Céim 0.10, §37.
+ * An briathar saor — the autonomous verb. Céim 0.10, §8.
  *
  * The third paradigm here and the first *productive* one. `bí` and the copula
  * are closed tables of function words: the compiler looks them up. The
@@ -437,7 +437,7 @@ const SAOR_CAITE_MIREGULTA = Object.freeze({
  *
  * Computed for one reason only: so that writing it can be refused with a
  * message that names what it is. R336 has no tense anywhere, which is the
- * same ground on which §31 kept `ba` out of the copula's table — a cell for a
+ * same ground on which §5.5 kept `ba` out of the copula's table — a cell for a
  * distinction the language cannot express would claim more than it can do.
  * But a reader of Irish will write `liostaíodh` for "it was listed", and an
  * unrecognised identifier is a worse answer than "that is the past and there
@@ -469,8 +469,8 @@ function foirmShaorChaite(lemma) {
  *
  * Laid out like `paraidimChopail`: the cell a position demands is plain, and
  * the cell that exists in Irish with no slot here is returned so that it can
- * be printed and labelled. Same treatment as an eclipsed form (§12), the
- * copula's four dead cells (§31), and for the same reason.
+ * be printed and labelled. Same treatment as an eclipsed form (§5.2), the
+ * copula's four dead cells (§5.5), and for the same reason.
  */
 function paraidimShaor(lemma) {
   const caite = foirmShaorChaite(lemma);
@@ -498,19 +498,19 @@ function reamhlitirH(word) {
 }
 
 /*
- * §40 — inscne ghramadaí.
+ * §5.10 — inscne ghramadaí.
  *
  * Tá gach ainmfhocal Gaeilge firinscneach nó baininscneach, agus is beag
  * loighic atá leis. Ní athraíonn an inscne brí ar bith. Ní dhéanann sí ach
  * foirm a éileamh — agus is é sin an fáth a bhfuil sí anseo agus nach raibh
- * sí i §36: dhiúltaigh §36 don inscne mar rud a iompraíonn brí (cé leis é),
+ * sí i §12: dhiúltaigh §12 don inscne mar rud a iompraíonn brí (cé leis é),
  * agus ní hé sin an rud atá anseo ar chor ar bith.
  *
  * Sa tuiseal ainmneach séimhítear an aidiacht i ndiaidh ainmfhocail
  * bhaininscnigh agus ní shéimhítear i ndiaidh ainmfhocail fhirinscnigh:
  *
  *     fear mór          bean mhór
- *     duine aois seasmhach sheasmhach
+ *     duine seasmhach     aois sheasmhach
  *
  * Níl aon rud anseo ach `seimhigh` á ghairm nó gan é a ghairm. Sin an
  * ceathrú paraidím, agus is é an ceann is lú de na ceithre cinn.
@@ -530,7 +530,7 @@ const ainmInscne = (i) => (i === INSCNE.BAIN ? 'baininscneach' : 'firinscneach')
  * about the system. R336 has no genitive construction at all: `ainm ó
  * dhuine` is a prepositional phrase, not *ainm an duine*. So there is no slot
  * the reversed rule could attach to, and its absence is forced rather than
- * chosen (§40.6).
+ * chosen (§5.10).
  */
 function foirmAidiachta(aidiacht, inscne) {
   if (inscne !== INSCNE.BAIN) return aidiacht;
@@ -539,7 +539,7 @@ function foirmAidiachta(aidiacht, inscne) {
   // lenited and demands nothing of anything that cannot. An adjective with an
   // empty mutation slot after a feminine noun is not an exception to gender
   // agreement — it is gender agreement applied to a word with nothing to
-  // change (§5).
+  // change (§5.2).
   return foirmDe(aidiacht, FOIRM.SEIMHITHE);
 }
 

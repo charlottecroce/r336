@@ -62,12 +62,12 @@ function paraidimi(anailiseoir) {
       inséimhithe: c.paraidim.inSeimhithe,
       cúis: c.paraidim.cuis,
       urúFéideartha: c.paraidim.uruFéideartha,
-      // §37 — present for autonomous verbs only. The past is carried too, and
+      // §8 — present for autonomous verbs only. The past is carried too, and
       // is printed labelled, because R336 has no tense and a form that is
       // refused is worth showing next to the one that is demanded.
       saor: (c.cineal && c.cineal.saor) || null,
       saorCaite: (c.cineal && c.cineal.saorCaite) || null,
-      // §40 — the first thing this output has ever carried that varies per
+      // §5.10 — the first thing this output has ever carried that varies per
       // identifier rather than per construction. `réamhshocraithe` is not
       // decoration: a binding always declares its gender by the form of its
       // own adjective, so a null here means a parameter or a receiver, which
@@ -81,7 +81,7 @@ function paraidimi(anailiseoir) {
 }
 
 /**
- * The copula's paradigm, for `r336c --paraidím` (§31).
+ * The copula's paradigm, for `r336c --paraidím` (§5.5).
  *
  * Shown against two real type names from the file rather than a placeholder,
  * because both of the copula's allomorph rules are conditioned on the first
@@ -110,7 +110,7 @@ function paraidimChopail(anailiseoir) {
  *
  * Read off the analyzer rather than the emitted code, because there is nothing
  * about provenance in the emitted code — no `__contae` and no county name. The
- * front end is the only place this exists (§24.5).
+ * front end is the only place this exists (§7.2).
  */
 function duchasanna(anailiseoir) {
   const ctae = require('./contaetha');
@@ -118,7 +118,7 @@ function duchasanna(anailiseoir) {
   for (const [ainm, t] of anailiseoir.cinealacha) {
     // A variant is not a placed type and must not be listed as one: it holds
     // no county of its own, and printing it would claim a slot that the sum
-    // already holds under a different name (§26.2).
+    // already holds under a different name (§6).
     if (t.k !== 'struchtúr' && t.k !== 'suim') continue;
     cinealacha.push({ ainm, contae: t.contae || ctae.DEORAIOCHT });
   }
@@ -128,10 +128,20 @@ function duchasanna(anailiseoir) {
   const comhaontuithe = [...anailiseoir.comhaontuithe]
     .map((k) => k.split('\u0000'))
     .map(([a, b]) => ({ a, b }));
-  return { contae: anailiseoir.contae, deoraíocht: ctae.DEORAIOCHT, cinealacha, comhaontuithe };
+  // §7.6 — the tables, reported here rather than in a display of their own,
+  // because a table is not a fifth thing a program has. It is a county with a
+  // column list attached, and the interesting number is how many of the four
+  // provinces are now spent on one. `uasmhéid` is carried so the reader can
+  // see the budget beside the spend without knowing the rule.
+  const tablai = anailiseoir.tabli.gach()
+    .map((t) => ({ cineál: t.cineal, tábla: t.tabla, contae: t.contae, réimsí: t.reimsi }));
+  return {
+    contae: anailiseoir.contae, deoraíocht: ctae.DEORAIOCHT, cinealacha, comhaontuithe,
+    tablai, uasmhéid: require('./táblaí').UASMHEID,
+  };
 }
 
 module.exports = {
   tiomsaigh, tiomsaighComhad, comhaidR336, paraidimi, paraidimChopail, duchasanna, Tionscadal,
-  Earraid, Cnuasach, morphology: mf,
+  Earraid, Cnuasach, morphology: mf, táblaí: require('./táblaí'),
 };

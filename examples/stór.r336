@@ -1,0 +1,34 @@
+// stór.r336 — an bhlaosc dheoraithe (§41).
+//
+// Osclaíonn an comhad seo an stór agus cruthaíonn sé an scéim. Ní féidir leis
+// an gcroí é sin a dhéanamh: is `Iasacht` an teibíocht stóir, tá `Iasacht` ar
+// deoraíocht, agus ní léann téacs curtha ball as an deoraíocht (E601). Sin an
+// scoilt chéanna atá i bhfeidhmchlár/ ó 0.6 i leith, agus níor bhog §41 í.
+//
+// Ach bhog sé rud eile. Roimhe seo b'éigean don bhlaosc an tiontú ó `Iasacht`
+// go cineál a dhéanamh freisin, mar nach raibh aon slí eile ann. Anois
+// déanann an croí é, mar níl ag teastáil ó `faigh` ach an luach stóir mar
+// argóint — agus ní léamh baill é argóint a thabhairt.
+
+stórlann seasmhach = ó "../rt/stór.js"
+croí seasmhach = ó "./stór-croí.r336"
+
+// Ní ghineann an tiomsaitheoir scéim as na réimsí, agus tá cúis leis sin
+// (§41.4): theastódh tábla ó chineálacha colún uaidh, agus is stór focal
+// teanga eile é sin curtha isteach sa tiomsaitheoir.
+SCÉIM seasmhach = "CREATE TABLE IF NOT EXISTS duine (
+    ainm TEXT NOT NULL,
+    aois INTEGER NOT NULL
+)"
+
+ag gníomh príomh() {
+    stór seasmhach = tar éis oscail ó stórlann(":memory:")
+    tar éis scéim ó stór(SCÉIM)
+    tar éis feidhmigh ó stór("INSERT INTO duine (ainm, aois) VALUES (?, ?), (?, ?)", ["Cáit", 20, "Oisín", 34])
+
+    // `liostaigh` gan cáiliú: tháinig sé ó "./stór-croí.r336" agus is
+    // briathar é, agus ní cháilítear stór focal.
+    liostaigh stór
+
+    tar éis dún ó stór()
+}

@@ -20,7 +20,7 @@
  * The *list*, though, is a fixed table of proper names the compiler happens to
  * ship. No Irish grammatical phenomenon produces it. The county system is a
  * bit — deliberate, rigorously enforced, and not claimed to have passed the
- * six questions (DEARADH.md §24, §25). Do not let the fact that `as` is well
+ * six questions (CONTEXT.md §7, §7). Do not let the fact that `as` is well
  * motivated launder the table into a grammar feature. In 0.7 the bit stops
  * being decoration and becomes the constraint the programmer plans around,
  * and that makes it *more* important to keep saying it is a bit, not less.
@@ -33,7 +33,7 @@
  *  2. Six names carry the definite article — *An Mhí*, *An Clár*, *An Dún* —
  *     and one carries the genitive plural article, *Dún na nGall*. The
  *     definite article is NOT implemented and nothing here implements it
- *     (§35 stands, and Part 4 of the 0.6 brief stands). These are opaque
+ *     (§10 stands, and Part 4 of the 0.6 brief stands). These are opaque
  *     word sequences in a lookup table. No rule about `an` or `na` is stated,
  *     derived, or reachable from this file. The province names are in the
  *     same position and get the same treatment: `An Mhumhain` is one opaque
@@ -43,7 +43,7 @@
  *     *Uíbh Fhailí* a lenited one. Both are frozen inside proper names. They
  *     are not produced by morphology.js and they demand nothing:
  *     `foirmDe(lemma, FOIRM.URAITHE)` still throws, because there is still no
- *     syntactic slot that asks for eclipsis (§12). The temptation to reach
+ *     syntactic slot that asks for eclipsis (§5.2). The temptation to reach
  *     for `as an mbaile` is explicitly refused: that eclipsis belongs to the
  *     article, which is future research. Provinces do not change this. There
  *     is no `as An Mhumhain` in the language and there is not going to be.
@@ -57,7 +57,7 @@
  * `deoraíocht` — "exile". Where a value is when it is from nowhere:
  * primitives, `Iasacht`, and any `struchtúr` declared without `as`.
  *
- * Three asymmetries against a real county, all deliberate (§24.3, §25.4):
+ * Three asymmetries against a real county, all deliberate (§7.2, §7.2):
  *
  *   - It is non-exclusive. A province holds one struct; exile holds any
  *     number, because exile is not a place and so has no single occupant.
@@ -95,7 +95,7 @@ const CUIGI_UILE = Object.freeze([
  * Until 0.7 both axes were carried and read by nothing, so that county
  * personality would have real properties to derive from rather than 32
  * hand-authored behaviours that rot into "why does Liatroim do *that*". The
- * province exclusivity rule (§25.2) reads `cúige`, and the border check reads
+ * province exclusivity rule (§7.2) reads `cúige`, and the border check reads
  * it on every `ó`. `cósta` is untouched and still waiting on the one candidate
  * worth building first: restricting `ó "…"` on foreign modules to coastal
  * counties, because ports import goods and ports import modules.
@@ -172,7 +172,7 @@ const isContae = (ainm) => CONTAETHA.has(ainm);
  * The province of a county, and `deoraíocht` for exile.
  *
  * Exile answering as its own province is what keeps the border rule at four
- * cases and one comparison (§25.3). Same province and both-exile collapse
+ * cases and one comparison (§7.2). Same province and both-exile collapse
  * into a single equality here, exactly as same-county and both-exile
  * collapsed into a single equality in 0.6, and for the same reason: two
  * things from nowhere are the same nowhere.
@@ -193,7 +193,7 @@ const contaethaCuige = (cuige) =>
 /**
  * Traditional rivalries. Read by the analyzer, and this is a reversal.
  *
- * §24.5 refused exactly this and the refusal was right at the time: with 32
+ * §7.2 refused exactly this and the refusal was right at the time: with 32
  * slots a treaty was paperwork nobody planned around, so a refused pair was a
  * joke that fires once and then sits in the compiler as a hard-coded
  * exception in a system whose only claim to seriousness is uniformity. Three
@@ -209,7 +209,7 @@ const contaethaCuige = (cuige) =>
  *     treaty, because no treaty between them can exist (E608).
  *
  *  3. It is a short hand-authored list of *pairs*, not 32 hand-authored
- *     behaviours, so it does not hit the §24.4 rot problem. `seiceailTabla`
+ *     behaviours, so it does not hit the §7.2 rot problem. `seiceailTabla`
  *     enforces the bound that keeps that true.
  *
  * Two kinds of pair, and both bite, which is the thing the 0.7 brief got
@@ -271,14 +271,14 @@ const iomaitheoiri = (ainm) => IOMAIOCHT
  * where a county ends and the next statement begins.
  *
  * The rivalry ones are the load-bearing ones for the *language*, and the last
- * is the answer to "is there an escape?" (§25.5). A rivalry is absolute — no
+ * is the answer to "is there an escape?" (§7.5). A rivalry is absolute — no
  * treaty lifts it and there is no `sos cogaidh` — so the only guarantee that
  * the four-slot squeeze never makes a reasonable program impossible is that
  * for every pair of provinces there is at least one legal pair of counties to
  * place them in. That is what bounds the list: it may grow until it would
  * seal a province pair shut, and then it may not grow any further. The bound
  * is mechanical rather than a promise to be tasteful, which is the whole
- * difference between this and the 32 hand-authored behaviours §24.4 refused.
+ * difference between this and the 32 hand-authored behaviours §7.2 refused.
  */
 function seiceailTabla() {
   const fadhbanna = [];
