@@ -1,15 +1,9 @@
 'use strict';
 
-/*
- * rt/freastal.js — an droichead chuig Express.
- *
- * R336 has no lambdas (see DEARADH.md §6), so the one thing it cannot do
- * for itself is wrap a handler in error plumbing. That wrapping is a runtime
- * concern rather than a language one, so it lives here and R336 reaches
- * it through `ó` like anything else borrowed:
- *
- *     bealach ó fhreastal(app, "/", a liostaigh)
- */
+// Bridge to Express. R336 has no lambdas, so wrapping a handler in error
+// plumbing lives here and is reached via `ó`:
+//
+//     bealach ó fhreastal(app, "/", a liostaigh)
 
 /** Register a R336 imperative as a GET route, forwarding rejections. */
 function bealach(app, conair, lamhalai) {

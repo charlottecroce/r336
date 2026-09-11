@@ -1,26 +1,21 @@
 'use strict';
 
-/*
- * anailíseoir.js — the grammatical / semantic stage.
- *
- * Four jobs, interleaved:
- *
- *  1. Cineálacha  — ordinary static type checking.
- *  2. Rialú       — *government*: each syntactic slot declares which
- *                   grammatical form it demands of the head of the phrase
- *                   filling it. One operator governs: `ó`, which lenites its
- *                   complement (Irish: ó dhuine, ó Chorcaigh, ó Dhuine).
- *  3. Réiteach    — *agreement*: the surface identifier written by the
- *                   programmer must be the realisation of some bound lemma
- *                   in the demanded form. One lemma, many surfaces.
- *  4. Modh/Aspect — *mood*: an imperative performs and cannot be mentioned;
- *                   an indicative produces a nominal and cannot be obeyed.
- *                   *Aspect*: `ag` marks an action under way, `tar éis` marks
- *                   it complete, and an action under way is not yet a value.
- *
- * A binding is never split into several symbols. `duine` and `dhuine` are one
- * entry in the table with a paradigm attached.
- */
+// anailíseoir.js — the grammatical / semantic stage.
+//
+// Four interleaved jobs:
+//  1. Cineálacha  — ordinary static type checking.
+//  2. Rialú       — government: a syntactic slot demands a grammatical form
+//                   of the head of its complement. `ó` lenites (ó dhuine,
+//                   ó Chorcaigh, ó Dhuine).
+//  3. Réiteach    — agreement: the surface form written must realise some
+//                   bound lemma in the demanded form. One lemma, many surfaces.
+//  4. Modh/Aspect — mood: an imperative performs and can't be mentioned; an
+//                   indicative produces a nominal and can't be obeyed.
+//                   Aspect: `ag` marks an action under way, `tar éis` marks
+//                   it complete.
+//
+// A binding is never split into several symbols — `duine`/`dhuine` are one
+// table entry with a paradigm attached.
 
 const mf = require('./morphology');
 const { FOIRM } = mf;
@@ -36,23 +31,16 @@ const BOOL = prim('Bool');
 const NEAMHNI = prim('Neamhní');
 
 /**
- * `Iasacht` — "a loan; something borrowed". The type of every value that
- * crosses the boundary from JavaScript. It is vocabulary, not grammar: no
- * Irish phenomenon motivates it, and the notes say so plainly. It earns its
- * place by making the copula non-vacuous — `má luach is Uimhir` on a borrowed
- * value is a real question with a real answer.
+ * `Iasacht` — "a loan". The type of every value crossing the JS boundary.
+ * Vocabulary, not grammar — earns its place by making the copula
+ * non-vacuous (`má luach is Uimhir` on a borrowed value is a real question).
  */
 const IASACHT = { k: 'iasacht', ainm: 'Iasacht' };
 
 const liosta = (mir) => ({ k: 'liosta', ainm: 'Liosta', mir });
 const arSiul = (inner) => ({ k: 'arSiúl', inner });
 
-/**
- * A R336 module reached through `ó`. Not `Iasacht`: the possessor is a
- * text written in this language, so its members keep their types, their mood
- * and their aspect. The relation is unchanged — the possessor is just better
- * known than it used to be.
- */
+/** A R336 module reached through `ó`, keeping type, mood and aspect (not `Iasacht`). */
 const modul = (ainm, siniu) => ({ k: 'modúl', ainm, siniu });
 
 const BUNCHINEALACHA = new Map([
@@ -66,17 +54,13 @@ function ainmCineail(t) {
     case 'liosta': return `Liosta(${ainmCineail(t.mir)})`;
     case 'arSiúl': return `ag ${ainmCineail(t.inner)}`;
     case 'modúl': return `modúl ${t.ainm}`;
-    // A variant is named on its own, because it is its own name in the type
-    // namespace: `suim Toradh firinscneach { Ceart … }` makes `Ceart` unavailable to
-    // anything else, and E208 says so.
+    // A variant is named on its own — its own name in the type namespace.
     case 'malairt': return t.ainm;
     case 'suim': return t.ainm;
-    // §5.11 — written exactly as the signature writes it, so a mismatch reads
-    // back as the declaration that produced it.
+    // §5.11 — written as the signature writes it, so a mismatch reads back
+    // as the declaration that produced it.
     case 'dochar': return `${ainmCineail(t.toradh)} ar ${ainmCineail(t.dochar)}`;
     case 'feidhm': {
-      // Render a verb type the way it is written, so a mismatch reads as the
-      // declaration the caller should have made.
       const MODH = { ordaitheach: 'gníomh', saor: 'saor', táscach: 'feidhm' };
       const ceann = (t.leanunach ? 'ag ' : '') + (MODH[t.modh] || 'feidhm');
       const ps = (t.params || []).map(ainmCineail).join(', ');
@@ -95,17 +79,13 @@ const isMalairtDe = (a, b) => a && b && a.k === 'suim' && b.k === 'malairt'
 function comhionann(a, b) {
   if (!a || !b) return false;
   if (a.k === 'iasacht' || b.k === 'iasacht') return true;
-  // Introduction is widening and widening is free (§6): a `Ceart` already
-  // *is* a `Toradh`, so there is no constructor to write and nothing to
-  // convert. Directional on purpose — `comhionann(súil, fuarthas)` — because
-  // the reverse is the narrowing the copula does and it is not free.
+  // A variant already *is* its sum, so this widening is free and directional
+  // (the reverse is the copula's narrowing, which is not free).
   if (isMalairtDe(a, b)) return true;
-  // §5.11 — the same widening, one level up. Inside a verb declared
-  // `-> Uimhir ar Earráid` both a bare `Uimhir` and a bare `Earráid` are
-  // acceptable results, because the affliction is a thing that may have
-  // happened rather than an alternative the author chose between. The reverse
-  // is the narrowing `tá … ar …` does, and it is not free — that asymmetry is
-  // the whole of the protection (E523).
+  // §5.11 — same widening, one level up: inside a verb declared
+  // `-> Uimhir ar Earráid`, a bare Uimhir or bare Earráid are both
+  // acceptable results. The reverse is `tá … ar …` narrowing, not free —
+  // that asymmetry is the whole protection (E523).
   if (a.k === 'dochar' && b.k !== 'dochar') {
     return comhionann(a.toradh, b) || comhionann(a.dochar, b);
   }
@@ -115,8 +95,7 @@ function comhionann(a, b) {
   if (a.k === 'arSiúl') return comhionann(a.inner, b.inner);
   if (a.k === 'modúl') return a.ainm === b.ainm;
   if (a.k === 'feidhm') {
-    // Mood and aspect are part of what a verb is, so they are part of its
-    // type: a `gníomh` is never a `feidhm`, however the arguments line up.
+    // Mood and aspect are part of a verb's type: gníomh never matches feidhm.
     if (a.modh !== b.modh) return false;
     if (!!a.leanunach !== !!b.leanunach) return false;
     const pa = a.params || [], pb = b.params || [];
@@ -128,12 +107,10 @@ function comhionann(a, b) {
 }
 
 /**
- * The type that covers both, or null if nothing does.
- *
- * Used where two types meet without one of them being expected — the branches
- * of a value `má`, and the items of a list literal. Two variants of one sum
- * meet at the sum, which is what finally gives a heterogeneous list literal
- * somewhere to go and makes E211 reachable (§6).
+ * The type that covers both, or null. Used where two types meet without one
+ * being expected: `má` branches and list literal items. Two variants of one
+ * sum meet at the sum (what makes a heterogeneous list literal go somewhere,
+ * and what makes E211 reachable).
  */
 function nasc(a, b, cinealacha) {
   if (!a || !b) return null;
@@ -145,12 +122,9 @@ function nasc(a, b, cinealacha) {
   const sa = suimDe(a) || (a.k === 'suim' ? a : null);
   const sb = suimDe(b) || (b.k === 'suim' ? b : null);
   if (sa && sb && sa.ainm === sb.ainm) return sa;
-  // §5.11 — a `má` whose branches are the result and the affliction is the
-  // ordinary way a verb with an `ar` clause is written, so the two have to
-  // meet somewhere. They meet at the afflicted type, and only because one of
-  // them has been *declared* an affliction by some signature in this module:
-  // `dochrach` is set by the `ar` clause and by nothing else, so this is not
-  // a rule that quietly joins any two unrelated types.
+  // §5.11 — a verb's Uimhir/Earráid branches meet at the afflicted type.
+  // Only fires when `dochrach` is actually set by an `ar` clause, so this
+  // never quietly joins two unrelated types.
   if (a.dochrach && !b.dochrach) return { k: 'dochar', toradh: b, dochar: a };
   if (b.dochrach && !a.dochrach) return { k: 'dochar', toradh: a, dochar: b };
   return null;
@@ -173,10 +147,7 @@ const FOCAIL_JS = new Set(['var', 'let', 'const', 'function', 'class', 'return',
   'await', 'async', 'yield', 'require', 'module', 'exports']);
 const jsAinm = (lemma) => (FOCAIL_JS.has(lemma) ? '_' + lemma : lemma);
 
-/**
- * A treaty is unordered, so it is keyed by the sorted pair. County names
- * contain spaces, so the separator is one that cannot occur in a name.
- */
+/** A treaty is unordered, keyed by the sorted pair (county names have spaces). */
 const comhaontuEochair = (a, b) => [a, b].sort().join('\u0000');
 
 class Ceangal {
@@ -184,9 +155,8 @@ class Ceangal {
     this.lemma = lemma;
     this.cineal = cineal;
     this.kind = kind;                    // 'luach' | 'feidhm' | 'gníomh'
-    // seasmhach: what the thing permanently is. sealadach: what it happens
-    // to be right now. The same essence/accident split that separates `is`
-    // from `bí` (§5.5, §5.5), applied to bindings rather than predicates.
+    // seasmhach = permanent essence; sealadach = current state — the
+    // same is/bí split applied to bindings.
     this.sealadach = sealadach;
     this.paraidim = mf.paraidim(lemma);
     this.jsAinm = jsAinm(lemma);
@@ -200,86 +170,51 @@ class Anailiseoir {
     this.cinealacha = new Map(BUNCHINEALACHA);
     this.domhanda = new Scoip();
     this.modhanna = [];   // method declarations, for the backend
-    // §5.10 — one gender per noun, per module. A word does not change gender
-    // between two sentences of the same text.
+    // §5.10 — one gender per noun, per module.
     this.inscni = new Map();   // lemma → { inscne, ionad }
-    // foinse → síniú, filled in by the module graph before analysis. Empty by
-    // default, which is exactly the pre-0.5 behaviour: every import is a loan.
+    // foinse → síniú, filled by the module graph before analysis. Empty by
+    // default, matching pre-module-graph behaviour (every import is a loan).
     this.modúil = comhthéacs.modúil || new Map();
     this.ailiasanna = new Map();   // foinse → the JS alias the backend requires
     /*
-     * Where this module is from (§7.3).
+     * Where this module is from (§7.3). A mismatch needs two provenances,
+     * so the accessing side is the module, not the verb: `as` predicates
+     * provenance of things ("nuachtán as Baile Átha Cliath"), not actions.
+     * Also engineering: one line per file, no per-verb override, and a
+     * receiver-based county would make every method access trivially pass.
      *
-     * A mismatch needs two provenances and only one of them is on the value,
-     * so the other has to be the code doing the accessing. It is the module
-     * and not the verb, for one honest reason and several engineering ones.
-     *
-     * The honest one: Irish `as` predicates provenance of people and things —
-     * *is as Corcaigh mé*, *fear as Doire* — and a text is a thing, so
-     * *nuachtán as Baile Átha Cliath* is ordinary. There is no construction in
-     * which an *action* is from somewhere; you cannot say *déanamh as
-     * Corcaigh*. That is a tiebreaker between the two candidates, not a
-     * justification for the county system, which has none and does not claim
-     * one.
-     *
-     * The engineering: one line per file instead of ceremony on every verb; no
-     * per-verb override, because a local escape hatch would defeat the point;
-     * and a receiver-based county would make every method access trivially
-     * pass, which is precisely where the check most needs to bite.
-     *
-     * `deoraíocht` until declared otherwise, so every 0.5 program keeps
-     * compiling untouched: counties cost nothing until you use one.
+     * `deoraíocht` until declared otherwise, so every pre-county program
+     * keeps compiling: counties cost nothing until used.
      */
     this.contae = ctae.DEORAIOCHT;
     this.ionadContae = null;
     /*
      * cúige → { contae, struchtúr }. One province, one struct, across the
-     * whole graph — an imported type brings its claim with it.
-     *
-     * Keyed by province and not by county, which is the headline of 0.7
-     * (§7.2). Four slots, not 32. The county is still recorded, because
-     * E603 has to be able to say who is sitting there and under what name,
-     * and because the county is what the rivalry table is keyed on.
-     *
-     * Province exclusivity is the point, not an implementation detail. The
-     * 32 names remain the vocabulary and remain checked; 28 of them are
-     * decoys at any given moment, and choosing between the decoys is the
-     * game, because the county you choose decides who will not deal with
-     * you (§7.2).
+     * whole graph — an imported type brings its claim with it. Keyed by
+     * province (4 slots), not county (32) — that's the 0.7 headline. County
+     * is still recorded, since E603 has to say who's sitting there and
+     * under what name, and it's what the rivalry table keys on.
      */
     this.cuigeGafa = new Map();
     /*
-     * §7.6 — contae → ainm an chineáil, for `stór` types only.
-     *
-     * The second placement registry, at the finer granularity. A table claims
-     * a county; an ordinary type claims a province. `eiligh` owns the rule and
-     * the collision between the two, and it is the only reader of this map.
+     * §7.6 — contae → type name, for `stór` types only. The finer
+     * registry: an ordinary type claims a province, a table claims a county.
      */
     this.contaeGafa = new Map();
     /*
-     * §7.6 — the tables in view here: local declarations plus everything that
-     * arrived through an import, exactly as `cuigeGafa` is built.
-     *
-     * The authoritative fact about one type is on the type record itself
-     * (`cineal.stor`), which is what makes a table travel through `síniú` for
-     * nothing: an imported type brings its table with it the same way it
-     * brings its county. This registry is the whole-graph *view*, for the
-     * ceiling, for `--graf` and for nothing the type checker consults.
+     * §7.6 — the whole-graph view of tables, for `--graf` and the ceiling.
+     * The authoritative fact is `cineal.stor`, which travels through
+     * `síniú` on its own; this is just the aggregate view.
      */
     this.tabli = new tbl.ClarlannTablai();
-    // The treaties in force in *this file*. Sorted-pair keys, so a treaty is
-    // the same treaty whichever way round it was written.
+    // Treaties in force in this file. Sorted-pair keys.
     this.comhaontuithe = new Set();
-    // A module body is a sequence of commands, so top level is imperative.
-    // It is not ongoing, so `tar éis` at top level is an error.
+    // Top level is a sequence of commands: imperative, not ongoing.
     this.ctx = { modh: 'ordaitheach', leanunach: false, ainm: '<barr>' };
     // Which form of the substantive verb the surrounding clause selects.
-    // Independent unless a particle governs the clause.
     this.rialuBriathair = mf.RIALU_BRIATHAIR.NEAMHSPLEACH;
     this.copailMhir = null;             // the particle governing the copula (§5.5)
-    // surface → { lemma, foirm } for every autonomous verb in scope, present
-    // and past. Built at declaration and at import; the Ordú path looks a
-    // written form up here before it looks it up as an identifier (§8).
+    // surface → { lemma, foirm } for every autonomous verb in scope.
     this.saorFoirmeacha = new Map();
     this.tusaigh();
   }
@@ -291,23 +226,12 @@ class Anailiseoir {
     }, 'gníomh'));
 
     /*
-     * `déan a fhógair ar dhaoine` — iteration (CONTEXT.md §5.8).
-     *
-     * `déan` is the Irish light verb that turns a verbal noun into an action
-     * performed: *déan scrúdú ar na cáipéisí*, *déan iniúchadh ar*, *déan cur
-     * síos ar*. The verbal noun names the action and `ar` marks what it is
-     * done to; with a plural object the action distributes over its members,
-     * which is what a loop is.
-     *
-     * Nothing new in the grammar. `déan` is a bare imperative root (§5.4);
-     * `a fhógair` is the nominalising particle already in the language (§5.2);
-     * `ar` is the preposition already governing `cuir … ar …` (§5.2), and it
-     * lenites here through the same code path. The only addition is the
-     * lexical fact that `déan` selects `ar`, which is ordinary Irish verb
-     * government of prepositions.
-     *
-     * Its argument must be a `gníomh`, not a `feidhm`: `déan` discards what
-     * the verb yields, and in the indicative a mention must be used (E503).
+     * `déan a fhógair ar dhaoine` — iteration. `déan` is the Irish light
+     * verb turning a verbal noun into a performed action, distributing over
+     * a plural object. Nothing new grammatically: `déan` is a bare
+     * imperative root, `a fhógair` the existing nominalising particle, `ar`
+     * the existing preposition. Only addition: `déan` lexically selects `ar`.
+     * Its argument must be a `gníomh` (a `feidhm`'s result would be discarded, E503).
      */
     const d = new Ceangal('déan', {
       k: 'feidhm', modh: 'ordaitheach', leanunach: false,
@@ -319,15 +243,10 @@ class Anailiseoir {
 
   // ---- modúil --------------------------------------------------------
   /**
-   * Bring an imported module's vocabulary into this one, before anything
-   * local is declared — so a local declaration that collides with an import
-   * is E208 in the ordinary way.
-   *
-   * Verbs come in unqualified, because a verb is vocabulary and vocabulary is
-   * not qualified: you cannot write `cuirDuine ó shonraí stór, …` and still
-   * have a command, since `ó` builds noun phrases and E501 exists precisely
-   * to say an imperative is not a nominal. Values do not come in unqualified,
-   * because a value is a possession and possession is exactly what `ó` is for.
+   * Bring an imported module's vocabulary in before anything local is
+   * declared, so a collision is E208 in the ordinary way. Verbs come in
+   * unqualified (vocabulary, not a possession — `ó` builds noun phrases and
+   * E501 says an imperative isn't one). Values stay qualified through `ó`.
    */
   iompórtail() {
     let uimh = 0;
@@ -337,15 +256,9 @@ class Anailiseoir {
 
       for (const [ainm, t] of siniu.cinealacha) {
         if (!this.cinealacha.has(ainm)) this.cinealacha.set(ainm, t);
-        // §7.6 — a table arrives with its type. Nothing was added to `síniú`
-        // to make this happen: the marker lives on the type record beside the
-        // county, so it crosses the module boundary for the same reason the
-        // county does, and `faigh Duine as stór` works on an imported `Duine`
-        // with no import rule of its own.
+        // §7.6 — a table arrives with its type, via the marker on the type
+        // record, the same way county does.
         if (t.stor) this.tabli.cuir(ainm, t.contae, t.stor.reimsi || [], siniu.ionad);
-        // A placement is global and arrives with the import — the same claim,
-        // judged by the same function, whether it was written here or read
-        // from somewhere else.
         if (!t.contae || t.contae === ctae.DEORAIOCHT) continue;
         this.eiligh(ainm, t.contae, siniu.ionad, !!t.stor);
       }
@@ -389,10 +302,8 @@ class Anailiseoir {
     for (const [lemma, onn] of onnmhairi) {
       if (onn.kind === 'gníomh') { gniomhartha.add(lemma); briathra.add(lemma); }
       else if (onn.kind === 'feidhm') briathra.add(lemma);
-      // An imported autonomous verb brings its forms with it, as a borrowed
-      // verb brings its conjugation (§5.9). They are re-derived rather than
-      // carried, because the lemma is the thing that was exported and the
-      // form is a fact about the lemma.
+      // Autonomous forms are re-derived, not carried, since the lemma is
+      // what was exported and the form follows from the lemma.
       if (onn.cineal && onn.cineal.saor) {
         gniomhartha.add(onn.cineal.saor); briathra.add(onn.cineal.saor);
         if (onn.cineal.saorCaite) {
@@ -400,34 +311,17 @@ class Anailiseoir {
         }
       }
     }
-    // The module's own county rides in the signature so `--graf` can print it.
-    // Nothing consults it from the far side: a county is a property of a
-    // place, and reading someone else's text is not moving house (§7.3). The
-    // struct types in `cinealacha` carry theirs, and those *are* consulted,
-    // because a type's county is its identity.
+    // The module's own county rides along purely for `--graf` — nothing on
+    // the importing side ever reads it (reading vocabulary isn't trade).
     return { onnmhairi, cinealacha, gniomhartha, briathra, ionad, contae: this.contae };
   }
 
-  // ---- government + agreement ---------------------------------------
+  // ---- government + agreement -----------------------------------------
   /**
-   * The single agreement check. Given what the programmer wrote (`surface`),
-   * the form the slot demands (`foirm`), and a way to ask whether a lemma is
-   * known here, either return the lemma or file a precise diagnostic.
-   */
-  /**
-   * The lemma a surface form stands for, or null.
-   *
-   * Split out of `reitighFoirm` at 0.13 because a second caller needs it, and
-   * needs it *before* it knows which form to demand. `i` chooses its own
-   * allomorph from the first letter of the word it governs (§5.2, `mf.mirI`),
-   * so the government cannot be computed until the lemma is in hand, and the
-   * lemma cannot be recovered from the surface without trying a de-eclipsis.
-   * Resolution and agreement are two jobs, and only the second one was ever
-   * the thing §11.2 requires to live in a single function.
-   *
-   * A de-eclipsis is tried second and only if the plain guess fails, because
-   * `lemmaiFaoiUru` returns a set: `ng-` is an eclipsed `g-` or an ordinary
-   * word beginning `ng-`, and the symbol table is what decides.
+   * The lemma a surface form stands for, or null. Split out of
+   * `reitighFoirm` since `i`'s allomorph needs the lemma first (§5.2): the
+   * particle picks its shape from the governed word's first letter, so the
+   * lemma has to be resolved before the demanded form is known.
    */
   lemmaCeangailte(surface, lemmaAnn) {
     const lemma = mf.lemmaTuairim(surface);
@@ -441,13 +335,8 @@ class Anailiseoir {
   }
 
   reitighFoirm(surface, foirm, lemmaAnn, oibreoir) {
-    // §5.2 — an eclipsed identifier used to be recognised here only so that it
-    // could be refused by name (E108), because eclipsis had no programming
-    // meaning. Since 0.13 `i` demands it, so the same recognition *resolves*
-    // instead: the form is correct Irish, and answering correct Irish with
-    // "undefined identifier" was always the worse of the two available
-    // answers. Whether this position licensed the urú is the agreement
-    // question below, not the resolution question here.
+    // An eclipsed surface is recognised here so `i` can license it (0.13),
+    // whereas before it was recognised only to refuse it (E108).
     const lemma = this.lemmaCeangailte(surface, lemmaAnn);
     if (lemma === null) return { earraid: ['E101', mf.lemmaTuairim(surface)] };
 
@@ -459,12 +348,9 @@ class Anailiseoir {
     const inSeim = mf.inSeimhithe(lemma);
     const inUr = mf.inUraithe(lemma);
 
-    // Six arms, three per mutation, in the same order and saying the same
-    // three things: this word cannot take that mutation, this position did
-    // not license it, this position demanded it and did not get it. The
-    // eclipsis codes are separate from the lenition ones on purpose (§9,
-    // 0.13): the shapes are identical but the mutations are not, and a reader
-    // holding an E112 should not have to work out which mutation is meant.
+    // Six arms, three per mutation, in parallel order: can't take this
+    // mutation, position didn't license it, position demanded it and didn't
+    // get it.
     if (scriobhSeimhithe && !inSeim.ok) return { earraid: ['E104', lemma, inSeim.cuis] };
     if (scriobhUraithe && !inUr.ok) return { earraid: ['E114', lemma, inUr.cuis] };
     if (scriobhSeimhithe && foirm !== FOIRM.SEIMHITHE) {
@@ -483,40 +369,24 @@ class Anailiseoir {
   }
 
   /**
-   * The copula's agreement check, and the twin of the `Substaint` one (§5.5).
-   *
-   * `bí` alternates independent/dependent and is checked against
-   * `rialuBriathair`; the copula fuses with its particle and is checked
-   * against `copailMhir`. The demanded form is a function of two things and
-   * both are grammatical: which particle governs the clause, and the first
-   * letter of the type named after it.
+   * The copula's agreement check. `bí` alternates independent/dependent
+   * against `rialuBriathair`; the copula fuses with its particle and is
+   * checked against `copailMhir`, chosen by particle + the first letter of
+   * the type name after it.
    *
    *   más Ceart toradh      má   + is,  consonant → más
    *   murab Easpa toradh    mura + is,  vowel     → murab
-   *   is Ceart              nothing governs it    → the independent form
+   *   is Ceart              ungoverned              → independent form
    */
   foirmChopaile(e, mhir) {
-    if (!mhir) {
-      // Ungoverned, so the independent form, which is the only one the
-      // parser can produce here. Nothing to check.
-      return;
-    }
+    if (!mhir) return;
     const rialu = mhir.diultach ? mf.RIALU_COPAIL.MURA : mf.RIALU_COPAIL.MA;
-    // §0.3 — ask before calling. Four of the copula's seven cells have no
-    // syntactic slot and `foirmChopail` throws a bare `Error` for them, with a
-    // section number inside the message; asserting on that message made
-    // documentation numbering part of the test contract, which is the thing
-    // §9's rule exists to prevent and which §9 could not cover, because a bare
-    // `Error` is not a coded diagnostic. Guarding here is `mf.inShaor`'s shape
-    // exactly (§8), and it leaves the `throw` as an assertion the compiler can
-    // no longer reach. Only MA and MURA are constructible above, so this
-    // cannot fire today; it is here so that it still cannot fire when a fifth
-    // particle is added.
+    // Guarded, since only MA/MURA are constructible above; kept so this
+    // still can't fire when a fifth particle is added.
     if (!mf.cealBeo(rialu)) return;
     const ceart = mf.foirmChopail(rialu, e.cineal.ainm);
-    // A separate `is` after the particle is the pre-0.9 word order. It is not
-    // a wrong allomorph but a missing fusion, so it is named as it was
-    // written rather than as a single word.
+    // A separate `is` after the particle is the old word order: a missing
+    // fusion, not a wrong allomorph, so named as what was actually written.
     const scriofa = e.faoiMhir ? mhir.scriofa : `${mhir.scriofa} … is`;
     if (scriofa !== ceart) this.bail.cuir('E517', e.ionad, scriofa, ceart);
   }
@@ -530,23 +400,13 @@ class Anailiseoir {
 
   /**
    * An `as` phrase to a county, or `deoraíocht` if there was no phrase.
-   *
-   * `as` governs the head of its complement and demands FOIRM.BUN, which is
-   * what every operator except `ó`, `ar` and `a` already demands. So this
-   * routes through `reitighFoirm` like everything else and the fourth operator
-   * adds no fifth mechanism. `as Chorcaigh` comes back E103 with no new code:
-   * unlicensed lenition is already an error everywhere, and `as` is policed
-   * correctly by the machinery doing nothing special for it.
-   *
-   * Only the head is governed. `Fhailí` in *Uíbh Fhailí* and `nGall` in *Dún
-   * na nGall* are frozen inside proper names and are nobody's business here;
-   * in particular the eclipsed slot is still empty (§5.2).
+   * `as` demands FOIRM.BUN through the same `reitighFoirm` everything else
+   * uses, so it adds no fifth mechanism. Only the head word is governed —
+   * multi-word names like `Uíbh Fhailí` are frozen and untouched.
    */
   reitighContae(nód) {
     if (!nód) return ctae.DEORAIOCHT;
     const [ceann, ...eile] = nód.focail;
-    // Exile is not a place, so you cannot be from it. It is what you are when
-    // you declare nothing.
     if (ceann === ctae.DEORAIOCHT) { this.bail.cuir('E605', nód.ionad); return ctae.DEORAIOCHT; }
     const res = this.reitighFoirm(ceann, FOIRM.BUN, (l) => ctae.isCeannAinm(l), 'as');
     if (res.earraid) { this.teip(res, nód.ionad, 'E602'); return ctae.DEORAIOCHT; }
@@ -556,71 +416,36 @@ class Anailiseoir {
   }
 
   /**
-   * The county a possessor carries, or `null` if provenance does not apply.
-   *
-   * A struct instance and an `Iasacht` are things you hold. A R336 module,
-   * a list and a primitive are not, and their exemption is a decision rather
-   * than an accident of where the check sits (§7.2): a `modúl` is a text you
-   * have read, not a thing you own, and reading vocabulary out of a text is
-   * not trade. Without that exemption the import graph and the treaty graph
-   * collapse into each other and `ó` ends up doing two jobs.
-   *
-   * A JavaScript module is deliberately *not* exempt, and the line falls
-   * exactly where 0.5 put it. `ó "./sonraí.r336"` is a `modúl`, because the
-   * compiler has read it; `ó "express"` is an `Iasacht`, because it has not.
-   * The first is a text, the second is a borrowed thing, and a borrowed thing
-   * is in exile like every other borrowed thing.
+   * The county a possessor carries, or null if provenance doesn't apply.
+   * A struct instance and `Iasacht` are things you hold; a R336 module, a
+   * list and a primitive are not (reading a module's vocabulary isn't trade).
+   * A foreign JS module IS treated as `Iasacht`/exile — it's a borrowed thing.
    */
   contaeDe(t) {
     if (!t) return null;
     if (t.k === 'iasacht') return ctae.DEORAIOCHT;
     if (t.k === 'struchtúr') return t.contae || ctae.DEORAIOCHT;
     if (t.k === 'suim') return t.contae || ctae.DEORAIOCHT;
-    // A variant answers with the sum's county and holds none of its own. That
-    // is §6 in one line: the sum is the identity that claims a province,
-    // and the variant is a name that identity goes by. If a variant carried
-    // its own county it would claim a province of its own, and a two-variant
-    // sum would eat half the program's budget.
+    // A variant answers with the sum's county and holds none of its own —
+    // the sum claims the province, the variant is a name it goes by.
     if (t.k === 'malairt') return t.contaeSuime || ctae.DEORAIOCHT;
     return null;
   }
 
   /**
-   * The border check on `ó` (§7.2, §7.2). Every `ó` on a county-bearing
-   * possessor, which is the pervasive option and was chosen deliberately.
+   * The border check on `ó` (§7.2). Two rules, in this order:
    *
-   * Two rules, in this order, and the order is the design.
+   * Rivals never trade — the veto sits above the four cases as a
+   * precondition, not inside one of them; no treaty between rivals can
+   * exist (E608). Exile is nobody's rival, so this never fires pre-county-system.
    *
-   * **Rivals do not trade.** The veto sits *above* the four cases rather
-   * than inside one of them, so it is not an exception to the border rule —
-   * it is a precondition on all of it. Not across a province line, not
-   * inside one province, and not under a treaty, because no treaty between
-   * rivals can exist (E608). It is the only irremediable relation in the
-   * language besides exile, and the two are a pair: exile trades with nobody
-   * because it is not a party, rivals trade with nobody because they will
-   * not. Exile is nobody's rival, so this never fires on a pre-0.7 program.
+   * Otherwise, the border: same province passes, and since
+   * cuigeDe(deoraíocht) = deoraíocht, exile-vs-exile passes through the same
+   * equality rather than a second branch — why every pre-county program
+   * still compiles untouched.
    *
-   * **Otherwise, the border.** A *border* check, not a sameness check — one
-   * comparison covers both legal cases, because two things from nowhere are
-   * the same nowhere. Same province passes, and `cuigeDe(deoraíocht)` is
-   * `deoraíocht`, so exile reading exile passes through the same equality
-   * rather than through a second branch. That is why the rule is still four
-   * cases and one comparison after the province change, and why every 0.4,
-   * 0.5 and 0.6 program compiles untouched. Exile against a placed county
-   * fails with no remedy available, because an agreement is between two
-   * parties and exile is not a party.
-   *
-   * The province is the jurisdiction and the county is the name it goes by.
-   * §7.2 said the county *was* the type's identity; that is now split, and
-   * the split is what makes the county choice load-bearing again instead of
-   * a synonym for the province (§7.2).
-   *
-   * What is *not* checked is construction, argument passing, and returning:
-   * a county is a lock on the box, not a border on the road. Values travel
-   * anywhere; they simply cannot be opened except at home. That is what
-   * makes exile-trades-with-nobody survivable — an exile module can parse
-   * the outside world, build placed structs out of primitives, and hand
-   * them on.
+   * Construction, argument passing and returns are never checked — a
+   * county is a lock on the box, not a border on the road.
    */
   seiceailDuchas(t, ball) {
     const as = this.contaeDe(t);
@@ -630,15 +455,14 @@ class Anailiseoir {
       return;
     }
     if (ctae.cuigeDe(as) === ctae.cuigeDe(this.contae)) return;
-    // The only place a treaty is ever consulted. Exile needs no special case
-    // here: `fogairComhaontu` refuses to key a pair containing `deoraíocht`,
-    // so no lookup involving exile can ever succeed, and exile trades with
-    // nobody as a consequence of the table rather than as a rule about it.
+    // The only place a treaty is consulted. `fogairComhaontu` never keys a
+    // pair containing `deoraíocht`, so exile trades with nobody as a
+    // consequence of the table rather than a rule about it.
     if (this.comhaontuithe.has(comhaontuEochair(as, this.contae))) return;
     this.bail.cuir('E601', ball.ionad, ball.surface, as, this.contae);
   }
 
-  /** Declarations name the lemma, so they must be written in the base form. */
+  /** Declarations name the lemma, so must be written in the base form. */
   seiceailBunfhoirm(ainm, ionad) {
     if (mf.cosuilLeSeimhiu(ainm)) {
       this.bail.cuir('E107', ionad, ainm, mf.diseimhigh(ainm));
@@ -673,16 +497,11 @@ class Anailiseoir {
   }
 
   /**
-   * §5.11 — `Uimhir ar Earráid`. The affliction wraps the result rather than
-   * sitting beside it, so nothing downstream needs a special path: what a verb
-   * with an `ar` clause yields simply *is* an afflicted `Uimhir`, and every
-   * check that already existed sees it.
-   *
-   * The adverse type must be a declared one. *Tá tinneas cinn orm* names an
-   * illness; a bare number is not a misfortune, and `Iasacht` is the statement
-   * that a category is unknown — E213's argument, one level up. The
-   * restriction is also what keeps the `dochrach` mark off the shared
-   * primitive singletons, which is the practical half of the same rule.
+   * §5.11 — `Uimhir ar Earráid`. The affliction wraps the result instead of
+   * sitting beside it, so every existing type check sees it automatically.
+   * The adverse type must be a declared struct/sum/variant: a bare number
+   * isn't a misfortune, and `Iasacht` is exactly "category unknown" — E213's
+   * argument one level up.
    */
   dochraigh(ref, t) {
     if (!ref.dochar) return t;
@@ -691,8 +510,7 @@ class Anailiseoir {
       this.bail.cuir('E525', ref.dochar.ionad, ainmCineail(td));
       return t;
     }
-    // Declaring an affliction is what makes a type an affliction. Nothing else
-    // sets this, which is why `nasc` can rely on it.
+    // Declaring an affliction is what makes a type an affliction — `nasc` relies on this.
     td.dochrach = true;
     return { k: 'dochar', toradh: t, dochar: td };
   }
@@ -702,17 +520,16 @@ class Anailiseoir {
     const briathra = [];
     const raitis = [];
 
-    // Pass 0 — the imported lexicon, before anything local exists.
+    // Pass 0 — imported lexicon, before anything local exists.
     this.iompórtail();
     ast.ailiasanna = this.ailiasanna;
 
-    // Pass 0b — where this module is from. Nothing else can be judged until
-    // the accessing side has a provenance to be judged against (§7.3).
+    // Pass 0b — this module's own county, before anything can be judged
+    // against it.
     for (const m of ast.mireanna) if (m.cineál === 'Contae') this.fogairContaeModuil(m);
 
-    // Pass 0c — the treaties in force here, before any access is judged. They
-    // are file scope, so position within the file does not matter and a treaty
-    // at the bottom licenses an access at the top.
+    // Pass 0c — treaties in force here, before any access is judged
+    // (file-scoped, so order in the file doesn't matter).
     for (const m of ast.mireanna) if (m.cineál === 'Comhaontú') this.fogairComhaontu(m);
 
     // Pass A — hoist type and verb declarations.
@@ -746,28 +563,15 @@ class Anailiseoir {
   }
 
   /**
-   * `comhaontú Corcaigh Ciarraí` — a bilateral agreement, in force in this
-   * file (§7.2).
+   * `comhaontú Corcaigh Ciarraí` — bilateral, file-scoped, in force
+   * regardless of where in the file it's written. Symmetric (sorted-pair
+   * key, so writing it either way names the same treaty — second writing is
+   * E607). Not transitive, deliberately: A-B + B-C doesn't give A-C, since
+   * transitivity would silently partition the 32 into blocs.
    *
-   * **Symmetric**, because an agreement between two parties binds both. The
-   * key is the sorted pair, so writing it either way round names the same
-   * treaty and the second writing is E607.
-   *
-   * **Not transitive**, deliberately. Corcaigh–Ciarraí together with
-   * Ciarraí–Gaillimh does not give Corcaigh–Gaillimh. Transitivity would
-   * partition the 32 into blocs, and a partition is not a treaty — it is the
-   * thing a treaty exists instead of. Nothing here computes a closure and
-   * nothing should.
-   *
-   * **File-scoped**, and it does not travel in the signature. The 0.5 boundary
-   * carries type, mood and aspect because those are properties of a *value*
-   * and go where the value goes; a treaty is a property of a *place*, and a
-   * file is a place. Keeping it local is also what lets E601 be diagnosed from
-   * the file in front of you rather than from a declaration three imports
-   * away, and what stops `--graf` from lying about what is in force here.
-   *
-   * `deoraíocht` is not a party and cannot be one, so a rejected name simply
-   * declares no treaty; `reitighContae` has already filed E605.
+   * File-scoped and not in the signature: a treaty is a property of a
+   * place, not a value. `deoraíocht` can't be a party — already refused by
+   * E605 before this runs.
    */
   fogairComhaontu(m) {
     const a = this.reitighContae(m.a);
@@ -782,34 +586,14 @@ class Anailiseoir {
 
   /**
    * Claim a place for a placed type, and report who holds it (§7.2, §7.6).
+   * Two granularities: an ordinary type claims a PROVINCE (4 slots), a
+   * `stór` type claims a COUNTY (32 slots) — a type is the vocabulary of a
+   * region, a table is a building in one town.
    *
-   * Two granularities, because two different things are being claimed.
-   *
-   *   an ordinary type    claims a PROVINCE   — 4 slots
-   *   a `stór` type       claims a COUNTY     — 32 slots
-   *
-   * A type is the vocabulary of a region: naming `Duine` as being from
-   * Corcaigh says what a whole part of the program is about, and it takes the
-   * whole of An Mhumhain with it. A table is a building in one town. It is a
-   * smaller thing and it claims a smaller place, and that asymmetry is the
-   * entire content of the rule.
-   *
-   * **The two registries collide, and that is what stops the marker being an
-   * escape hatch.** A table in Corcaigh blocks any ordinary type from claiming
-   * An Mhumhain, and an ordinary type in An Mhumhain blocks a table anywhere
-   * in Munster. Marking a type `stór` does not remove it from contention; it
-   * changes the shape of its claim from a region to a town. So a program with
-   * four ordinary placed types still has nowhere to put a table — `craobh/` is
-   * exactly such a program and still cannot have one — and the 32 slots are
-   * reachable only by a program that has no ordinary placed types at all.
-   *
-   * The order of declaration does not matter. A table declared first is caught
-   * by the province claim's sweep; a province claimed first is caught by the
-   * table's own check.
-   *
-   * Shared by `struchtúr` and `suim` and by the import path, which is the
-   * whole of what 0.8 and 0.12 do to this rule: there are simply more things
-   * that want a place, and that is what makes the budget scarce.
+   * The two registries collide deliberately: a table blocks the whole
+   * province from an ordinary claim, and an ordinary claim blocks every
+   * county in its province from holding a table. `stór` doesn't remove a
+   * type from contention, it changes the shape of its claim.
    */
   eiligh(ainm, contae, ionad, stor = false) {
     if (contae === ctae.DEORAIOCHT) return;
@@ -834,9 +618,8 @@ class Anailiseoir {
       this.bail.cuir('E603', ionad, cuige, gafa.contae, gafa.struchtur);
       return;
     }
-    // A province claim sweeps its own counties, because a table may already be
-    // sitting in one of them. This is the only place in the compiler that
-    // enumerates a province's counties for a rule rather than for display.
+    // A province claim sweeps its own counties, since a table might already
+    // be sitting in one.
     for (const c of ctae.contaethaCuige(cuige)) {
       const tabla = this.contaeGafa.get(c);
       if (tabla && tabla !== ainm) {
@@ -848,25 +631,11 @@ class Anailiseoir {
   }
 
   /**
-   * §5.10 — the gender a *type declaration* states, and whether it states it in
-   * the form its own name demands.
-   *
-   * `firinscneach` and `baininscneach` are adjectives, so they agree with the
-   * noun they follow like any other. That makes the declaration check itself:
-   * `Duine firinscneach` says masculine in the masculine form, `Aois
-   * bhaininscneach` says feminine in the feminine form, and the two ways of
-   * getting it wrong are the same fault written twice. E526 is that fault.
-   *
-   * Optional, and that is a finding rather than a convenience. A binding
-   * always carries a state adjective, so a binding's gender is always
-   * declared and never guessed; a type name carries no adjective, and 0.11
-   * built no site that demands agreement with one. Requiring it would have
-   * been ceremony collected against a rule that does not yet exist — and it
-   * would have rewritten every type declaration in the repository to say
-   * something nothing reads. So it may be written, it is recorded, it is
-   * printed by `--paraidím`, and where it is absent the type is masculine by
-   * default (Part 11 D). If the possessive determiner is ever built, that is
-   * the release in which this stops being optional (§5.10).
+   * §5.10 — the gender a *type declaration* states, and whether the form
+   * matches. `firinscneach`/`baininscneach` are adjectives, so the
+   * declaration checks itself. Optional: nothing yet demands agreement with
+   * a type's gender, so requiring it would be ceremony against a rule that
+   * doesn't exist. Masculine by default when absent.
    */
   inscneFhogartha(ainm, aid) {
     if (!aid) return mf.INSCNE.FIR;
@@ -880,19 +649,9 @@ class Anailiseoir {
   }
 
   /**
-   * §5.10 — the gender a *binding* states, which is stated by the form of its
-   * own state adjective and by nothing else.
-   *
-   * There is no separate declaration syntax for a binding's gender because
-   * there does not need to be one: every binding already carries an
-   * attributive adjective, and an attributive adjective already agrees. So
-   * writing `aois sheasmhach` *is* the declaration, and `duine seasmhach` is
-   * the other one. Nothing was added to the language to make this possible.
-   *
-   * The module keeps one gender per lemma. A noun does not change gender
-   * between two sentences of the same text, so a second, different spelling
-   * of the same word is E527 — and the message names where the word was first
-   * spelled, because that is the other line the author has to look at.
+   * §5.10 — the gender a *binding* states: its own state adjective's form
+   * IS the declaration, nothing new needed. One gender per lemma per
+   * module — a second, different spelling is E527, naming the first-seen line.
    */
   inscneCheangail(ainm, aid) {
     if (!aid) return null;                      // a receiver: no adjective slot
@@ -911,22 +670,14 @@ class Anailiseoir {
     if (!this.seiceailBunfhoirm(m.ainm, m.ionad)) return;
     if (this.cinealacha.has(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
     const contae = this.reitighContae(m.contae);
-    // §7.6 — a table is somewhere.
-    //
-    // Exile is not a place. That is what makes it non-exclusive, what stops it
-    // signing a treaty, and what stops it being anybody's rival (§7.2), and
-    // it is the same fact here: there is no county for the table to sit in.
-    // Without this rule the number of tables would be unbounded and the marker
-    // would be only a word.
+    // §7.6 — exile isn't a place, so a table has nowhere to sit.
     if (m.stor && contae === ctae.DEORAIOCHT) this.bail.cuir('E610', m.stor, m.ainm);
     const stor = !!m.stor && contae !== ctae.DEORAIOCHT;
     this.eiligh(m.ainm, contae, m.contae && m.contae.ionad, stor);
     this.cinealacha.set(m.ainm, {
       k: 'struchtúr', ainm: m.ainm, reimsi: new Map(), modhanna: new Map(), contae,
       inscne: this.inscneFhogartha(m.ainm, m.inscne),
-      // Field names are not known until pass A2, so the record is opened here
-      // — where the county is known and E610 can be judged — and filled in
-      // `socraighReimsi`.
+      // Field names aren't known until pass A2, filled in `socraighReimsi`.
       stor: stor
         ? { tabla: tbl.ainmTabla(m.ainm), reimsi: null, ionad: m.stor }
         : null,
@@ -940,10 +691,7 @@ class Anailiseoir {
       if (!this.seiceailBunfhoirm(r.ainm, r.ionad)) continue;
       t.reimsi.set(r.ainm, this.tagairtCineail(r.cineal));
     }
-    // §7.6 — the column list is the declared field list in declaration order,
-    // and there is no second place to write it. A table whose columns could
-    // drift from the type's fields would be a second source of truth, which
-    // is the fault §5.10 avoided by letting the state adjective carry gender.
+    // §7.6 — the column list is the declared field list, no second place to write it.
     if (t.stor) {
       t.stor.reimsi = [...t.reimsi.keys()];
       this.tabli.cuir(m.ainm, t.contae, t.stor.reimsi, t.stor.ionad);
@@ -951,15 +699,10 @@ class Anailiseoir {
   }
 
   /**
-   * `suim Toradh firinscneach as Corcaigh { Ceart { … } Earráid { … } }` — §6.
-   *
-   * Both the sum and every variant go into `cinealacha`, because both are
-   * written: `Toradh` in a signature, `Ceart` in a literal and to the right of
-   * `is`. That also means a variant name collides with anything else of that
-   * name through E208 in the ordinary way, with nothing written here to make
-   * it happen.
-   *
-   * Only the sum claims a province. See `contaeDe`.
+   * `suim Toradh firinscneach as Corcaigh { Ceart { … } Earráid { … } }`
+   * Both the sum and every variant go into `cinealacha`, since both are
+   * written (Toradh in a signature, Ceart in a literal or after `is`). Only
+   * the sum claims a province — see `contaeDe`.
    */
   fogairSuim(m) {
     if (!this.seiceailBunfhoirm(m.ainm, m.ionad)) return;
@@ -967,10 +710,7 @@ class Anailiseoir {
     const contae = this.reitighContae(m.contae);
     this.eiligh(m.ainm, contae, m.contae ? m.contae.ionad : m.ionad);
 
-    // §6 — a sum enumerates a choice, so it needs something to choose
-    // between. Reported and then carried on with: the declaration is still
-    // usable enough to check the rest of the file against, and stopping here
-    // would hide every later error behind this one.
+    // Reported, then carried on with, so later errors aren't hidden behind this one.
     if (m.malairti.length < 2) this.bail.cuir('E214', m.ionad, m.ainm, m.malairti.length);
 
     const t = {
@@ -992,17 +732,9 @@ class Anailiseoir {
 
   /**
    * Variant field types, and the one new rule: no field may be `Iasacht`.
-   *
-   * A sum is the language's statement of exactly what a value may be, and
-   * `Iasacht` is the statement that its category is unknown. A payload of
-   * unknown category inside an enumeration of categories is a sum that has not
-   * finished being written, so it is E213 rather than something to normalise
-   * away. It is also what forces the conversion to happen at the exile
-   * boundary, which is what lets §7.5's third finding actually close.
-   *
-   * A `struchtúr` field may still be `Iasacht`, and the asymmetry is
-   * deliberate: a record is a bag of fields and has never claimed otherwise,
-   * while a sum claims to enumerate. Every 0.4–0.7 program keeps compiling.
+   * A sum enumerates exactly what a value may be; `Iasacht` is "unknown",
+   * so it can't sit inside an enumeration of categories. Struct fields can
+   * still be `Iasacht` — a record never claimed to enumerate anything.
    */
   socraighMalairti(m) {
     const t = this.cinealacha.get(m.ainm);
@@ -1032,7 +764,7 @@ class Anailiseoir {
     m.cineálSocraithe = cineal;
 
     if (m.faighteoir) {
-      // `ó Dhuine` — the method belongs to a category, and `ó` lenites it.
+      // `ó Dhuine` — the method belongs to a category, `ó` lenites it.
       const res = this.reitighFoirm(m.faighteoir.surface, FOIRM.SEIMHITHE,
         (l) => this.cinealacha.has(l), 'ó');
       if (res.earraid) { this.teip(res, m.faighteoir.ionad, 'E202'); return; }
@@ -1050,8 +782,7 @@ class Anailiseoir {
 
     if (this.domhanda.faighAitiuil(m.ainm)) { this.bail.cuir('E208', m.ionad, m.ainm); return; }
 
-    // §8 — the autonomous. Its forms are derived here, once, from the lemma,
-    // because that is where the lemma is known to be a verb.
+    // §8 — autonomous forms derived here, once, from the lemma.
     if (m.modh === 'saor') {
       const cead = mf.inShaor(m.ainm);
       if (!cead.ok) { this.bail.cuir('E521', m.ionad, m.ainm, cead.cuis); return; }
@@ -1086,10 +817,8 @@ class Anailiseoir {
     for (const p of m.params) {
       if (!this.seiceailBunfhoirm(p.ainm, p.ionad)) continue;
       p.ceangal = scoip.cuir(new Ceangal(p.ainm, p.cinealSocraithe || IASACHT, 'luach', !!p.sealadach));
-      // A parameter may carry a state adjective and usually does not, so a
-      // parameter usually declares no gender. Where the module has heard the
-      // word before it keeps that gender; where it has not, the word is
-      // masculine by default and `--paraidím` says so rather than the source.
+      // A parameter with no adjective declares no gender: keeps whatever
+      // the module already recorded, or masculine by default.
       p.ceangal.inscne = this.inscneCheangail(p.ainm, p.aidiacht)
         || (this.inscni.get(p.ainm) || {}).inscne || null;
     }
@@ -1110,16 +839,13 @@ class Anailiseoir {
   bloc(b, tuisScoip, caolu = null) {
     const scoip = new Scoip(tuisScoip);
     b.scoip = scoip;
-    // The narrowed binding shadows the outer one for the length of the branch.
-    // It is the same lemma with a different type, which is what the copula
-    // just established, so it is one more entry in a scope rather than a new
-    // concept: `t` inside `má t is Ceart { … }` is a `Ceart`.
+    // The narrowed binding shadows the outer one for the branch.
     if (caolu) scoip.cuir(new Ceangal(caolu.lemma, caolu.cineal));
     for (const r of b.raitis) this.raiteas(r, scoip);
     if (!b.luach) return NEAMHNI;
-    // An imperative body has no return value, so a trailing conditional is a
-    // statement rather than the block's value. The parser cannot know which
-    // mood it is in; the analyzer does, so it demotes the node here.
+    // An imperative body has no return value, so a trailing conditional
+    // used as a statement gets demoted by the analyzer (the parser can't
+    // know the mood).
     if (this.ctx.modh === 'ordaitheach' && b.luach.cineál === 'Má') {
       const nód = b.luach;
       b.luach = null;
@@ -1132,12 +858,7 @@ class Anailiseoir {
     return t;
   }
 
-  /**
-   * A verb standing alone was mentioned and not obeyed. That is E501 whether
-   * the mention came from a name or from `a` + verbal noun; the parser cannot
-   * catch it, because its lexicon holds the verbs of the language and a
-   * parameter of verb type is a bound name rather than a word.
-   */
+  /** A verb standing alone was mentioned, not obeyed — E501, whether via a name or `a`+verbal noun. */
   seiceailLuaite(e, t) {
     if (t && t.k === 'feidhm' && t.modh === 'ordaitheach') {
       this.bail.cuir('E501', e.ionad, e.lemma || e.surface || '?');
@@ -1163,8 +884,8 @@ class Anailiseoir {
       case 'Má': {
         this.coinniall(r, scoip);
         const caol = this.caolu(r, scoip);
-        // A branch that produces a value in statement position is discarding
-        // it, which the indicative does not permit — same rule as E503.
+        // A branch producing a value in statement position discards it,
+        // which the indicative doesn't permit — same rule as E503.
         const craobh = (b, c) => {
           if (b.cineál === 'Má') { this.raiteas(b, scoip); return; }
           const t = this.bloc(b, scoip, c);
@@ -1177,39 +898,18 @@ class Anailiseoir {
         return;
       }
 
-      // Mutation is a command: `cuir 3 ar chomhaireamh`.
       case 'Cuir': {
         if (this.ctx.modh === 'táscach') this.bail.cuir('E502', r.ionad, 'cuir');
 
         /*
-         * §7.6 — `cuir duine i stór`, the write. The second frame of one verb,
-         * and it learns almost nothing:
-         *
-         *  - Mood learned nothing. It is a command, so E502 above already
-         *    covers it, and the `Ordú` path already emits `await` under `ag`.
-         *  - Aspect learned nothing. It is ongoing by construction, which is
-         *    what E504 was always about; only that code's wording moved.
-         *  - The type system learned nothing. E611 is `faigh`'s code read from
-         *    the other end: there it names a type with no table, here it holds
-         *    a value of one.
-         *  - The county system learned nothing. Passing a value as an argument
-         *    is not a member read, so it is never border-checked (§7.2) — the
-         *    same free ride `faigh` took.
-         *  - Government learned one call site, and it is the fifth. What it did
-         *    not learn is a fifth mechanism: `reitighFoirm` still does all of
-         *    the agreement in this language, and the invariant §11.2 states was
-         *    always the function and never the number.
-         *
-         * There is no bulk write. `déan V ar Xs` wants a `gníomh(T)` value and
-         * this is a built-in frame, not a verb, so no statement can write more
-         * than one row. §7.6.6's demand that a write needs a transaction story
-         * first is therefore answered rather than deferred: it needs one when
-         * bulk write arrives, and bulk write is not expressible.
+         * §7.6 — `cuir duine i stór`, the write. Learns almost nothing:
+         * mood already covered by E502 above; aspect already ongoing by
+         * construction (E504); type check via `struchtúr`/`stór`; county
+         * unchecked (passing an argument isn't a member read); government
+         * routes through the same `reitighFoirm`. No bulk write — `déan V
+         * ar Xs` wants a gníomh(T) and this is a frame, not a verb.
          */
         if (r.reamhfhocal === 'i') {
-          // Ongoing by construction, as `faigh` is, and marked the way every
-          // other ongoing command is marked — the backend reads this flag and
-          // writes the `await` from it.
           r.leanunach = true;
           if (!this.ctx.leanunach) this.bail.cuir('E504', r.ionad);
 
@@ -1217,19 +917,15 @@ class Anailiseoir {
           if (tScriofa && tScriofa.k === 'struchtúr' && tScriofa.stor) r.cineálStoir = tScriofa;
           else this.bail.cuir('E611', r.luach.ionad, ainmCineail(tScriofa || IASACHT));
 
-          // The destination is an argument, not a binding, so it is named
-          // rather than walked: no `fréamhCheangal`, no E510. A store is not
-          // a thing this program owns and writing to one is not mutation of
-          // anything the file can see.
+          // The destination is an argument, not a binding: named rather
+          // than walked, no fréamhCheangal, no E510.
           if (r.stor.cineál !== 'Aitheantóir') {
             this.bail.cuir('E511', r.stor.ionad, 'i');
             return;
           }
 
-          // The particle is chosen by the word it governs, so the lemma has to
-          // be recovered before the government is known (§5.2, `mf.mirI`).
-          // Unresolvable falls back to the surface, and `reitighFoirm` files
-          // the E101 a line later.
+          // The particle is chosen by the word it governs, so the lemma
+          // must be recovered first (§5.2, mf.mirI).
           const lemma = this.lemmaCeangailte(r.stor.surface, (l) => !!scoip.faigh(l));
           const { mir, foirm } = mf.mirI(lemma || r.stor.surface);
           if (r.mirScriofa !== mir) {
@@ -1243,7 +939,6 @@ class Anailiseoir {
         }
 
         const tLuach = this.luach(r.luach, scoip);
-        // `ar` governs its complement exactly as `ó` does.
         const tSprioc = this.luach(r.sprioc, scoip, FOIRM.SEIMHITHE, 'ar');
         if (!['Aitheantóir', 'Sealbhach'].includes(r.sprioc.cineál)) {
           this.bail.cuir('E511', r.sprioc.ionad);
@@ -1263,12 +958,10 @@ class Anailiseoir {
         this.fogairStruchtur(r); this.socraighReimsi(r); return;
       }
 
-      // An imperative is obeyed, never mentioned.
       case 'Ordú': {
         if (this.ctx.modh === 'táscach') this.bail.cuir('E502', r.ionad, r.ainm);
-        // An autonomous form is not a lemma and never will be, so it is
-        // resolved through its own table before the ordinary identifier path
-        // gets a chance to call it undefined.
+        // An autonomous form is resolved through its own table before the
+        // ordinary identifier path can call it undefined.
         const saorAinm = this.saorFoirmeacha.get(r.ainm);
         const lorg = saorAinm ? saorAinm.lemma : r.ainm;
         const res = this.reitighFoirm(lorg, FOIRM.BUN, (l) => !!scoip.faigh(l), null);
@@ -1277,25 +970,21 @@ class Anailiseoir {
         if (c.kind !== 'gníomh') {
           this.bail.cuir('E207', r.ionad, ainmCineail(c.cineal)); return;
         }
-        // §8 — the form agreement, and the same shape as E512 and E517: what
-        // was written against what this position demands.
+        // §8 — same shape as E512/E517: what was written vs what this position demands.
         if (c.cineal.saor && r.ainm !== c.cineal.saor) {
           if (r.ainm === res.lemma) this.bail.cuir('E518', r.ionad, res.lemma, c.cineal.saor);
           else this.bail.cuir('E519', r.ionad, r.ainm, c.cineal.saor, res.lemma);
           return;
         }
-        // The converse: an ordinary imperative written in an autonomous shape
-        // resolved to nothing, so it is already E101 and needs no code here.
         r.ceangal = c;
 
-        // Verb government of prepositions: the verb says which phrase, if any,
-        // belongs with it. A verb without a frame takes none.
+        // Verb government of prepositions.
         const frama = c.cineal.frama || null;
         if (frama && !r.fras) { this.bail.cuir('E514', r.ionad, res.lemma, frama); return; }
         if (!frama && r.fras) { this.bail.cuir('E515', r.fras.ionad, res.lemma); return; }
 
-        // A command to an ongoing imperative is sequenced by the imperative
-        // itself: it is implicitly completed, so the caller must be ongoing.
+        // A command to an ongoing imperative is implicitly completed, so
+        // the caller must itself be ongoing.
         if (c.cineal.leanunach) {
           r.leanunach = true;
           if (!this.ctx.leanunach) this.bail.cuir('E504', r.ionad);
@@ -1306,9 +995,7 @@ class Anailiseoir {
       }
 
       case 'Slonn': {
-        // In the indicative you mention things, and a mention must be used.
         if (this.ctx.modh === 'táscach') this.bail.cuir('E503', r.ionad);
-        // In the imperative you do them: a verb left standing is E501.
         this.seiceailLuaite(r.slonn, this.luach(r.slonn, scoip));
         return;
       }
@@ -1319,25 +1006,18 @@ class Anailiseoir {
   }
 
   /**
-   * The narrowing a condition licenses, or null (§6).
+   * The narrowing a condition licenses, or null. `má t is Ceart` says `t`
+   * is a `Ceart` in the affirmative branch — the copula predicate, once
+   * asked, holds for the branch's duration. Recognised in exactly one
+   * shape (identifier, `is`, a variant of that identifier's sum) rather
+   * than by inference.
    *
-   * `má t is Ceart` says that in the affirmative branch `t` is a `Ceart`, and
-   * that is elimination: the copula is a predicate over a value, and once the
-   * predicate has been asked the answer is known for as long as the branch
-   * lasts. Recognised in exactly one shape — an identifier, `is`, a variant of
-   * that identifier's own sum — because a wider shape would be inference
-   * rather than agreement, and the project has one piece of inference already
-   * and confines it to `déan` (§5.8).
+   * The complement only narrows when the sum has exactly two variants,
+   * since "not Ceart" only names something real with one alternative. With
+   * three or more the negative branch keeps the whole sum.
    *
-   * **The complement narrows only when the sum has two variants**, because
-   * only then is "not `Ceart`" the name of something. With three, the negative
-   * branch keeps the sum and the author asks again. That is a real limit and
-   * not a temporary one: naming the complement of one variant among many would
-   * need anonymous unions, which 0.8 does not have.
-   *
-   * **Only a `seasmhach` binding narrows.** A `sealadach` one may be assigned
-   * inside the branch, and a narrowing that a `cuir` can invalidate is a
-   * narrowing that is not true. Essence narrows; accident does not.
+   * Only a `seasmhach` binding narrows — a `sealadach` one could be
+   * reassigned inside the branch, invalidating the narrowing.
    */
   caolu(r, scoip) {
     const c = r.coinniall;
@@ -1362,19 +1042,10 @@ class Anailiseoir {
   }
 
   /**
-   * §5.11 — narrowing through `tá Earráid ar thoradh`.
-   *
-   * This is the second shape `caolu` recognises, and admitting a second one is
-   * the real cost of the feature. §6 confined narrowing to exactly one
-   * shape on purpose, so that the analyzer never had to be taught to see a
-   * conditional as a match. It still does not: this is one more condition
-   * whose truth is a fact about a binding's type, written the one way Irish
-   * writes it, and the two shapes share every rule that follows.
-   *
-   * Both branches learn something here, which the copula's version cannot
-   * always manage: an affliction is binary — it is on the thing or it is not —
-   * so there is no "one variant among many" case and no complement to name.
-   * Only `seasmhach` narrows, for §6's reason exactly.
+   * §5.11 — narrowing through `tá Earráid ar thoradh`. The second shape
+   * `caolu` recognises. Both branches learn something here (an affliction
+   * is binary, no complement to name). Only `seasmhach` narrows, same reason
+   * as above.
    */
   caoluDochair(r, c, scoip) {
     if (c.abhar.cineál !== 'Aitheantóir') return null;
@@ -1396,8 +1067,6 @@ class Anailiseoir {
     this.rialuBriathair = r.diultach
       ? mf.RIALU_BRIATHAIR.SPLEACH
       : mf.RIALU_BRIATHAIR.NEAMHSPLEACH;
-    // The particle governs the copula the same way it governs `bí`, so it is
-    // published the same way: set for the condition, restored after it (§5.5).
     this.copailMhir = r.copail
       ? { scriofa: r.copail, diultach: r.diultach, ionad: r.ionad }
       : null;
@@ -1405,9 +1074,8 @@ class Anailiseoir {
     this.copailMhir = roimheC;
     this.rialuBriathair = roimhe;
 
-    // A fused particle with nothing to classify. `más` is `má` + the copula,
-    // so writing it in front of an ordinary condition claims a classification
-    // that is not there; the fix is to unfuse it.
+    // A fused particle with nothing to classify: `más` in front of a
+    // non-copular condition claims a classification that isn't there.
     const fusta = r.copail === 'más' || r.copail === 'murab';
     if (fusta && (!r.coinniall || r.coinniall.cineál !== 'Copail')) {
       this.bail.cuir('E517', r.ionad, r.copail, r.diultach ? 'mura' : 'má');
@@ -1416,14 +1084,9 @@ class Anailiseoir {
   }
 
   /**
-   * `déan <a bhriathar> ar <bailiúchán>` — the action distributed over the
-   * members of what `ar` marks.
-   *
-   * Checked here rather than through the ordinary arity path because the
-   * relation between the two halves is a dependency: the verb's one parameter
-   * must be the element type of the collection. That is the only piece of
-   * inference in the language and it is deliberately confined to this verb —
-   * generalising it is what sum types and a real quantifier are for.
+   * `déan <a bhriathar> ar <bailiúchán>` — the one place the language
+   * infers anything: checks the verb's parameter against the collection's
+   * element type, then runs it once per element.
    */
   deanIteraid(r, scoip, ainm) {
     if (r.argointi.length !== 1) {
@@ -1433,7 +1096,6 @@ class Anailiseoir {
       return;
     }
     const tG = this.luach(r.argointi[0], scoip);
-    // `ar` governs its complement here exactly as it does in `cuir … ar …`.
     const tXs = this.luach(r.fras.abhar, scoip, FOIRM.SEIMHITHE, 'ar');
 
     const mir = tXs.k === 'liosta' ? tXs.mir : (tXs.k === 'iasacht' ? IASACHT : null);
@@ -1456,8 +1118,7 @@ class Anailiseoir {
       this.bail.cuir('E201', r.argointi[0].ionad, ainmCineail(mir), ainmCineail(tG.params[0]));
       return;
     }
-    // The aspect of the verb is the aspect of the loop: commands are
-    // sequential, so an ongoing verb makes the whole command ongoing.
+    // Commands are sequential, so an ongoing verb makes the whole loop ongoing.
     if (tG.leanunach) {
       r.leanunach = true;
       if (!this.ctx.leanunach) this.bail.cuir('E504', r.ionad);
@@ -1473,14 +1134,9 @@ class Anailiseoir {
   }
 
   /**
-   * §5.11 — the protection, and it is only ever a mismatch report.
-   *
-   * A value that a verb declared may be afflicted is not its result type until
-   * the affliction has been ruled out, so every existing check refuses it
-   * already; all this does is answer with the sentence that names the remedy
-   * rather than with a bare type mismatch. Where no verb declared an
-   * affliction there is nothing here to fire, which is what "protective only
-   * where the verb declared it" means in practice.
+   * §5.11 — the protection, always just a mismatch report with a better
+   * message: a value that may be afflicted isn't its result type until
+   * the affliction's ruled out, so every existing check already refuses it.
    */
   mismeaitseail(ionad, suil, fuarthas) {
     if (fuarthas && fuarthas.k === 'dochar' && comhionann(suil, fuarthas.toradh)) {
@@ -1515,10 +1171,9 @@ class Anailiseoir {
   }
 
   /**
-   * `foirm` is the grammatical form demanded of the *head* of this phrase by
-   * whatever governs it. It propagates to the head daughter only: in
-   * `ainm ó athair ó dhuine`, each `ó` lenites the initial word of its own
-   * complement, exactly as a preposition does in Irish.
+   * `foirm` is the grammatical form demanded of the head of this phrase.
+   * It propagates to the head daughter only: in `ainm ó athair ó dhuine`
+   * each `ó` lenites the initial word of its own complement.
    */
   slonn(e, scoip, foirm = FOIRM.BUN, oibreoir = null) {
     const t = this.slonnInmhe(e, scoip, foirm, oibreoir);
@@ -1536,23 +1191,16 @@ class Anailiseoir {
       case 'Liosta': {
         if (!e.mireanna.length) return liosta(IASACHT);
         const ts = e.mireanna.map((m) => this.luach(m, scoip));
-        // Until 0.8 a heterogeneous literal widened to `Liosta(Iasacht)`,
-        // because there was nothing else to widen it to, and E211 was
-        // unreachable as a result. There is now: two variants of one sum meet
-        // at the sum. What has no meeting point is an error, which is what
-        // E211 has been reserved to say since 0.4 (§6).
+        // Two variants of one sum meet at the sum; what has no meeting
+        // point still widens to Liosta(Iasacht) — a driver's parameter list
+        // is legitimately heterogeneous, so E211 stays reserved.
         let acc = ts[0];
         for (let i = 1; i < ts.length && acc; i++) acc = nasc(acc, ts[i], this.cinealacha);
-        // Two variants of one sum meet at the sum, which is new in 0.8 and is
-        // what a list of results needs. What has no meeting point still widens
-        // to `Liosta(Iasacht)`, and E211 stays unreachable — see §6. The
-        // reason is `[ainm, aois]` in `sonraí.r336`: a driver's parameter list is
-        // legitimately heterogeneous and no sum can or should cover it.
         return liosta(acc || IASACHT);
       }
 
-      // `Router ó "express"` / `ó "express"` — origin, the same relation `ó`
-      // always expresses, with a foreign module in the possessor slot.
+      // `Router ó "express"` / `ó "express"` — origin, same relation `ó`
+      // always expresses, with a foreign module as possessor.
       case 'Bunús': {
         if (e.ball && e.ball.cineál !== 'Aitheantóir') {
           this.bail.cuir('E401', e.ball.ionad, '"slonn"', '"ball"');
@@ -1560,13 +1208,8 @@ class Anailiseoir {
         }
         const siniu = this.modúil.get(e.foinse);
         if (siniu) {
-          // A native origin. The member is an Irish lemma with a paradigm, so
-          // it goes through the ordinary agreement check in whatever form
-          // *this* phrase's own governor demands — base at the top level, as
-          // for any head. A foreign member is exempt from all of that, and
-          // that exemption is now a statement about the word rather than
-          // about the syntax: a foreign name has no mutation slot, the same
-          // way `áit` and `stór` have none.
+          // A native origin — the member is an Irish lemma with a paradigm,
+          // governed like any other head.
           if (!e.ball) return modul(e.foinse, siniu);
           const r = this.reitighFoirm(e.ball.surface, foirm, (l) => siniu.onnmhairi.has(l), oibreoir);
           if (r.earraid) { this.teip(r, e.ball.ionad, 'E203', e.foinse); return IASACHT; }
@@ -1576,8 +1219,8 @@ class Anailiseoir {
           if (onn.kind === 'gníomh') { this.bail.cuir('E501', e.ball.ionad, r.lemma); return IASACHT; }
           return onn.cineal;
         }
-        // A borrowed member keeps its borrowed name: you do not get to rename
-        // someone else's API by importing it (§5.9).
+        // A borrowed member keeps its exact spelling — you don't get to
+        // rename someone else's API.
         if (e.ball) e.ball.lemma = e.ball.surface;
         return IASACHT;
       }
@@ -1594,28 +1237,20 @@ class Anailiseoir {
       }
 
       case 'Sealbhach': {
-        // `ó` governs its complement: the head of the possessor phrase lenites.
+        // `ó` governs its complement.
         const tS = this.luach(e.sealbhoir, scoip, FOIRM.SEIMHITHE, 'ó');
         if (e.ball.cineál !== 'Aitheantóir') {
           this.bail.cuir('E401', e.ball.ionad, '"slonn"', '"ball"');
           return IASACHT;
         }
-        // §5.11 — the same argument E509 makes about a sum: an unidentified
-        // value possesses nothing. A thing that may still be afflicted has not
-        // been identified yet, so there is nothing yet for a member to belong
-        // to, and E205's "this has no members" would be the wrong answer — it
-        // has members, once the affliction is out of the way.
+        // §5.11 — an unidentified afflicted value possesses nothing yet.
         if (tS && tS.k === 'dochar') {
           this.bail.cuir('E523', e.sealbhoir.ionad,
             ainmCineail(tS.dochar), ainmCineail(tS.toradh));
           return IASACHT;
         }
-        // §7.2 — provenance, before agreement. The surface is used in the
-        // message because it is what was written; resolution continues either
-        // way, so a wrong member in the wrong county reports both faults.
+        // §7.2 — provenance, before agreement.
         this.seiceailDuchas(tS, e.ball);
-        // The member is the head of *this* phrase, so it takes whatever form
-        // this phrase's own governor demands (base at the top level).
         const socraigh = (lemma) => { e.ball.lemma = lemma; e.ball.foirm = foirm; };
 
         if (tS.k === 'iasacht') {
@@ -1626,25 +1261,19 @@ class Anailiseoir {
         }
 
         if (tS.k === 'modúl') {
-          // The same relation, a better-typed possessor. `ó` still governs the
-          // possessor and the member is still the head of this phrase, so not
-          // one line of the government machinery changes — only the question
-          // asked of the symbol table.
           const res = this.reitighFoirm(e.ball.surface, foirm,
             (l) => tS.siniu.onnmhairi.has(l), oibreoir);
           if (res.earraid) { this.teip(res, e.ball.ionad, 'E203', tS.ainm); return IASACHT; }
           socraigh(res.lemma);
           const onn = tS.siniu.onnmhairi.get(res.lemma);
-          // Mood survives the boundary, which is the whole point: a
-          // cross-module imperative is a command you give, not a value you
-          // call and complete.
+          // Mood survives the boundary — a cross-module gníomh is a command
+          // given, not a value called and completed.
           if (onn.kind === 'gníomh') { this.bail.cuir('E501', e.ball.ionad, res.lemma); return IASACHT; }
           return onn.cineal;
         }
 
         if (tS.k === 'liosta') {
-          // Library members of a builtin type, reached through the ordinary
-          // `ó` relation. Not new syntax, and not a claim about Irish.
+          // Built-in list members, reached the ordinary `ó` way.
           const ballaí = new Map([['fad', UIMHIR], ['folamh', BOOL], ['céad', tS.mir]]);
           const res = this.reitighFoirm(e.ball.surface, foirm, (l) => ballaí.has(l), oibreoir);
           if (res.earraid) { this.teip(res, e.ball.ionad, 'E203', ainmCineail(tS)); return IASACHT; }
@@ -1653,10 +1282,8 @@ class Anailiseoir {
           return ballaí.get(res.lemma);
         }
 
-        // A narrowed variant is opened exactly as a struct is: it has fields
-        // and `ó` is how fields are read. An *un*-narrowed sum is E205 with no
-        // new code, and the message is the right one — you cannot open a box
-        // you have not yet identified. Ask the copula first (§6).
+        // A narrowed variant opens like a struct. An un-narrowed sum is
+        // E205: you can't open a box you haven't identified (ask the copula first).
         if (tS.k !== 'struchtúr' && tS.k !== 'malairt') {
           this.bail.cuir('E205', e.sealbhoir.ionad, ainmCineail(tS)); return IASACHT;
         }
@@ -1668,8 +1295,7 @@ class Anailiseoir {
 
         if (tS.reimsi.has(res.lemma)) return tS.reimsi.get(res.lemma);
 
-        // A method: the same `ó` relation, retrieved from the value rather
-        // than declared on the category. Receiver drops out of the arity.
+        // A method: retrieved from the value, receiver drops out of arity.
         const md = tS.modhanna.get(res.lemma);
         if (md.modh === 'ordaitheach') { this.bail.cuir('E501', e.ball.ionad, res.lemma); return IASACHT; }
         e.modhR336 = md;
@@ -1698,10 +1324,8 @@ class Anailiseoir {
 
       case 'Déantús': {
         const t = this.tagairtCineail(e.cineal);
-        // A variant literal is a struct literal. Introduction needed no new
-        // syntax and gets none: `Ceart { duine: d }` is the record form the
-        // language already had, and every field check below is the one
-        // `struchtúr` already used (§6).
+        // A variant literal is a struct literal, so all field checks reuse
+        // the struct ones.
         if (t.k !== 'struchtúr' && t.k !== 'malairt') {
           if (t.k !== 'iasacht') this.bail.cuir('E205', e.ionad, ainmCineail(t));
           for (const r of e.reimsi) this.luach(r.luach, scoip);
@@ -1733,11 +1357,10 @@ class Anailiseoir {
         return UIMHIR;
       }
 
-      // §5.5 — the copula: identification / classification. The right operand
-      // is a category, never a value, so this is not `==` with Irish paint.
+      // §5.5 — the copula: identification/classification, not `==` in Irish paint.
       case 'Copail': {
-        // Taken and cleared before descending, so that a copula nested inside
-        // the subject is not checked against the outer particle.
+        // Taken and cleared before descending, so a nested copula isn't
+        // checked against the outer particle.
         const mhir = this.copailMhir;
         this.copailMhir = null;
         const tA = this.luach(e.abhar, scoip);
@@ -1745,22 +1368,16 @@ class Anailiseoir {
         this.foirmChopaile(e, mhir);
         const tC = this.cinealacha.get(e.cineal.ainm);
         if (!tC) { this.bail.cuir('E202', e.cineal.ionad, e.cineal.ainm); return BOOL; }
-        // E302 was reserved in 0.4 for a classification that cannot be true
-        // and had nothing to fire on, because any value might be anything.
-        // A sum is a closed statement of what a value may be, so asking
-        // whether a `Toradh` is an `Áit` is now answerable in advance — and
-        // answering it is the whole job of the copula (§6).
+        // A sum closes what a value may be, so a class that's impossible
+        // can be caught statically.
         if (tA.k === 'suim' && tC.k === 'malairt' && !tA.malairti.has(tC.ainm)) {
           this.bail.cuir('E302', e.cineal.ionad, tA.ainm, tC.ainm);
         }
         return BOOL;
       }
 
-
-
-      // §5.5 — the substantive verb: existence / presence, never category.
-      // Its *form* agrees with the particle governing the clause, exactly as
-      // an identifier's form agrees with `ó`. Its *meaning* never changes.
+      // §5.5 — the substantive verb: existence, never category. Its form
+      // agrees with the governing particle; meaning never changes.
       case 'Substaint': {
         const ceart = mf.foirmBhriathartha(this.rialuBriathair);
         if (e.surface !== ceart) {
@@ -1770,34 +1387,27 @@ class Anailiseoir {
         return BOOL;
       }
 
-      // §5.11 — `tá Earráid ar thoradh`. Still `bí`, so the independent /
-      // dependent agreement is the same check in the same place: the
-      // predication changes what is being asked, not which verb asks it.
+      // §5.11 — `tá Earráid ar thoradh`. Still `bí`, same form agreement.
       case 'Dochar': {
         const ceart = mf.foirmBhriathartha(this.rialuBriathair);
         if (e.surface !== ceart) {
           this.bail.cuir('E512', e.ionad, e.surface, ceart, this.rialuBriathair);
         }
-        // The affliction is named in the base form, as the copula's predicate
-        // is: nothing governs it. `ar` governs what follows it, and lenites.
         const res = this.reitighFoirm(e.cineal.surface, FOIRM.BUN,
           (l) => this.cinealacha.has(l), null);
         if (res.earraid) { this.teip(res, e.cineal.ionad, 'E202'); return BOOL; }
         const td = this.cinealacha.get(res.lemma);
         e.cineal.ainm = res.lemma;
         const t = this.luach(e.abhar, scoip, FOIRM.SEIMHITHE, 'ar');
-        // Protective only where the verb declared it. Asking whether a value
-        // carries an affliction nothing ever put on it is not false — it is
-        // meaningless, and answering `bréagach` would teach the reader that
-        // the question is always available.
+        // Protective only where the verb declared it: asking about an
+        // affliction nothing declared is meaningless, not false.
         if (t.k !== 'iasacht' && !(t.k === 'dochar' && comhionann(t.dochar, td))) {
           this.bail.cuir('E524', e.ionad, ainmCineail(td), ainmCineail(t));
         }
         return BOOL;
       }
 
-      // `a` + lenited verb: the particle that makes a noun of a verb, and so
-      // the one licensed way to mention an imperative instead of obeying it.
+      // `a` + lenited verb: the only licensed way to mention an imperative instead of obeying it.
       case 'Ainmniú': {
         const res = this.reitighFoirm(e.surface, FOIRM.SEIMHITHE,
           (l) => { const c = scoip.faigh(l); return !!c && c.kind !== 'luach'; }, 'a');
@@ -1808,22 +1418,10 @@ class Anailiseoir {
       }
 
       /*
-       * §7.6 — `faigh Duine as stór`.
-       *
-       * Four things this case does *not* do, and the absences are the design:
-       *
-       *  - It adds no government. The source is an ordinary identifier in an
-       *    ordinary base-form position, so `reitighFoirm` handles a wrongly
-       *    mutated one through the path it already had. No fifth call site.
-       *  - It adds no aspect machinery. The result is `arSiúl`, which is what
-       *    a call to an `ag` verb already returns, so E504, E505 and E508 fire
-       *    from the code that was already there.
-       *  - It adds no border check. Naming a type to read its table is
-       *    construction, and construction is never checked (§7.2). Reading a
-       *    field off a row afterwards is, and E601 fires through `ó`.
-       *  - It adds nothing to `comhionann`. A type with a table and a type
-       *    without one are the same type, for the same reason gender is not
-       *    part of a type's identity (§5.10).
+       * §7.6 — `faigh Duine as stór`. Adds no government (ordinary base-form
+       * position), no aspect machinery (returns arSiúl, existing E504/E505/
+       * E508 apply), no border check (construction, never checked), and
+       * nothing to comhionann (a type with/without a table is the same type).
        */
       case 'Faigh': {
         const tF = this.luach(e.foinse, scoip);
@@ -1832,21 +1430,15 @@ class Anailiseoir {
         }
         const t = this.tagairtCineail(e.cineal);
         if (!t || t.k !== 'struchtúr' || !t.stor) {
-          // A refusal, not an empty list. Answering "here are the rows" for a
-          // type that never declared a table would mean the question is always
-          // available, and then the declaration would mean nothing. The same
-          // shape as E302 and E524.
+          // A refusal, not an empty list — same shape as E302/E524.
           this.bail.cuir('E611', e.ionad, ainmCineail(t || IASACHT));
-          // `Liosta(Iasacht)` so that a declared binding type does not collect
-          // a second, misleading E201 on top of the real fault.
           return arSiul(liosta(IASACHT));
         }
         e.cineálStoir = t;
         return arSiul(liosta(t));
       }
 
-      // §5.4 — perfect aspect. `tá sé tar éis scríobh`: the action is over,
-      // so what was under way is now a value.
+      // §5.4 — perfect aspect: an action under way becomes a value once complete.
       case 'Críoch': {
         if (!this.ctx.leanunach) this.bail.cuir('E504', e.ionad);
         const t = this.slonn(e.abhar, scoip);
@@ -1868,9 +1460,7 @@ class Anailiseoir {
         const b = e.eile.cineál === 'Má'
           ? this.slonn(e.eile, scoip)
           : this.bloc(e.eile, scoip, caol && caol.eile);
-        // The branches meet rather than match. One arm yielding `Ceart` and
-        // the other `Earráid` is a `Toradh`, not a type error — which is the
-        // same join the list literal uses, for the same reason.
+        // Branches meet rather than match, same join as list literals.
         const n = nasc(a, b, this.cinealacha);
         if (!n) {
           this.bail.cuir('E201', e.eile.ionad, ainmCineail(a), ainmCineail(b));

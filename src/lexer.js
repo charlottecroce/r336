@@ -1,19 +1,11 @@
 'use strict';
 
-/*
- * léacsóir.js — tokenizer.
- *
- * Two things worth noticing.
- *
- * `ó` is both a keyword and a perfectly good identifier character, so
- * identifiers are read maximally and *then* checked against the keyword
- * table. `ó` alone is the preposition; `óstach` is a name.
- *
- * `tar éis` is a fixed idiom, not two words. Irish marks completed aspect
- * with a prepositional phrase (`tá sé tar éis scríobh` — "he is after
- * writing"), and the phrase is lexically frozen. The lexer emits it as one
- * token, which is what a reader of Irish does too.
- */
+// léacsóir.js — tokenizer.
+//
+// `ó` is read as an identifier first and checked against the keyword table
+// after, since it's also valid inside longer identifiers (óstach).
+// `tar éis` is lexed as one frozen token, matching how a reader of Irish
+// treats the idiom.
 
 const { earraid } = require('./diagnostics');
 const mf = require('./morphology');
@@ -21,68 +13,45 @@ const mf = require('./morphology');
 const EOCHAIRFHOCAIL = new Set([
   'feidhm',      // function — produces a nominal
   'gníomh',      // imperative — performs, produces nothing
-  'saor',        // autonomous — performed, by nobody this text can name (§8)
+  'saor',        // autonomous — performed by nobody nameable (§8)
   'struchtúr',   // struct
-  'suim',        // sum — a type that is one of several named alternatives
+  'suim',        // sum type
   'seasmhach',   // immutable binding
   'ó',           // possession / origin
-  'as',          // provenance — as Corcaigh, as Dún na nGall
-  'comhaontú',   // a bilateral agreement between two counties 
-  'ag',          // progressive aspect: an ongoing action
-  'tar éis',     // perfect aspect: a completed action
-  'is',          // copula — identity / classification; independent form
-  'bí',          // substantive verb, citation form (imperative)
-  'tá',          //   … independent form
-  'bhfuil',      //   … dependent form, eclipsed by its particle
-  'má',          // if — realis particle, selects the independent form
-  'mura',        // if…not — selects the dependent form, and eclipses it
-  // The same two particles again, fused with the copula (§5.5). Irish writes
-  // `má` + `is` as one word, so these are forms of the copula and not new
-  // conjunctions: `más` is `má` and `mura`/`murab` is `mura`, which is why
-  // the parser normalises them back to the bare particle and hands the
-  // written form to the analyzer to check, exactly as it does for `bhfuil`.
-  'más',         // má   + is           — realis, classifying
-  'murab',       // mura + is, before a vowel
-  'sealadach',   // mutable binding: what a thing happens to be right now
-  // §5.10 — the same two adjectives after a feminine noun, and the two that
-  // declare a type's gender. Inflected forms of a function word live in this
-  // table exactly as `bhfuil`, `más` and `murab` do: the parser normalises
-  // them back to the base adjective and hands the written form to the
-  // analyzer to check. A lenited adjective is not a new word.
-  'sheasmhach',  // … after a feminine noun
-  'shealadach',  // …
-  'firinscneach',   // declares a type masculine
-  'fhirinscneach',  //   … the form is wrong for what it declares (E526)
-  'baininscneach',  // declares a type feminine
-  'bhaininscneach', //   … and this is the form a feminine name demands
-  'cuir',        // "put" — the imperative that changes a state
-  // §7.6 — the second narrow one-off after `déan`. A real keyword and not a
-  // contextual one, because it takes a *type* where an expression would
-  // otherwise begin, so there is nothing for a lookahead to disambiguate
-  // against. The cost is real and is paid knowingly: `faigh` can no longer
-  // name a user verb, and `SAOR_CAITE_MIREGULTA.faigh` (`fuarthas`) is now
-  // reachable only through `--paraidím`. §8's `Fuarthas`/`Aimsithe` history
-  // note is partly archaeology as a result.
-  //
-  // `stór` is deliberately NOT here. It is a contextual marker read in the
-  // struct-declaration slot only, because `stór` is bound as an ordinary name
-  // in `feidhmchlár/sonraí.r336`, `bealaí.r336` and `examples/aspect.r336`.
+  'as',          // provenance
+  'comhaontú',   // treaty between two counties
+  'ag',          // progressive aspect
+  'tar éis',     // perfect aspect
+  'is',          // copula, independent form
+  'bí',          // substantive verb, citation form
+  'tá',          //   independent form
+  'bhfuil',      //   dependent form
+  'má',          // if — realis, independent
+  'mura',        // if not — irrealis, dependent
+  // Copula fused with the particle (§5.5): `más` = má+is, `murab` = mura+is
+  // before a vowel. Normalised back to the bare particle by the parser.
+  'más',
+  'murab',
+  'sealadach',   // mutable binding
+  // Lenited forms of the state/gender adjectives, normalised the same way.
+  'sheasmhach',
+  'shealadach',
+  'firinscneach',
+  'fhirinscneach',
+  'baininscneach',
+  'bhaininscneach',
+  'cuir',        // mutation command
+  // §7.6 — real keyword, not contextual, because it takes a type where an
+  // expression would begin. Costs `faigh` as a possible verb name.
   'faigh',
-  // §5.2, §5.8 — the preposition of containment, and the first thing in the
-  // language to demand an urú. Two written forms of one particle, conditioned
-  // on the word that follows: `i gcuntas`, `in áit`. They live in this table
-  // for the reason `bhfuil`, `más` and `sheasmhach` do — an inflected form of
-  // a function word is not a new word, and the parser normalises `in` back to
-  // `i` and hands the written form to the analyzer to check.
-  //
-  // A single letter is a legal identifier, so this reserves `i`. `in` is
-  // reserved with it. Neither is bound anywhere in the repository.
+  // §5.2 — containment preposition, demands urú. Two surfaces, `i`/`in`,
+  // conditioned on the following word; normalised like `bhfuil`/`más`.
   'i',
   'in',
-  'ar',          // "on" — the surface an action lands on; lenites
+  'ar',          // lenites; also the adverse-state preposition
   'fíor',        // true
   'bréagach',    // false
-  'neamhní',     // absence — the thing `bí` reports as not being there
+  'neamhní',     // absence
 ]);
 
 /** Compound keywords, matched as `[first, rest…]` after an identifier read. */
@@ -184,25 +153,10 @@ function leacs(src, comhad = '<foinse>') {
   return toks;
 }
 
-/**
- * Mood is a lexical property of the verb. A reader of Irish parses VSO order
- * because they already know which words are verbs; the parser is handed the
- * same lexicon by a pre-scan for `gníomh AINM` before it starts.
- */
+/** Which words are verbs, known before parsing since R336 is VSO. */
 const GNIOMHARTHA_IONSUITE = new Set(['scríobh', 'déan']);
 
-/**
- * Import pre-scan. `ó "…"` is the only import form, and both the particle and
- * the path are lexemes, so a file's origins can be read off the token stream
- * without parsing it.
- *
- * That is not an optimisation, it is forced. A reader of Irish parses VSO
- * because they already know which words are verbs, and a reader who picks up
- * a text built on another text's vocabulary must have read the other text
- * first. So an imported module's verb lexicon has to be in hand *before* this
- * file is parsed — and you cannot parse this file to discover what to load.
- * The lexicon is acquired before reading, never during it.
- */
+/** Pre-scan for `ó "…"` import specifiers, without a full parse. */
 function bunuis(toks) {
   const amach = [];
   for (let i = 0; i < toks.length - 1; i++) {
@@ -214,23 +168,14 @@ function bunuis(toks) {
 }
 
 /**
- * Two lexicons, both gathered before parsing.
- *
- * `gniomhartha` are the imperatives, needed because a statement beginning
- * with one is VSO and takes bare arguments.
- *
- * `briathra` is every declared verb of either mood, needed because `a` is
- * the particle that turns a verb into a noun (`a fhógair`) and is otherwise
- * an ordinary identifier. Deciding by lexicon rather than by keyword means
- * `a seasmhach = 3` still works.
+ * Two lexicons, gathered before parsing.
+ * `gniomhartha`: imperatives (VSO statements take bare arguments).
+ * `briathra`: every declared verb, needed for `a <verb>` nominalisation.
  */
 function lexeain(toks, iasachta = null) {
   const gniomhartha = new Set(GNIOMHARTHA_IONSUITE);
   const briathra = new Set(GNIOMHARTHA_IONSUITE);
-  // A borrowed verb is still a verb. When Irish takes a verb from elsewhere it
-  // conjugates it natively and it simply joins the lexicon — you do not say
-  // "the borrowed verb X", you say X. So an imported imperative enters the
-  // lexicon unqualified, and `cuirDuine stór, "Cáit", 20` parses as a command.
+  // Imported imperatives join unqualified, same as a borrowed Irish verb.
   if (iasachta) {
     for (const g of iasachta.gniomhartha || []) { gniomhartha.add(g); briathra.add(g); }
     for (const b of iasachta.briathra || []) briathra.add(b);
@@ -241,21 +186,15 @@ function lexeain(toks, iasachta = null) {
     if (t.luach === 'gníomh') { gniomhartha.add(toks[i + 1].luach); briathra.add(toks[i + 1].luach); }
     else if (t.luach === 'feidhm') briathra.add(toks[i + 1].luach);
     else if (t.luach === 'saor') {
-      // Two surfaces enter the lexicon for one verb, and both have to, for
-      // different reasons. The autonomous form is the one a statement is
-      // written with, so VSO parsing needs it. The root is added as well —
-      // not because commanding it is legal, but because it has to *parse*
-      // before the analyzer can say why it is refused (E518). Diagnosing
-      // beats failing to parse, which is the same reason the pre-0.9 copula
-      // word order still parses.
+      // Both the root and derived autonomous form enter the lexicon: the
+      // root so a mistaken command still parses (then refused as E518).
       const lemma = toks[i + 1].luach;
       briathra.add(lemma);
       gniomhartha.add(lemma);
       try {
         const saor = mf.foirmShaor(lemma);
         gniomhartha.add(saor); briathra.add(saor);
-        // The past form enters the lexicon so it can be *refused* by name
-        // rather than coming back as an unknown identifier (§8).
+        // Past form added too, so it can be refused by name (§8).
         const caite = mf.foirmShaorChaite(lemma);
         if (caite) { gniomhartha.add(caite); briathra.add(caite); }
       } catch { /* unformable; the analyzer reports it */ }

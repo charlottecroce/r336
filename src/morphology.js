@@ -1,24 +1,19 @@
 'use strict';
 
-/*
- * moirfeolaíocht.js — Irish initial mutation as a compiler subsystem.
- *
- * This module knows nothing about programming. It knows about Irish
- * orthography: which words can bear a séimhiú, what the lenited form of a
- * word is, and how to recover the lemma from a mutated surface form.
- *
- * The semantic layer asks it questions; it does not ask the semantic layer
- * anything. That separation is the whole point: mutation is a property of
- * the word, government is a property of the syntax, and agreement is the
- * check that joins them.
- */
+// moirfeolaíocht.js — Irish initial mutation as a compiler subsystem.
+//
+// Knows nothing about programming: only Irish orthography — which words can
+// take a séimhiú, what a word's lenited form is, how to recover a lemma from
+// a mutated surface form. The semantic layer asks it questions and never the
+// reverse: mutation is a property of the word, government a property of the
+// syntax, agreement is what joins them.
 
 const GUTAI = 'aeiouáéíóú';
 
-// The nine consonants that take a written séimhiú (b c d f g m p s t).
+// The nine consonants that take a written séimhiú.
 const INSEIMHITHE = 'bcdfgmpst';
 
-// Eclipsis replaces the initial sound; m, l, n, r, s and h have no eclipsed
+// Eclipsis replaces the initial sound; m, l, n, r, s, h have no eclipsed
 // form, and a vowel takes a prefixed n instead.
 const URU = { b: 'm', c: 'g', d: 'n', f: 'bh', g: 'n', p: 'b', t: 'd' };
 
@@ -26,16 +21,15 @@ const URU = { b: 'm', c: 'g', d: 'n', f: 'bh', g: 'n', p: 'b', t: 'd' };
 const FOIRM = Object.freeze({
   BUN: 'bun',            // base / citation form
   SEIMHITHE: 'séimhithe', // lenited
-  URAITHE: 'uraithe',    // eclipsed — demanded by `i` since 0.13 (§5.2)
+  URAITHE: 'uraithe',    // eclipsed — demanded by `i` since 0.13
 });
 
 const isGuta = (ch) => !!ch && GUTAI.includes(ch.toLowerCase());
 
 /**
- * Does this word already carry a written séimhiú?
- * Genuinely ambiguous in Irish (`thall` is not a lenited `tall`), which is
- * why we also require the lemma to exist in a symbol table before we accept
- * a delenition.
+ * Does this word already carry a written séimhiú? Genuinely ambiguous in
+ * Irish (`thall` isn't a lenited `tall`), so callers also check the symbol
+ * table before accepting a delenition.
  */
 function cosuilLeSeimhiu(word) {
   if (!word || word.length < 2) return false;
@@ -43,9 +37,8 @@ function cosuilLeSeimhiu(word) {
 }
 
 /**
- * Can this word bear a séimhiú at all?
- * Returns { ok } or { ok: false, cuis } where `cuis` ("reason") is a tag the
- * diagnostic layer turns into Irish prose.
+ * Can this word bear a séimhiú at all? Returns { ok } or
+ * { ok: false, cuis } where `cuis` is a tag the diagnostics turn into prose.
  */
 function inSeimhithe(word) {
   if (!word) return { ok: false, cuis: 'folamh' };
@@ -57,9 +50,7 @@ function inSeimhithe(word) {
   if ('lnrh'.includes(c0)) return { ok: false, cuis: 'lnrh' };
   if (!INSEIMHITHE.includes(c0)) return { ok: false, cuis: 'neamhlitir' };
 
-  // `s` lenites before a vowel and before l, n, r; it resists lenition in the
-  // clusters sc-, sf-, sm-, sp-, st- (and generally s + consonant).
-  // Note `''.includes` is vacuously true in JS, so c1 is tested explicitly.
+  // `s` lenites before a vowel or l/n/r; resists it in sc-/sf-/sm-/sp-/st-.
   if (c0 === 's' && !(c1 !== '' && (isGuta(c1) || 'lnr'.includes(c1)))) {
     return { ok: false, cuis: 'cnuasach-s' };
   }
@@ -79,11 +70,10 @@ function diseimhigh(word) {
 /**
  * The surface realisation of `lemma` in grammatical form `foirm`.
  *
- * The fallback in the SEIMHITHE branch is the load-bearing line of the whole
- * language: a lenition-triggering environment demands lenition *of anything
- * that can be lenited*, and demands nothing of anything that cannot. A
- * vowel-initial identifier after `ó` is not an exception to the rule, it is
- * the rule applied to a word with an empty mutation slot.
+ * The SEIMHITHE fallback is the load-bearing rule of the language: a
+ * leniting position demands lenition of anything that can be lenited and
+ * nothing of anything that can't. A vowel-initial word after `ó` isn't an
+ * exception — it's the rule applied to a word with an empty mutation slot.
  */
 function foirmDe(lemma, foirm) {
   switch (foirm) {
@@ -92,18 +82,10 @@ function foirmDe(lemma, foirm) {
     case FOIRM.SEIMHITHE:
       return inSeimhithe(lemma).ok ? seimhigh(lemma) : lemma;
     case FOIRM.URAITHE:
-      // §5.2, as of 0.13: eclipsis is demanded, by the preposition `i`, and
-      // the arm is the SEIMHITHE arm above with a different mutation — the
-      // fallback included. `i stór` is not an exception to the rule, it is
-      // the rule applied to a word with an empty mutation slot, exactly as
-      // `as stór` and `aois óg` are.
-      //
-      // The refusal shrank rather than vanished. `uraigh` still prefixes `n-`
-      // to a vowel and nothing demands that form: before a vowel the
-      // preposition takes the `in` allomorph and the noun is left alone (see
-      // `mirI`). So the pre-0.13 state of this slot survives, narrowed to
-      // vowel-initial words, and `--paraidím` still prints what no position
-      // asks for.
+      // §5.2, 0.13 — same SEIMHITHE-arm fallback logic, different mutation,
+      // demanded by `i`. `uraigh` still prefixes n- to a vowel, but nothing
+      // demands that form: before a vowel `i` takes the `in` allomorph and
+      // the noun is left alone (see `mirI`).
       return inUraithe(lemma).ok ? uraigh(lemma) : lemma;
     default:
       throw new Error(`foirm anaithnid: ${foirm}`);
@@ -130,8 +112,8 @@ function inUraithe(word) {
 }
 
 /**
- * Eclipse. The prefix is always lowercase and the radical is untouched:
- * baile -> mbaile, Baile -> mBaile, fuil -> bhfuil, áit -> n-áit, Éire -> nÉire.
+ * Eclipse. Prefix always lowercase, radical untouched: baile -> mbaile,
+ * Baile -> mBaile, fuil -> bhfuil, áit -> n-áit, Éire -> nÉire.
  */
 function uraigh(word) {
   const c0 = word[0];
@@ -140,13 +122,11 @@ function uraigh(word) {
 }
 
 /**
- * Every lemma that `word` could be the eclipsed form of.
- *
- * The inverse of `uraigh`, and it is a set rather than a value because the
- * mapping is not one-to-one: `n` before a vowel undoes to nothing (nÉire →
- * Éire), and `ng-` could be an eclipsed `g-` or a word that simply starts
- * `ng-`. Used only to recognise an eclipsed identifier well enough to refuse
- * it by name (E108, §5.2); the symbol table decides which candidate is real.
+ * Every lemma that `word` could be the eclipsed form of. A set, not a value,
+ * since the mapping isn't one-to-one (`n` before a vowel could undo to
+ * nothing, `ng-` could be eclipsed `g-` or just start `ng-`). Used only to
+ * recognise an eclipsed identifier well enough to refuse it (E108); the
+ * symbol table decides which candidate is real.
  */
 function lemmaiFaoiUru(word) {
   const amach = [];
@@ -161,7 +141,7 @@ function lemmaiFaoiUru(word) {
   return amach;
 }
 
-/** The full paradigm of a lemma, for `--paraidím` output and symbol dumps. */
+/** The full paradigm of a lemma, for `--paraidím` and symbol dumps. */
 function paraidim(lemma) {
   const can = inSeimhithe(lemma);
   const ur = inUraithe(lemma);
@@ -171,27 +151,23 @@ function paraidim(lemma) {
     [FOIRM.SEIMHITHE]: can.ok ? seimhigh(lemma) : lemma,
     inSeimhithe: can.ok,
     cuis: can.cuis || null,
-    // Demanded by `i` since 0.13, for a consonant-initial word. For a
-    // vowel-initial one this is still shown and never asked for, because the
-    // particle moves instead of the noun (`in áit`). Key unchanged: it is in
-    // `--paraidím --json` output and `index.js` reads it.
+    // Shown even for vowel-initial words where it's never demanded (`i`
+    // takes the `in` allomorph there instead).
     uruFéideartha: ur.ok ? uraigh(lemma) : null,
   };
 }
 
 /**
- * The substantive verb `bí`. Irish verbs have an *independent* form used when
- * the verb heads its own assertion, and a *dependent* form used when a
- * particle governs the clause — a question, a negation, or a subordinator.
- * The dependent form of `bí` is `fuil`, which never appears bare: the
- * particles that select it also eclipse it, giving `bhfuil`.
+ * `bí`. Irish verbs have an independent form (heading their own assertion)
+ * and a dependent form (under a governing particle — question, negation,
+ * subordinator). `bí`'s dependent form is `fuil`, which never appears bare:
+ * the particles selecting it also eclipse it, giving `bhfuil`.
  *
- *   má tá duine        an assertion under a realis particle → independent
- *   mura bhfuil duine  a negated condition                  → dependent
- *   bí                 the imperative; the citation form; the lemma
+ *   má tá duine        assertion under a realis particle → independent
+ *   mura bhfuil duine  negated condition                 → dependent
+ *   bí                 imperative / citation form
  *
- * This is morphology, not semantics. `bí` still means existence and state in
- * every form; only its shape agrees with its environment.
+ * Morphology, not semantics: `bí` means the same thing in every form.
  */
 const RIALU_BRIATHAIR = Object.freeze({
   NEAMHSPLEACH: 'neamhspleách',  // independent
@@ -208,55 +184,44 @@ const PARAIDIM_BI = Object.freeze({
 const foirmBhriathartha = (rialu) => PARAIDIM_BI[rialu];
 
 /**
- * The copula `is`. Céim 0.9, §5.5.
+ * The copula `is`. Same shape as `bí` — one word, several forms chosen by
+ * environment — but the alternation is *fusion*: the governing particle and
+ * copula are written as one word.
  *
- * The second paradigm in this file, and the first evidence that the design
- * generalises past initial mutation. It has the same shape as `bí` above: one
- * word, several forms, the form chosen by the environment and never by the
- * meaning. What differs is that `bí`'s alternation is independent/dependent,
- * while the copula's is a *fusion* — the governing particle and the copula
- * are written as one word:
+ *   is Duine é          independent, ungoverned
+ *   má + is  → más      realis particle absorbs it
+ *   mura + is → mura    irrealis particle absorbs it
+ *            → murab      … -b before a vowel
  *
- *   is Duine é          the copula heading its own assertion  → independent
- *   má + is  → más      the realis particle swallows it
- *   mura + is → mura    the irrealis particle swallows it
- *            → murab      … and takes -b before a vowel
+ * Two allomorph rules, both regressive (conditioned on the word *after* the
+ * copula), so the caller must pass it in:
  *
- * Two allomorph rules live here and nowhere else, both conditioned on the
- * first letter of the *following* word, which is why the caller has to pass
- * it in:
+ *   mura → murab  before a vowel
+ *   ní   → ní h-  before a vowel
  *
- *   mura → murab  before a vowel   (mura Ceart, murab Easpa)
- *   ní   → ní h-  before a vowel   (ní Ceart, ní hEaspa)
- *
- * The second is computed and never demanded, exactly as `uraigh` is computed
- * and never demanded (§5.2). Four of the seven cells have no syntactic slot in
- * R336, because the language has no question, no bare negation and no
- * subordinate assertion. `foirmChopail` throws for those, `paraidimChopail`
- * prints them, and `--paraidím` labels them *gan bhrí, §5.5*.
+ * Four of the seven cells have no syntactic slot in R336 (no question, bare
+ * negation, or subordinate assertion). `foirmChopail` throws for those;
+ * `paraidimChopail` still prints them, labelled dead.
  */
 const RIALU_COPAIL = Object.freeze({
   BUN: 'bun',                            // is    — independent
-  MA: 'má',                              // más   — under the realis particle
-  MURA: 'mura',                          // mura / murab — under the irrealis
-  DIULTACH: 'diúltach',                  // ní    — no slot: no bare negation
-  CEISTEACH: 'ceisteach',                // an    — no slot: no question
-  CEISTEACH_DIULTACH: 'ceisteach diúltach', // nach — no slot, likewise
-  FAISNEISEACH: 'faisnéiseach',          // gur   — no slot: no `go` clause
+  MA: 'má',                              // más   — under realis particle
+  MURA: 'mura',                          // mura / murab — under irrealis
+  DIULTACH: 'diúltach',                  // ní    — no slot
+  CEISTEACH: 'ceisteach',                // an    — no slot
+  CEISTEACH_DIULTACH: 'ceisteach diúltach', // nach — no slot
+  FAISNEISEACH: 'faisnéiseach',          // gur   — no slot
 });
 
-/** The cells a syntactic position actually demands. */
+/** The cells a syntactic position can actually demand. */
 const COPAIL_BEO = Object.freeze([
   RIALU_COPAIL.BUN, RIALU_COPAIL.MA, RIALU_COPAIL.MURA,
 ]);
 
 /**
- * The surface form of the copula under `rialu`, before the word `focal`.
- *
- * `focal` is the predicate — the type name — because the two allomorph rules
- * are both regressive: the copula's shape depends on what comes after it, not
- * on what comes before. Passing the predicate is therefore not a convenience,
- * it is the rule.
+ * The surface form of the copula under `rialu`, before `focal` (the
+ * predicate/type name). Both allomorph rules are regressive, so passing it
+ * isn't a convenience — it's required.
  */
 function foirmChopail(rialu, focal = '') {
   switch (rialu) {
@@ -267,8 +232,7 @@ function foirmChopail(rialu, focal = '') {
     case RIALU_COPAIL.CEISTEACH:
     case RIALU_COPAIL.CEISTEACH_DIULTACH:
     case RIALU_COPAIL.FAISNEISEACH:
-      // §5.5 stands, on the §5.2 pattern: the form is real Irish and is
-      // computed below for display, but no slot in the language demands it.
+      // Real Irish, computed below for display, but no slot demands it.
       throw new Error(`copail: níl brí ríomhchláraithe sannta don fhoirm "${rialu}" (§5.5)`);
     default:
       throw new Error(`rialú copaile anaithnid: ${rialu}`);
@@ -276,10 +240,9 @@ function foirmChopail(rialu, focal = '') {
 }
 
 /**
- * The whole present paradigm before `focal`, for `--paraidím` and for tests.
- * `beo` marks the three cells a position can demand; the rest are shown the
- * way an eclipsed form is shown, so that the reader can see what the language
- * is declining to use.
+ * The whole present paradigm before `focal`, for `--paraidím` and tests.
+ * `beo` marks the three demandable cells; the rest are shown the way an
+ * eclipsed form is shown, so declining-to-use reads as deliberate.
  */
 function paraidimChopail(focal = 'Cineál') {
   const guta = isGuta(focal[0]);
@@ -288,7 +251,6 @@ function paraidimChopail(focal = 'Cineál') {
     { rialu: R.BUN, foirm: 'is', frasa: `is ${focal}`, beo: true },
     { rialu: R.MA, foirm: 'más', frasa: `más ${focal}`, beo: true },
     { rialu: R.MURA, foirm: guta ? 'murab' : 'mura', frasa: `${guta ? 'murab' : 'mura'} ${focal}`, beo: true },
-    // `ní` prefixes h- to a vowel, the same rule `le` follows in E201.
     { rialu: R.DIULTACH, foirm: 'ní', frasa: `ní ${reamhlitirH(focal)}`, beo: false },
     { rialu: R.CEISTEACH, foirm: 'an', frasa: `an ${focal}`, beo: false },
     { rialu: R.CEISTEACH_DIULTACH, foirm: 'nach', frasa: `nach ${focal}`, beo: false },
@@ -300,40 +262,20 @@ function paraidimChopail(focal = 'Cineál') {
 const FOIRMEACHA_COPAIL = Object.freeze(['is', 'más', 'mura', 'murab']);
 
 /**
- * Is this a cell some syntactic position can actually demand?
- *
- * The guard for `foirmChopail`'s four dead cells, and the twin of `inShaor`
- * below. It exists so that a caller asks *before* calling rather than reading
- * a thrown message: a section pointer inside a runtime string made
- * documentation numbering part of the test contract once already, and §9's
- * rule — codes are the contract, wording is not — only ever covered
- * diagnostics routed through `diagnostics.js`. The `throw` stays where it is
- * and is now unreachable from the compiler, which is the position
- * `foirmShaor`'s has been in since 0.10.
+ * Is this a cell some syntactic position can demand? Guard for
+ * `foirmChopail`'s four dead cells, so a caller checks before calling
+ * instead of parsing a thrown message.
  */
 function cealBeo(rialu) {
   return COPAIL_BEO.includes(rialu);
 }
 
 /**
- * The preposition `i`, and the form it demands of the word it governs.
- *
- * Irish `i` eclipses — *i mbaile*, *i gcathair*, *i dteach* — and takes the
- * allomorph `in` before a vowel, where the noun is then left alone: *in áit*,
- * not the pre-Caighdeán *i n-áit*.
- *
- * So the form this preposition demands is **not a constant**. It is a
- * function of the first letter of the word that follows, which makes this the
- * second conditioned government in the language and puts it in the copula's
- * shape rather than `ó`'s: `foirmChopail` above chooses `mura`/`murab` on
- * exactly the same evidence, and for exactly the same reason — both rules are
- * regressive. That is also the answer to the sixth question's fifth cousin:
- * the compiler has to know the grammar here, because a lookup table keyed on
- * the preposition cannot produce an answer that depends on the noun.
- *
- * Two written forms of one particle, like `bhfuil`, `más` and `sheasmhach`:
- * the parser normalises `in` back to `i` and hands the written form to the
- * analyzer to check.
+ * The preposition `i`. Eclipses (*i mbaile*), but takes the `in` allomorph
+ * before a vowel where the noun is left alone (*in áit*, not *i n-áit*).
+ * Regressive, like the copula's allomorph rule — the demanded form depends
+ * on the following word, so a lookup keyed only on the preposition can't
+ * answer it.
  */
 function mirI(ceadFhocal) {
   return isGuta((ceadFhocal || '')[0])
@@ -345,45 +287,30 @@ function mirI(ceadFhocal) {
 const MIREANNA_I = Object.freeze(['i', 'in']);
 
 /**
- * An briathar saor — the autonomous verb. Céim 0.10, §8.
+ * The autonomous verb — céim 0.10, §8. The first *productive* paradigm here:
+ * `bí` and the copula are closed function-word tables; this conjugates
+ * whatever verb the author declares.
  *
- * The third paradigm here and the first *productive* one. `bí` and the copula
- * are closed tables of function words: the compiler looks them up. The
- * autonomous is formed from any verb the author declares, which means this is
- * the first time the file has had to conjugate rather than recognise.
- *
- *   scríobh   →  scríobhtar        1st conjugation, broad
- *   cuir      →  cuirtear          1st conjugation, slender
- *   caith     →  caitear           … -th is absorbed by the ending
- *   léigh     →  léitear           … -gh likewise
+ *   scríobh   →  scríobhtar        1st conj, broad
+ *   cuir      →  cuirtear          1st conj, slender
+ *   caith     →  caitear           -th absorbed by the ending
+ *   léigh     →  léitear           -gh likewise
  *   sábháil   →  sábháiltear       polysyllabic loan, still 1st
- *   ceannaigh →  ceannaítear       2nd conjugation, -aigh dropped
+ *   ceannaigh →  ceannaítear       2nd conj, -aigh dropped
  *   bailigh   →  bailítear         2nd, slender
  *   fógair    →  fógraítear        2nd, syncopating: fógair → fógr-
  *   oscail    →  osclaítear        likewise
  *   inis      →  insítear          likewise
  *
- * The ending agrees in quality with the final consonant of the stem, which
- * Irish orthography signals with the preceding vowel: broad (a, o, u) takes
- * -tar / -aítear, slender (e, i) takes -tear / -ítear. Quality is read off the
- * stem *after* any syncopation, because syncopation is what changes it —
- * `fógair` looks slender and `fógr-` is broad, and the ending follows the
- * second.
- *
- * Nothing here knows what a verb is used for. As with lenition, the question
- * "what is the autonomous form of this word" is answered without reference to
- * whether any position demands it.
+ * Broad (a/o/u) takes -tar/-aítear, slender (e/i) takes -tear/-ítear,
+ * decided after syncopation since that's what changes quality.
  */
 
 const LEATHAN = 'aouáóú';
 const CAOL = 'eiéí';
 
-/** The handful that do not follow the rules. Irish has eleven irregular verbs. */
+/** The handful of irregular verbs (Irish has eleven). */
 const SAOR_MIREGULTA = Object.freeze({
-  // Stem-internal irregularity: `taispeáin` broadens to `taispeán-` before the
-  // ending, where `sábháil` keeps its slender consonant. No orthographic rule
-  // separates the two, so this is lexical and belongs in a table — which is
-  // what a printed grammar does with it too.
   taispeáin: 'taispeántar',
   bí: 'táthar',
   faigh: 'faightear',
@@ -401,38 +328,31 @@ function gutai(word) {
   return word.toLowerCase().match(/[aeiouáéíóú]+/g) || [];
 }
 
-/** Syllable count, counted the way Irish counts it: one per vowel group. */
+/** Syllable count: one per vowel group. */
 const siollai = (word) => gutai(word).length;
 
-/**
- * Is the stem broad? Decided by its last vowel group's last vowel, which is
- * the letter that carries the quality of the consonant after it.
- */
+/** Is the stem broad? Decided by the last vowel of its last vowel group. */
 function isLeathan(stem) {
   const gs = gutai(stem);
-  if (!gs.length) return true;                 // no vowel: nothing to agree with
+  if (!gs.length) return true;
   const g = gs[gs.length - 1];
   return LEATHAN.includes(g[g.length - 1]);
 }
 
 /**
- * Second conjugation: polysyllabic verbs in -(a)igh, and the syncopating
- * stems in -il, -in, -ir, -is. Polysyllabic verbs in -áil and friends are
- * first-conjugation loans and are excluded before the -il test can catch
- * them, which is why the order of these clauses matters.
+ * Second conjugation: polysyllabic -(a)igh verbs, and syncopating stems in
+ * -il/-in/-ir/-is. -áil loans stay 1st conjugation and are excluded first,
+ * since order matters here.
  */
 function isDaraReimniu(lemma) {
   const w = lemma.toLowerCase();
   if (siollai(w) < 2) return false;
-  if (/(áil|eáil|óil|úil|áin|úin)$/.test(w)) return false;   // loans stay 1st
+  if (/(áil|eáil|óil|úil|áin|úin)$/.test(w)) return false;
   if (/(aigh|igh)$/.test(w)) return true;
   return /[aeiouáéíóú][ilnrs]$/.test(w);
 }
 
-/**
- * Syncopation: the unstressed vowel of the final syllable drops before a
- * vowel-initial ending. fógair → fógr, oscail → oscl, inis → ins.
- */
+/** Syncopation: unstressed final-syllable vowel drops before a vowel-initial ending. */
 function coimriu(stem) {
   return stem.replace(/[aeiouáéíóú]+([^aeiouáéíóú]+)$/i, '$1');
 }
@@ -444,15 +364,7 @@ function inShaor(lemma) {
   return { ok: true };
 }
 
-/**
- * The present autonomous of `lemma`.
- *
- * The imperative root is the citation form, so this is derivation from the
- * lemma exactly as `seimhigh` is — but with a suffix rather than a prefix,
- * and with the shape of the ending decided by the stem rather than by the
- * environment. That is the difference between this paradigm and the other
- * two, and the reason it is the one that shows the file generalising.
- */
+/** The present autonomous of `lemma`. */
 function foirmShaor(lemma) {
   const iseal = lemma.toLowerCase();
   if (SAOR_MIREGULTA[iseal]) return SAOR_MIREGULTA[iseal];
@@ -465,15 +377,14 @@ function foirmShaor(lemma) {
     return stem + (isLeathan(stem) ? 'aítear' : 'ítear');
   }
 
-  // First conjugation. A stem in -th or -gh is absorbed by the ending: the
-  // ending begins with the same sound, and Irish does not write it twice.
+  // 1st conjugation. A stem in -th/-gh is absorbed by the ending.
   let stem = lemma;
   if (/th$/i.test(stem)) stem = stem.slice(0, -2);
   else if (/gh$/i.test(stem)) stem = stem.slice(0, -2);
   return stem + (isLeathan(stem) ? 'tar' : 'tear');
 }
 
-/** The past autonomous. Recognised so it can be refused; see below. */
+/** The past autonomous. Recognised so it can be refused (§8, no tense in R336). */
 const SAOR_CAITE_MIREGULTA = Object.freeze({
   taispeáin: 'taispeánadh',
   bí: 'bhíothas',
@@ -489,22 +400,10 @@ const SAOR_CAITE_MIREGULTA = Object.freeze({
 });
 
 /**
- * The *past* autonomous — `moladh`, `scríobhadh`, `liostaíodh`, `fuarthas`.
- *
- * Computed for one reason only: so that writing it can be refused with a
- * message that names what it is. R336 has no tense anywhere, which is the
- * same ground on which §5.5 kept `ba` out of the copula's table — a cell for a
- * distinction the language cannot express would claim more than it can do.
- * But a reader of Irish will write `liostaíodh` for "it was listed", and an
- * unrecognised identifier is a worse answer than "that is the past and there
- * is no past here".
- *
- * `fuarthas` is in the table above, and it is the form that made `Fuarthas` an
- * unsafe variant name in `feidhmchlár/duine.r336` before 0.9 renamed it.
- *
- * Returns null where the regular rule does not reach — the monosyllabic verbs
- * in -igh (`léigh` → `léadh`, `nigh` → `níodh`) are genuinely irregular here
- * and are not guessed at.
+ * The past autonomous — `moladh`, `scríobhadh`, `liostaíodh`, `fuarthas`.
+ * Computed only so writing it can be refused with a message naming what it
+ * is, rather than "unbound identifier". Returns null where the regular rule
+ * doesn't reach (monosyllabic -igh verbs are genuinely irregular here).
  */
 function foirmShaorChaite(lemma) {
   const iseal = lemma.toLowerCase();
@@ -520,14 +419,7 @@ function foirmShaorChaite(lemma) {
   return lemma + (isLeathan(lemma) ? 'adh' : 'eadh');
 }
 
-/**
- * The autonomous paradigm of one verb, for `--paraidím`.
- *
- * Laid out like `paraidimChopail`: the cell a position demands is plain, and
- * the cell that exists in Irish with no slot here is returned so that it can
- * be printed and labelled. Same treatment as an eclipsed form (§5.2), the
- * copula's four dead cells (§5.5), and for the same reason.
- */
+/** The autonomous paradigm of one verb, for `--paraidím`. */
 function paraidimShaor(lemma) {
   const caite = foirmShaorChaite(lemma);
   return [
@@ -536,66 +428,31 @@ function paraidimShaor(lemma) {
   ];
 }
 
-/**
- * Best guess at the lemma behind a surface form. Only a guess: the symbol
- * table has the final say.
- */
+/** Best guess at the lemma behind a surface form; the symbol table has final say. */
 function lemmaTuairim(surface) {
   return cosuilLeSeimhiu(surface) ? diseimhigh(surface) : surface;
 }
 
-/**
- * `le` prefixes h- to a vowel-initial word (le hUimhir, but le Teaghrán).
- * Used by the diagnostic formatter so error messages are themselves
- * grammatical Irish.
- */
+/** `le` prefixes h- to a vowel-initial word (le hUimhir, le Teaghrán). */
 function reamhlitirH(word) {
   return isGuta(word[0]) ? 'h' + word : word;
 }
 
-/*
- * §5.10 — inscne ghramadaí.
- *
- * Tá gach ainmfhocal Gaeilge firinscneach nó baininscneach, agus is beag
- * loighic atá leis. Ní athraíonn an inscne brí ar bith. Ní dhéanann sí ach
- * foirm a éileamh — agus is é sin an fáth a bhfuil sí anseo agus nach raibh
- * sí i §12: dhiúltaigh §12 don inscne mar rud a iompraíonn brí (cé leis é),
- * agus ní hé sin an rud atá anseo ar chor ar bith.
- *
- * Sa tuiseal ainmneach séimhítear an aidiacht i ndiaidh ainmfhocail
- * bhaininscnigh agus ní shéimhítear i ndiaidh ainmfhocail fhirinscnigh:
- *
- *     fear mór          bean mhór
- *     duine seasmhach     aois sheasmhach
- *
- * Níl aon rud anseo ach `seimhigh` á ghairm nó gan é a ghairm. Sin an
- * ceathrú paraidím, agus is é an ceann is lú de na ceithre cinn.
- */
+// §5.10 — grammatical gender. Doesn't carry meaning, only requires form:
+// the adjective after a feminine noun lenites, after masculine it doesn't
+// (fear mór / bean mhór, duine seasmhach / aois sheasmhach).
 const INSCNE = { FIR: 'fir', BAIN: 'bain' };
 
-/** The Irish name, for messages and for `--paraidím`. */
+/** The Irish name, for messages and `--paraidím`. */
 const ainmInscne = (i) => (i === INSCNE.BAIN ? 'baininscneach' : 'firinscneach');
 
 /**
- * The form an attributive adjective takes after a noun of this gender, in the
- * nominative singular.
- *
- * The genitive is not here and cannot be. Irish reverses the rule in the
- * genitive singular — *hata an fhir* lenites the masculine, *doras na scoile*
- * leaves the feminine bare — and that chiasmus is the most distinctive thing
- * about the system. R336 has no genitive construction at all: `ainm ó
- * dhuine` is a prepositional phrase, not *ainm an duine*. So there is no slot
- * the reversed rule could attach to, and its absence is forced rather than
- * chosen (§5.10).
+ * The form an attributive adjective takes after a noun of this gender
+ * (nominative singular only — R336 has no genitive construction, so the
+ * reversed genitive rule has no slot to attach to).
  */
 function foirmAidiachta(aidiacht, inscne) {
   if (inscne !== INSCNE.BAIN) return aidiacht;
-  // Straight through `foirmDe`, which is the load-bearing line of the whole
-  // language: a leniting environment demands lenition of anything that can be
-  // lenited and demands nothing of anything that cannot. An adjective with an
-  // empty mutation slot after a feminine noun is not an exception to gender
-  // agreement — it is gender agreement applied to a word with nothing to
-  // change (§5.2).
   return foirmDe(aidiacht, FOIRM.SEIMHITHE);
 }
 

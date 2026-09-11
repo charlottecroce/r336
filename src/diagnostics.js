@@ -1,20 +1,17 @@
 'use strict';
 
-/*
- * fáiltis.js — diagnostics.
- *
- * Messages are Irish. Codes are stable so that tests and tooling survive
- * rewording (§9). The prose should still be reviewed by a fluent speaker;
- * the codes are the contract, the wording is not yet.
- *
- * Ranges:
- *   1xx  moirfeolaíocht  — mutation, grammatical form, resolution
- *   2xx  cineálacha      — types
- *   3xx  copail / bí     — classification and existence
- *   4xx  comhréir        — lexing and parsing
- *   5xx  modh agus aspect— imperative vs indicative, ongoing vs completed
- *   6xx  dúchas          — province, county, exile, treaty (§7, §7)
- */
+// fáiltis.js — diagnostics.
+//
+// Messages are Irish. Codes are stable so tests/tooling survive rewording;
+// the prose is not yet reviewed by a fluent speaker.
+//
+// Ranges:
+//   1xx  moirfeolaíocht  — mutation, form, resolution
+//   2xx  cineálacha      — types
+//   3xx  copail / bí     — classification and existence
+//   4xx  comhréir        — lexing and parsing
+//   5xx  modh agus aspect— mood, aspect
+//   6xx  dúchas          — province, county, exile, treaty
 
 const { reamhlitirH } = require('./morphology');
 const ctae = require('./contaetha');
@@ -37,7 +34,7 @@ class Cnuasach extends Error {
   }
 }
 
-/** Reasons a word cannot be lenited, rendered as Irish clauses. */
+/** Reasons a word cannot be lenited, as Irish clauses. */
 const CUISEANNA = {
   'guta': 'tosaíonn sé le guta',
   'lnrh': 'tosaíonn sé le l, n, r nó h',
@@ -45,25 +42,15 @@ const CUISEANNA = {
   'seimhithe-cheana': 'tá séimhiú air cheana',
   'neamhlitir': 'ní tosaíonn sé le consan inséimhithe',
   'folamh': 'tá sé folamh',
-  // §5.2 — the two `inUraithe` returns. `gan-uru` is the common one and is
-  // the reason `i stór` is correct as written: s has no eclipsed form at all.
   'gan-uru': 'ní tosaíonn sé le consan in-uraithe ná le guta',
   'uraithe-cheana': 'tá urú air cheana',
 };
 
-/**
- * A place, named the way the reader needs it in a 6xx message.
- *
- * Since 0.7 the border compares provinces, so a message that names only
- * counties is not saying why it fired: *as Corcaigh* against *as Gaillimh*
- * is refused for a reason a reader cannot see unless the message says
- * "An Mhumhain" and "Connachta". Exile has no province and gets no
- * parenthesis, because "deoraíocht (deoraíocht)" says nothing twice.
- */
+/** A place formatted with its province, since the border compares provinces. */
 const ait = (c) => (c === ctae.DEORAIOCHT ? c : `${c} (${ctae.cuigeDe(c)})`);
 
 const M = {
-  // ── 1xx: moirfeolaíocht ───────────────────────────────────────────────
+  // ── 1xx: moirfeolaíocht ──
   E101: (ainm) => `Aitheantóir gan sainmhíniú: "${ainm}".`,
 
   E102: (surface, ceart, oibreoir) =>
@@ -78,22 +65,14 @@ const M = {
   E105: (surface, lemma, ceart) =>
     `Níl an fhoirm "${surface}" bailí don aitheantóir "${lemma}". An fhoirm a bhí ag teastáil: "${ceart}".`,
 
-  // Onnmhairíonn níos mó ná modúl amháin an lemma céanna: ní féidir a rá cé
-  // acu briathar atá i gceist gan cháiliú, agus ní cháilítear briathra.
   E106: (ainm, foinsi) =>
     `Tá "${ainm}" á onnmhairiú ag níos mó ná modúl amháin (${foinsi.map((f) => `"${f}"`).join(', ')}). Athainmnigh ceann acu.`,
 
   E107: (surface, ceart) =>
     `Ní mór aitheantóirí a fhógairt sa bhunfhoirm. Fógraíodh "${surface}"; úsáid "${ceart}".`,
 
-  // CURTHA IN ÁIRITHE ó 0.13 — ní lasann sé a thuilleadh.
-  //
-  // Ba é seo an diúltú: aithníodh foirm uraithe chun í a dhiúltú as a hainm,
-  // mar nach raibh brí ríomhchláraithe ag an urú. Ó chuir `i` slot ar fáil
-  // (§5.2) tá an fhoirm sin inghlactha nuair a éilítear í, agus is é E113 an
-  // locht nuair nach n-éilítear. D'athródh sé brí an chóid é a athúsáid, agus
-  // is measa cód a athraíonn brí ná cód a stopann. Tá an chúis in `INAIRITHE`
-  // in `test/earraidi.js`; níl aon chomhad cáis aige a thuilleadh.
+  // Reserved since 0.13: `i` gave eclipsis a slot, so an eclipsed form now
+  // resolves (E113 if unlicensed) instead of being refused by name here.
   E108: (ainm) => `Níl urú curtha i bhfeidhm sa teanga fós: "${ainm}".`,
 
   E109: (conair) => `Ní bhfuarthas an modúl "${conair}".`,
@@ -101,17 +80,9 @@ const M = {
   E110: (timthriall) =>
     `Timthriall i measc na modúl: ${timthriall.join(' → ')}. Ní féidir modúl a thiomsú roimhe féin.`,
 
-  // ── an t-urú, agus an réamhfhocal a éilíonn é (§5.2, 0.13) ────────────
-  //
-  // Ceithre chód nua seachas trí cinn atá ann a leathnú: tá an t-urú agus an
-  // séimhiú ar comhdhéanamh, ach ní hionann iad, agus is fearr cód in aghaidh
-  // an athraithe tosaigh ná cód in aghaidh an chruth. Leanann E112/E113/E114
-  // E102/E103/E104 líne ar líne d'aon ghnó — an fhoirm a bhí ag teastáil, an
-  // t-athrú gan údar, an focal nach féidir a athrú.
-  //
-  // Baineann E111 le rud eile ar fad. Ní locht athraithe tosaigh é ach locht
-  // allamorph: tá an mhír féin mícheart. Is é cruth E512/E517 é — cad a
-  // scríobhadh, cad atá ag teastáil, agus cén fáth.
+  // §5.2, 0.13 — urú, mirroring E102/E103/E104 for eclipsis instead of
+  // lenition. E111 is different: not a mutation fault but the wrong
+  // preposition allomorph (i vs in).
   E111: (scriofa, ceart, focal) =>
     `Foirm mhícheart den réamhfhocal: scríobhadh "${scriofa}", ach is é "${ceart}" atá ag teastáil roimh "${focal}".`,
 
@@ -124,9 +95,7 @@ const M = {
   E114: (lemma, cuis) =>
     `Ní féidir urú a chur ar an aitheantóir "${lemma}" (${CUISEANNA[cuis] || cuis}); is í an bhunfhoirm an t-aon fhoirm atá aige.`,
 
-  // ── 2xx: cineálacha ───────────────────────────────────────────────────
-  // `le` prefixes h- to a vowel-initial word (le hUimhir, le Teaghrán), so
-  // the formatter runs the same morphology the language does.
+  // ── 2xx: cineálacha ──
   E201: (suil, fuarthas) =>
     `Neamhréir chineáil: ag súil le ${reamhlitirH(suil)}, fuarthas ${fuarthas}.`,
 
@@ -151,51 +120,37 @@ const M = {
 
   E210: (op, ar, dheis) => `Ní féidir "${op}" a chur i bhfeidhm ar ${ar} agus ${dheis}.`,
 
-  // Curtha in áirithe fós, agus ní mar a bhíothas ag súil. Buaileann dhá
-  // mhalairt den tsuim chéanna le chéile ag an tsuim ó 0.8 i leith, ach
-  // leathnaíonn liosta nach mbuaileann in aon áit go Liosta(Iasacht) mar a
-  // rinne sé riamh: is liosta paraiméadar dlisteanach é `[ainm, aois]` ag an
-  // teorainn, agus níor cheart suim a chumhdach air (§6).
+  // Reserved. Two sum variants meet at the sum instead of widening; a list
+  // that doesn't meet anywhere still widens to Liosta(Iasacht), because a
+  // driver's variadic param list is legitimately heterogeneous.
   E211: (a, b) => `Ní mór an cineál céanna a bheith ag gach mír i liosta: ${a} agus ${b}.`,
 
   E212: (ainm, suil, fuarthas) =>
     `Tá ${suil} paraiméadar cineáil ag "${ainm}", ach fuarthas ${fuarthas}.`,
 
-  // §6 — ní ceadmhach `Iasacht` i réimse malairte.
-  //
-  // Dearbhaíonn suim go beacht cad is féidir le luach a bheith; deir
-  // `Iasacht` nach eol cén chatagóir í. Ualach de chatagóir anaithnid taobh
-  // istigh d'áireamh catagóirí: sin suim nár críochnaíodh a scríobh. Ceadaítear
-  // é fós i réimse struchtúir, mar nár mhaígh taifead riamh go n-áiríonn sé.
+  // A sum declares exactly what a value may be; Iasacht ("unknown category")
+  // inside a variant field contradicts that. Struct fields may still be
+  // Iasacht — a record never claimed to enumerate anything.
   E213: (suim, malairt, reimse, cineal) =>
     `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
 
-  // §6 — ní suim í suim nach bhfuil dhá mhalairt inti.
-  //
-  // Dhá chás, aon chód amháin, mar is ionann an locht iontu: ní dhéanann an
-  // fógra rogha. Suim fholamh — níl luach ar bith inti, agus mar sin ní
-  // cineál is féidir a lua í. Suim aonair — tá a fhios roimh ré cad í, agus
-  // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
-  // éigeantach air. Luaitear a bhfuarthas, mar is é sin an rud atá le ceartú.
   E214: (ainm, lion) =>
     `Ní suim í "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
 
-  // ── 3xx: copail agus briathar substaintigh ────────────────────────────
+  // ── 3xx: copail agus briathar substaintigh ──
   E301: () => `Ní mór gur cineál atá ar dheis na copaile "is".`,
 
-  // Sroichte ó 0.8: dearbhaíonn suim go beacht cad is féidir le luach a
-  // bheith, agus mar sin is féidir aicmiú a bhréagnú go statach. Ba é seo an
-  // t-aon chód a bhí curtha in áirithe agus a d'éirigh fíor; níor thug an
-  // nóta faoi deara é go dtí 0.10.1.
+  // Reachable since a sum closes what a value may be, so classification can
+  // be disproved statically.
   E302: (cineal, cineal2) => `Ní féidir le rud de chineál ${cineal} bheith ina ${cineal2} choíche.`,
 
-  // ── 4xx: comhréir ─────────────────────────────────────────────────────
+  // ── 4xx: comhréir ──
   E401: (fuarthas, suil) => `Comhartha gan choinne: fuarthas ${fuarthas}, ag súil le ${suil}.`,
   E402: (ch) => `Carachtar anaithnid sa fhoinse: ${ch}.`,
   E403: () => `Teaghrán gan dúnadh.`,
   E404: () => `Ní ghlacann gníomh le cineál toraidh: ní thugann ordú aon rud ar ais.`,
 
-  // ── 5xx: modh agus aspect ─────────────────────────────────────────────
+  // ── 5xx: modh agus aspect ──
   E501: (ainm) =>
     `Is gníomh é "${ainm}", ní ainmní: ní féidir ordú a úsáid mar shlonn. Tabhair mar ordú é.`,
 
@@ -205,19 +160,15 @@ const M = {
   E503: () =>
     `Luach á chaitheamh i dtraipisí taobh istigh d'fheidhm. Sa mhodh táscach luaitear rudaí; sa mhodh ordaitheach a dhéantar iad.`,
 
-  // Athfhoclaithe ag 0.13 chun `cuir … i …` a chlúdach. Ní athrú brí é: ba é
-  // an locht céanna riamh é — gníomh ar siúl i suíomh nach bhfuil ar siúl —
-  // agus "tar éis" an t-aon bhealach chuige go dtí seo. Is é an cód an
-  // conradh agus ní hé an foclaíocht (§9).
+  // Covers `cuir … i …` too since 0.13 — same fault, ongoing action without `ag`.
   E504: () =>
     `Gníomh ar siúl gan "ag": ní féidir gníomh a chríochnú ná a chur i gcrích mura bhfuil an fógra ar siúl. Cuir "ag" roimh an bhfógra.`,
 
   E505: (cineal) =>
     `Gníomh atá ar siúl (${cineal}) á úsáid mar luach. Úsáid "tar éis" chun é a chríochnú.`,
 
-  // Curtha in áirithe, agus tá an chúis luaite in `test/earraidi.js` mar aon
-  // leis na cinn eile: ardaíonn an chúlchríoch craobhacha ilráiteacha anois,
-  // mar sin ní theipeann "má" mar shlonn ar an gcúis seo a thuilleadh.
+  // Reserved: multi-statement `má` branches are now hoisted by codegen, so
+  // "má" as an expression no longer fails this way.
   E506: () => `Ní féidir "má" a úsáid mar shlonn ach nuair a thugann gach craobh luach.`,
 
   E507: () =>
@@ -240,26 +191,16 @@ const M = {
   E513: (ainm) =>
     `Ní briathar é "${ainm}": ní féidir "a" a chur roimh rud nach féidir a ainmniú.`,
 
-  // Réamhfhocal an bhriathair: roghnaíonn briathar réamhfhocal ar leith, agus
-  // ní ghlactar le frása gan é ná le frása mícheart.
   E514: (ainm, reamhfhocal) =>
     `Tá frása "${reamhfhocal}" ag teastáil ón ordú "${ainm}": is é sin an réamhfhocal a roghnaíonn an briathar seo.`,
 
   E515: (ainm) =>
     `Ní ghlacann an t-ordú "${ainm}" le frásaí réamhfhoclacha.`,
 
-  // Tógann `ó` frása ainmfhoclach, agus ní ainmní é ordú (E501). Tagann
-  // briathar iasachta isteach sa fhoclóir gan cháiliú, mar a thagann i
-  // nGaeilge: ní deirtear "an briathar iasachta X", ach X.
   E516: (ainm) =>
     `Ní ghlacann an t-ordú "${ainm}" le sealbhóir: tógann "ó" frása ainmfhoclach, agus ní ainmní é ordú. Tá briathar iasachta san fhoclóir gan cháiliú — tabhair "${ainm} …" mar ordú.`,
 
-  // §8 — an briathar saor.
-  //
-  // Ní hionann é seo agus cosc: is é an fhoirm féin a dhiúltaíonn. Ordaítear
-  // do dhuine, agus níl aon duine ann. Is é a mhalairt de E501 é — ní féidir
-  // gníomh a lua, agus ní féidir briathar saor a ordú — agus insítear an dá
-  // rud ar an gcaoi chéanna: cad é an rud, agus cad is féidir a dhéanamh leis.
+  // §8 — the form doesn't allow this, it's not a policy carve-out.
   E518: (ainm, saor) =>
     `Ní ordaítear do bhriathar saor: is é "${ainm}" fréamh an bhriathair, agus is í an fhréamh an modh ordaitheach — labhraíonn sí le déantóir. Níl déantóir ag "${ainm}". Scríobh "${saor} …" mar ráiteas, nó tabhair "a ${ainm}" do rud éigin lasmuigh a dhéanfaidh é.`,
 
@@ -272,30 +213,14 @@ const M = {
   E521: (ainm, cuis) =>
     `Ní féidir foirm shaor a dhéanamh de "${ainm}" (${cuis === 'gan-ghuta' ? 'níl guta ann' : cuis}): ní réimnítear focal nach bhfuil ina fhréamh bhriathair.`,
 
-  // §5.5 — foirm na copaile. An comhbhrá céanna le E512, ar an mír seachas ar
-  // an mbriathar substaintigh: ceanglaíonn an chopail leis an mír a rialaíonn
-  // í, agus roghnaíonn an chéad litir den chineál ina diaidh idir "mura" agus
-  // "murab". Ní athraíonn a brí, díreach mar nach n-athraíonn brí "bhfuil".
   E517: (scriofa, ceart) =>
     `Foirm mhícheart den chopail: scríobhadh "${scriofa}", ach is í "${ceart}" an fhoirm atá ag teastáil sa suíomh seo. Ceanglaíonn an chopail leis an mír a rialaíonn í, agus roghnaíonn tús an chineáil ina diaidh an fhoirm.`,
 
-  // §5.11 — `ar` mar staid dhochrach.
-  //
-  // Cuireann an Ghaeilge an mí-ádh ort: *tá tinneas cinn orm*, *theip orm*,
-  // *tá brón orm*. Ní dhéanann an duine é agus ní leis é — tarlaíonn sé dó.
-  // Sin an tríú ball den scoilt: `ag` coimeád, `le` teideal, `ar` dochar.
-  //
-  // Níl aon mhoirfeolaíocht nua anseo. Séimhíonn `ar` cheana agus téann sé
-  // trí `reitighFoirm` cheana (§5.2, §5.8). Is í an bhrí atá nua, agus mar sin
-  // caithfear a rá gur ar fhorais shéimeantacha atá an ghné seo bunaithe agus
-  // ní ar fhorais ghramadaí — an chóireáil chéanna a fuair `suim` i §6.
+  // §5.11 — the "misfortune" pattern (tá tinneas cinn orm). No new
+  // morphology: `ar` already lenites and routes through reitighFoirm.
   E522: (ainm) =>
     `Ní chuirtear dochar ar rud nach bhfuil ann: níl toradh ar bith ag "${ainm}", mar sin níl aon rud ann le bheith buailte. Níl frása "ar" ceadaithe ach ar fheidhm a bhfuil "->" aici.`,
 
-  // An chosaint, agus níl sí ann ach san áit ar fhógair an briathar í. Sin an
-  // difríocht idir seo agus cineál suime: ní iarrtar ar an nglaoiteoir gach
-  // rud a scrúdú, ní iarrtar air ach an rud a dúradh leis a d'fhéadfadh a
-  // bheith buailte.
   E523: (dochar, toradh) =>
     `Tá ${dochar} air seo go fóill: ní ${toradh} é go dtí go bhfuil an dochar curtha as an áireamh. Scríobh "má tá ${dochar} ar …" agus úsáid é sa chraobh dhiúltach.`,
 
@@ -305,45 +230,24 @@ const M = {
   E524: (dochar, cineal) =>
     `Ní bhuailtear ${cineal} le ${dochar}: níor fhógair aon bhriathar an dochar sin air, mar sin tá an cheist gan bhrí. Ní cheistítear ach an rud a d'fhéadfadh a bheith buailte.`,
 
-  // §5.10 — inscne ghramadaí.
-  //
-  // Ní iompraíonn an inscne brí ar bith. Sin an difríocht idir seo agus an
-  // rud ar dhiúltaigh §12 dó: theastaigh `aige`/`aici` ón úinéireacht chun
-  // sealbhóir amháin a aithint thar cheann eile, agus b'shin catagóir
-  // ghramadaí ag iompar ábhair a raibh an clár ag brath air. Ní éilíonn an
-  // inscne anseo ach foirm, agus ní athraíonn sí rud ar bith eile.
+  // §5.10 — gender carries no meaning, only form.
   E526: (ainm, scriofa, ceart, dearbhaithe) =>
     `Ní réitíonn foirm na haidiachta leis an rud a fhógraíonn sí: scríobhadh "${scriofa}" i ndiaidh "${ainm}", ach is í "${ceart}" an fhoirm a éilíonn ainm ${dearbhaithe}. Aidiacht atá san fhógra, agus réitíonn aidiacht lena hainmfhocal.`,
 
   E527: (ainm, roimhe, ceart, line) =>
     `Is ainm ${roimhe} é "${ainm}" (líne ${line}), mar sin is í "${ceart}" an fhoirm atá ag teastáil anseo. Ní athraíonn focal a inscne idir dhá abairt den téacs céanna.`,
 
-  // ── 6xx: dúchas ───────────────────────────────────────────────────────
-  // A new axis, alongside morphology, types, the copula, syntax and mood.
-  // The county system is a bit and the notes say so (§7.1, §7.1); the
-  // diagnostics are not, and they hold to the same standard as the rest.
-  //
-  // Three of these are funny, and none of them is written to be. The rule is
-  // the joke; the message states the rule.
-
-  // Modelled on E103 and E205 — what was found, what was demanded, and why.
-  // Since 0.7 the comparison is between provinces, so both places are named
-  // with theirs or the message does not say why it fired.
+  // ── 6xx: dúchas ──
+  // The county system is a deliberate bit; these diagnostics hold to the
+  // same standard as everything else regardless.
   E601: (ball, contaeBaill, contaeAitiuil) =>
     `Níl cead ag téacs as ${ait(contaeAitiuil)} an ball "${ball}" a oscailt: is as ${ait(contaeBaill)} é, agus níl aon chomhaontú eatarthu.`,
 
   E602: (ainm) =>
     `Níl "${ainm}" ar cheann de na 32 contae.`,
 
-  // Three things named, because the author needs all three to fix it: the
-  // province that is gone, the county sitting in it, and the struct that put
-  // it there. Naming only the county — which is what 0.6 did — is now wrong,
-  // because the thing that was taken is not the county that was written.
-  // Ó 0.8 i leith is féidir gur suim atá san áititheoir, mar tá suim agus
-  // struchtúr san iomaíocht chéanna ar na ceithre shliotán (§6).
-  //
-  // (Bhí an nóta seo truaillithe ag imirce 0.11: cuireadh "firinscneach"
-  // isteach trí huaire i lár na Gaeilge. Deisithe i 0.12 — féach §0.)
+  // Names all three so the author can fix it: the province taken, the
+  // county sitting in it, and the type that put it there.
   E603: (cuige, contae, struchtur) =>
     `Tá ${cuige} tógtha cheana ag an gcineál "${struchtur}", atá as ${contae}. Éilíonn gnáthchineál curtha cúige iomlán, agus is ionann contae a roghnú agus cúige a roghnú. Ní éilíonn cineál stóir ach contae amháin (E612) — ach ní sháraíonn sin éileamh cúige atá ann cheana, ná a mhalairt.`,
 
@@ -359,38 +263,20 @@ const M = {
   E607: (a, b) =>
     `Tá comhaontú idir ${a} agus ${b} sa chomhad seo cheana. Is ionann comhaontú ón dá thaobh, mar sin níl san dara fógra ach athrá.`,
 
-  // §7.2 — an t-iompú. Ní eisceacht sa tábla comhaontuithe é seo: ní
-  // fhéadfadh comhaontú idir iomaitheoirí cead a thabhairt riamh, mar go
-  // ritheann an cosc roimh an gcuardach. Insítear anseo é san áit a
-  // gceapann an t-údar go bhfuil leigheas ann.
   E608: (a, b) =>
     `Ní dhéantar comhaontú idir ${a} agus ${b}: is seanaighneas atá eatarthu. Níl aon leigheas air.`,
 
-  // The last clause is the whole rule and is meant flatly: the province does
-  // not help. Two rivals in one province are still two rivals.
   E609: (ball, contaeBaill, contaeAitiuil) =>
     `Níl cead ag téacs as ${contaeAitiuil} an ball "${ball}" a oscailt: is as ${contaeBaill} é, agus is seanaighneas atá eatarthu. Ní réitíonn comhaontú é seo (E608), ná an cúige céanna.`,
 
-  // ── §7.6: táblaí stóir ──────────────────────────────────────
-  // Two codes, and the pair that is *not* here is worth naming: there is no
-  // code for two tables in one county, because two placed types in one county
-  // are two placed types in one province and E603 has already said so. A
-  // second diagnostic would name the same fault twice.
-
-  // Both ways out are named, because either may be the right one: the author
-  // either meant the type to be somewhere, or did not mean it to have a table.
+  // §7.6 — table placement. No code for "two tables in one county" separately
+  // since that's already two placed types in one province (E603).
   E610: (ainm) =>
     `Níl contae ag "${ainm}", agus bíonn tábla in áit éigin. Ní áit í an deoraíocht: cuir "as <contae>" leis an dearbhú, nó bain an marc "stór" de. Éilíonn cineál curtha cúige iomlán, agus níl ann ach ceithre cinn.`,
 
-  // A refusal and not a `liosta folamh`, on the E302 and E524 pattern: dá
-  // bhfreagrófaí an cheist do chineál nár dhearbhaigh tábla, bheadh an
-  // cheist ar fáil i gcónaí agus ní chiallódh an dearbhú faic.
   E611: (ainm) =>
     `Níl tábla ag "${ainm}". Ní thugtar liosta folamh ar ais: dá bhfreagrófaí an cheist do chineál nár dhearbhaigh ceann, ní bheadh brí ar bith leis an dearbhú. Cuir "stór" le dearbhú "${ainm}".`,
 
-  // The finer of the two placement registries. A tábla is a building in one
-  // town, so it takes one county and not a whole province — but the two
-  // claims collide, and E603 is what says so in the other direction.
   E612: (contae, struchtur) =>
     `Tá ${contae} tógtha cheana ag tábla an chineáil "${struchtur}". Ní bhíonn ach tábla amháin ag contae: dhá cheann is tríocha atá ann ar fad, agus ní bhaintear amach an líon sin ach i gclár nach bhfuil aon ghnáthchineál curtha ann.`,
 };

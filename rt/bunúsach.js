@@ -1,17 +1,12 @@
 'use strict';
 
-/*
- * rt/bunúsach.js — an bunleabharlann.
- *
- * Conversions live in the runtime library rather than in the language.
- * Coercion is not a grammatical relationship, so it gets no syntax: you reach
- * these the way you reach anything borrowed, through `ó`.
- *
- *     seasmhach bun = ó "../rt/bunúsach.js"
- *     seasmhach n   = uimhir ó bhun(téacs)
- */
+// Conversions live in the runtime, not the language: coercion isn't
+// grammatical, so you reach these through `ó` like anything borrowed.
+//
+//     seasmhach bun = ó "../rt/bunúsach.js"
+//     seasmhach n   = uimhir ó bhun(téacs)
 
-/** Text to number. NaN on failure, which the copula rejects as an Uimhir. */
+/** Text to number. NaN on failure, rejected by the copula as not-Uimhir. */
 function uimhir(luach) { return Number(luach); }
 
 /** Anything to text. */

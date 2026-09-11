@@ -1,39 +1,22 @@
 #!/usr/bin/env node
 'use strict';
 
-/*
- * tools/imirce-inscne.js — an t-aistriú focail do chéim 0.11 (§40).
- *
- *     node tools/imirce-inscne.js <fillteán|comhad> …        (turraing thirim)
- *     node tools/imirce-inscne.js --scríobh <fillteán|comhad> …
- *
- * Aon athrú meicniúil amháin:
- *
- *     seasmhach duine = …     →   duine seasmhach = …
- *     sealadach cuntas: T     →   cuntas shealadach: T   (más baininscneach é)
- *
- * Leanann an aidiacht a hainmfhocal sa Ghaeilge, agus is aidiachtaí iad
- * `seasmhach` agus `sealadach` (§40.2). Ní chuireann an uirlis seo séimhiú ar
- * bith: fágann sí gach aidiacht ina bunfhoirm, is é sin le rá go bhfógraíonn
- * sí gach ainm mar fhocal firinscneach. Ní féidir léi a fháil amach gur
- * baininscneach é `aois`, agus ní dhéanfaidh sí buille faoi thuairim air.
- * Rith `r336c <comhad> --paraidím` ina diaidh: tá colún inscne ann anois, agus
- * is é an liosta sin an obair atá fágtha do dhuine.
- *
- * Dhá riail faoin méid nach n-athraítear:
- *
- *   1. Ní bhaintear le prós. Is gnáthfhocail Ghaeilge iad `seasmhach` agus
- *      `suim` chomh maith le heochairfhocail, agus tá leath an stóir seo ina
- *      thráchtaireacht. Fágtar gach rud i ndiaidh `//` agus gach rud istigh i
- *      mbloc `/* … *​/` mar atá.
- *
- *   2. Athscríobhtar foinse R336 atá istigh i dteaghráin JavaScript.
- *      Tá thart ar thrí oiread níos mó fógraí i `test/*.js` ná mar atá sna
- *      comhaid `.r336`, agus is ann a bheadh botún i bhfolach. Tabhair faoi
- *      deara go bhfuil `\n` roimh eochairfhocal ina theorainn fhocail chomh
- *      maith: `'…\nseasmhach x = 3'` — sin an cás a chaill an chéad leagan
- *      den uirlis seo, agus sin an fáth a bhfuil sé luaite anseo.
- */
+// tools/imirce-inscne.js — word-order migration for céim 0.11 (§40).
+//
+//     node tools/imirce-inscne.js <fillteán|comhad> …        (dry run)
+//     node tools/imirce-inscne.js --scríobh <fillteán|comhad> …
+//
+// One mechanical change: `seasmhach duine` → `duine seasmhach` (attributive
+// adjective follows its noun in Irish). Never adds lenition, so every noun
+// comes out masculine — run `r336c <comhad> --paraidím` after to see the
+// gender column and fill it in by hand.
+//
+// Two things intentionally left untouched:
+//   1. Prose — `seasmhach`/`suim` appear as ordinary words too, and half
+//      this repo is commentary. Comments and block comments are skipped.
+//   2. R336 source embedded in JS strings (mostly in test/*.js), where a
+//      missed word boundary (`'…\nseasmhach x = 3'`) bit the first version
+//      of this tool.
 
 const fs = require('fs');
 const path = require('path');

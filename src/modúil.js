@@ -1,24 +1,16 @@
 'use strict';
 
-/*
- * modúil.js — the module graph.
- *
- * This is a compiler problem rather than a language one: `ó "./sonraí.r336"` was
- * already the right syntax (§5.9), and nothing here adds a keyword. What it adds
- * is that the thing on the far side of the preposition is now *known*.
- *
- * Order is forced by the grammar, not chosen for convenience. `lexeain` exists
- * because a reader of Irish parses VSO by already knowing which words are
- * verbs; a reader working from another text's vocabulary must have read that
- * text first. So a module's dependencies are compiled — or at least reduced to
- * a signature — before it is parsed, and the import list is read off the token
- * stream by `bunuis`, which needs no parse.
- *
- * The filesystem is injected. `tiomsaigh(foinse)` with no project is still the
- * whole pipeline for one string of source, which is what the test harness and
- * `--amharc` use, and in that mode every import is an `Iasacht` exactly as
- * before. Nothing about the module graph reaches into the language.
- */
+// modúil.js — the module graph.
+//
+// `ó "./sonraí.r336"` was already the right syntax; this file adds that the
+// far side is now known. A module's dependencies (or at least their
+// signatures) compile before it's parsed, since R336's VSO parsing needs the
+// imported verb lexicon up front. Import specifiers are read off tokens by
+// `bunuis`, no parse required.
+//
+// The filesystem is injected. With no project, `tiomsaigh(foinse)` is the
+// whole pipeline for one string of source and every import is `Iasacht`,
+// same as before the module graph existed.
 
 const fs = require('fs');
 const path = require('path');
@@ -76,7 +68,7 @@ class Tionscadal {
       const comhad = path.basename(abs);
       const toks = leacs(foinse, comhad);
 
-      // Resolve the origins before parsing: the lexicon has to exist first.
+      // Resolve origins before parsing: the lexicon must exist first.
       const modúil = new Map();
       const fillteán = path.dirname(abs);
       for (const b of bunuis(toks)) {

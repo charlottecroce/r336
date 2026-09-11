@@ -28,28 +28,11 @@ if (!spriocanna.length) {
 const comhaid = spriocanna.flatMap((s) =>
   (fs.existsSync(s) && fs.statSync(s).isDirectory() ? comhaidR336(s) : [s]));
 
-// One project across every target, so a shared dependency is compiled once and
-// so compilation order follows the graph rather than whatever readdirSync
-// happened to return.
+// One project across every target: a shared dependency compiles once, and
+// compile order follows the graph rather than readdirSync's whim.
 const tionscadal = new Tionscadal();
 
-/*
- * §25 — the province block.
- *
- * Four slots is the whole of the 0.7 game, so this is the first thing the
- * flag prints and the per-type list is demoted to whatever is left over in
- * exile. What a reader wants to know, in order: which provinces are gone,
- * who took them, what is still free, and what this file cannot reach.
- *
- * The refusal annotation is the useful new thing. A rivalry is absolute —
- * no treaty lifts it (E608) and the province does not help (E609) — so a
- * placed type that this file can never open is worth saying out loud before
- * the author writes the access and finds out.
- *
- * Read off the analyzer, like everything else here. There is no `__contae`
- * and no county name in the emitted JavaScript, and there is no province
- * either (§24.5).
- */
+/** `--graf`'s province block: which provinces are taken, by whom, what's free. */
 function cloCuigi(d) {
   const gafa = new Map();
   for (const t of d.cinealacha) {
@@ -69,21 +52,10 @@ function cloCuigi(d) {
   console.log(`    ${String(4 - saor)}/4 tógtha`);
 }
 
-/*
- * §31 — the copula block.
- *
- * The second paradigm in the language, and the first thing `--paraidím` has
- * had to print that is not initial mutation. Laid out the same way as the
- * eclipsed forms above it: the cells a syntactic position can demand are
- * shown plainly, and the cells that exist in Irish and have no slot here are
- * annotated *gan bhrí, §31* exactly as an eclipsed form is annotated *gan
- * bhrí, §12*. Showing them is the point — the reader can see what the
- * language is declining, which is the only way a deliberate absence is
- * distinguishable from an oversight.
- *
- * Two columns, because both allomorph rules are regressive: `mura` becomes
- * `murab` and `ní` prefixes h-, and each is triggered by the type that comes
- * after the copula rather than by anything before it.
+/**
+ * `--graf`'s copula block. Shows both live and dead cells (dead ones labelled
+ * "gan bhrí" like an eclipsed form) so a deliberate absence reads as
+ * deliberate rather than an oversight.
  */
 function cloChopail(c) {
   const stampa = (k) => (c.ionadaithe[k] ? '  (samhail)' : '');
@@ -101,8 +73,6 @@ async function príomh() {
   for (const c of comhaid) {
     if (bratacha.has('--crann') || bratacha.has('--amharc')
       || bratacha.has('--paraidím') || bratacha.has('--paraidim') || bratacha.has('--graf')) {
-      // Read through the project, so imported signatures are in scope and
-      // --paraidím shows an imported verb's real mood rather than Iasacht.
       const { js, ast, anailiseoir } = tionscadal.tiomsaigh(c);
       if (bratacha.has('--crann')) {
         console.log(JSON.stringify(ast, (k, v) =>
@@ -118,9 +88,6 @@ async function príomh() {
         for (const p of paraidimi(anailiseoir).filter((x) => x.foinse)) {
           console.log(`    ${p.lemma.padEnd(14)} ${p.kind.padEnd(9)} ${p.cineál}   ← ${p.foinse}`);
         }
-        // §24, §25 — provenance. Exile is annotated the way an eclipsed form
-        // is annotated in --paraidím: the thing is real, and it demands
-        // nothing.
         const d = duchasanna(anailiseoir);
         const áitiúil = d.contae === d.deoraíocht
           ? `${d.contae}  (gan áit, §24)`
@@ -145,18 +112,11 @@ async function príomh() {
             : '    (ceann ar bith)');
         }
 
-        // Who this file could never agree with, whether or not it tried.
         const naimhde = d.contae === d.deoraíocht ? [] : ctae.iomaitheoiri(d.contae);
         if (naimhde.length) {
           console.log(`\n  seanaighneas — ní dhéanann ${d.contae} comhaontú le ${naimhde.join(', ')}  (E608)`);
         }
       } else if (bratacha.has('--json')) {
-        // §40 — the structured mode. `--paraidím` now carries base form,
-        // lenited form, the reason lenition is impossible, the eclipsed form,
-        // the autonomous present and past, gender, the source module and a
-        // copula block. That is eight columns and it stopped fitting on a
-        // line, so the human output keeps the four that a reader scans and
-        // everything else is here, whole, for anything that wants to read it.
         console.log(JSON.stringify({
           comhad: c,
           ceangail: paraidimi(anailiseoir),
@@ -168,14 +128,9 @@ async function príomh() {
           const s = p.inséimhithe ? p.séimhithe : `${p.bun}  (ní féidir: ${p.cúis})`;
           const u = p.urúFéideartha ? `  [urú: ${p.urúFéideartha} — gan bhrí, §12]` : '';
           const ó = p.foinse ? `  ← ${p.foinse}` : '';
-          // The autonomous verb's own paradigm, on the same line as the
-          // mutation forms because it is a form of the same word (§37).
           const sa = p.saor
             ? `  [saor: ${p.saor}${p.saorCaite ? `; caite: ${p.saorCaite} — gan aimsir, §37` : ''}]`
             : '';
-          // §40 — the gender column, and the adjective form it demands. A
-          // starred gender was never declared: a parameter has no adjective
-          // slot, so it is masculine by default rather than by statement.
           const aid = p.sealadach ? 'sealadach' : 'seasmhach';
           const inscne = `${p.inscne === 'bain' ? 'bain' : 'fir'}${p.inscneRéamhshocraithe ? '*' : ' '}`;
           const foirmAid = require('../src/morphology').foirmAidiachta(aid, p.inscne);
@@ -189,9 +144,8 @@ async function príomh() {
     const { amach } = tionscadal.scriobh(c);
     if (!bratacha.has('--rith')) { console.error(`scríofa: ${amach}`); continue; }
     const mod = require(path.resolve(amach));
-    // Convention, not syntax: a module's top level is imperative but not
-    // ongoing, so anything needing `tar éis` lives in an entry point named
-    // `príomh` ("chief"), which the runner completes.
+    // Convention: `príomh` is where `tar éis` lives, since module top level
+    // is imperative but not ongoing.
     if (typeof mod.príomh === 'function') await mod.príomh();
   }
 }

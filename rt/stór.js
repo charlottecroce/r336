@@ -1,70 +1,34 @@
 'use strict';
 
-/*
- * rt/stór.js — teibíocht bunachair sonraí R336.
- *
- * Phase 6 of the spec says the database layer must be R336's own
- * abstraction sitting over SQLite, not a set of Prisma-shaped language
- * features. So this module owns the whole interface, and nothing above it
- * knows what a driver is:
- *
- *     R336  →  Stór  →  tiománaí  →  SQLite
- *
- * The interface is promise-returning even though `node:sqlite` is synchronous.
- * That is deliberate: a driver over a socket cannot be synchronous, so the
- * abstraction must be async or it will only ever fit the one driver it was
- * written against. On the R336 side that shows up as `ag` / `tar éis`,
- * which is exactly the progressive/perfect distinction those markers carry.
- *
- * Presented to R336 as `Iasacht`, reached with the ordinary `ó` relation:
- *
- *     stórlann seasmhach = ó "../rt/stór.js"
- *     stór     seasmhach = tar éis oscail ó stórlann(":memory:")
- *     rónna    seasmhach = tar éis ceistigh ó stór("SELECT …", [])
- *
- * ── 0.12: `faigh` ─────────────────────────────────────────────────────
- *
- * One method is new, `faigh`, and it is the only part of §41 that is here
- * rather than in the compiler. The compiler decides *that* a type has a table
- * and *what it is called*; this file decides how a table is read. That split
- * is the same one the file already had — `ceistigh` owns the query language
- * and `sonraí.r336` owns none of it — and it is what keeps the driver
- * vocabulary out of `src/`, which `test/run.js` greps for and now greps for in
- * `táblaí.js` too.
- *
- * `faigh` takes the table name, the column list and the type's tag from the
- * compiler, and hands back rows already tagged, so `__is` can read them.
- * Nothing here knows what a `struchtúr` is: it receives three strings and a
- * list of strings, and it does not ask what they mean.
- *
- * ── 0.13: `cuir`, agus an dearbhú colún ───────────────────────────────
- *
- * Two additions, and they answer two different things.
- *
- * `cuir` is `faigh`'s twin and arrives for the same reason: `cuir X i stór`
- * on the R336 side (§7.6) hands down a table name, a column list and a value,
- * and the INSERT is built here so that no SQL is written above this file.
- * There is no tag on the way out, because a row leaving does not need one —
- * the column list says which fields to read off the value. `faigh` passes one
- * because `__is` wants a tag on the way back in.
- *
- * `dearbhaighColúin` answers §7.6.6's standing question: what happens when the
- * table on disk disagrees with the type in the file. Until now, nothing — a
- * declared column that was not there came back as a raw driver error naming
- * neither the type nor the field. The compiler will still not *generate* a
- * schema, because that needs a type→column-type map, which is another
- * language's vocabulary shipped inside this one. Checking is not supplying:
- * this is the move §5.12.1 makes about the gender dictionary, and it is the
- * reason the refusal to generate can stay a refusal rather than a gap.
- *
- * The check is cached per table per connection, so it costs one extra read the
- * first time a table is touched and nothing after that. **The interrogation
- * itself belongs to the driver, not to this class**: `PRAGMA table_info` is
- * SQLite's, not SQL's, and a driver over a socket would answer the question
- * some other way. So `colúin` joins `nasc`, `gach`, `rith`, `scéim` and `dún`
- * in the driver table below, which is exactly where everything
- * driver-specific already lives.
- */
+// rt/stór.js — teibíocht bunachair sonraí R336.
+//
+// This module owns the whole DB interface; R336 code never sees a driver:
+//
+//     R336  ->  Stór  ->  tiománaí  ->  SQLite
+//
+// Promise-returning even though node:sqlite is synchronous, so R336's
+// ag/tar éis (async/await) fit any future driver, not just this one.
+// Reached via `ó`:
+//
+//     stórlann seasmhach = ó "../rt/stór.js"
+//     stór     seasmhach = tar éis oscail ó stórlann(":memory:")
+//     rónna    seasmhach = tar éis ceistigh ó stór("SELECT …", [])
+//
+// `faigh` (0.12) is the only part of §41 that lives here rather than in the
+// compiler: the compiler decides a type has a table and what it's called,
+// this file decides how to read it. Takes table name, columns and the type's
+// tag; hands back tagged rows so `__is` can read them.
+//
+// `cuir` (0.13) is `faigh`'s twin for writes: table name, columns, and a
+// value instead of a tag (no tag needed going out — the column list says
+// what to read off the value).
+//
+// `dearbhaighColúin` (0.13) answers what happens when the table on disk
+// disagrees with the declared type: it refuses rather than silently
+// dropping a missing field. Checking is not the same as generating a
+// schema — that would need a type→column-type map, which is a second
+// language's vocabulary this project isn't taking on. Cached per table per
+// connection.
 
 const TIOMANAITHE = Object.create(null);
 
@@ -82,10 +46,8 @@ TIOMANAITHE.sqlite = {
   },
   scéim(db, sql) { db.exec(sql); },
   dún(db) { db.close(); },
-  // 0.13 — the columns a table actually has. `PRAGMA table_info` is SQLite's
-  // own and belongs here for that reason; a different driver answers the same
-  // question with a different sentence. An empty list means no such table,
-  // which the caller reports as such rather than guessing.
+  // The columns a table actually has, via SQLite's own PRAGMA. A different
+  // driver would answer this some other way.
   colúin(db, tábla) {
     return db.prepare(`PRAGMA table_info(${aitheantóirLuaite(tábla)})`)
       .all()
@@ -99,45 +61,33 @@ class Stór {
     this.tiománaí = tiománaí;
     this.db = db;
     this.conair = conair;
-    // tábla → Set de na colúin atá air. Ní líontar é ach nuair a bhaintear
-    // úsáid as tábla den chéad uair.
+    // tábla → Set of columns it has. Filled lazily on first use.
     this.scéimeanna = new Map();
   }
 
-  /** Read. A query asks a question, so on the R336 side it is a feidhm. */
+  /** Read. Asks a question, so `feidhm` on the R336 side. */
   async ceistigh(sql, params = []) {
     return this.tiománaí.gach(this.db, sql, params).map(rónNormalaithe);
   }
 
-  /** Write. An insert obeys an instruction, so on that side it is a gníomh. */
+  /** Write. Obeys an instruction, so `gníomh` on the R336 side. */
   async feidhmigh(sql, params = []) {
     return this.tiománaí.rith(this.db, sql, params);
   }
 
   async scéim(sql) {
     this.tiománaí.scéim(this.db, sql);
-    // A statement that may have created or altered a table invalidates what we
-    // believe about every table. Cheap to drop, and the alternative is a cache
-    // that is quietly wrong exactly once, on the run where the schema changed.
+    // A schema-changing statement invalidates everything we believe about
+    // every table — cheap to drop, cheap not to guess wrong once.
     this.scéimeanna.clear();
   }
 
   async dún() { this.tiománaí.dún(this.db); }
 
   /**
-   * §7.6.6 — the declared columns are on the table, or the program stops here
-   * and says which one is not.
-   *
-   * The compiler knows the type's field list and nothing about the disk; the
-   * disk knows its columns and nothing about the type. This is the only place
-   * the two are ever in the same room, so it is the only place the question
-   * can be asked. It refuses rather than adapting: a read that silently
-   * dropped a missing field would hand R336 a value of a type it is not.
-   *
-   * Extra columns on disk are not an error and stay invisible — `id` in
-   * `feidhmchlár/` is exactly that, and a `struchtúr` states every field it
-   * has, so a row carrying one the type never declared is not a value of that
-   * type but a row that happens to contain one.
+   * The declared columns must be on the table, or we refuse and say which
+   * one isn't. Extra columns on disk stay invisible — a struct states every
+   * field it has, so a row with an unfielded extra isn't a value of that type.
    */
   dearbhaighColúin(tábla, réimsí) {
     let atá = this.scéimeanna.get(tábla);
@@ -160,26 +110,10 @@ class Stór {
 
   /**
    * `tar éis faigh Duine as stór` — every row of one table, typed.
-   *
-   * Three arguments, all three written by the backend and none of them by the
-   * programmer: the table name (derived from the type name in `táblaí.js`),
-   * the declared field names in declaration order, and the type's tag.
-   *
-   * A tag rather than a constructor, because an imported type's `$nua` is not
-   * in scope in the file doing the reading, and because the tag is all `__is`
-   * ever wanted. This file already sets `__cineál` on itself, so it is not
-   * learning the convention here.
-   *
-   * The column list is explicit rather than `*` so that what comes back is
-   * exactly the type and nothing else. A table with an `id` column the type
-   * does not declare stays readable, and `id` stays invisible to R336, which
-   * is right: a `struchtúr` states every field it has, so a row carrying a
-   * field the type never declared is not a value of that type — it is a row
-   * that happens to contain one.
-   *
-   * Identifiers are quoted rather than trusted. They arrive from R336 lemmas
-   * and so cannot currently contain anything dangerous, but "cannot currently"
-   * is a property of the lexer and this file is not the lexer.
+   * Table name, field list and tag all come from the backend (derived from
+   * the declared type), never from the programmer. A tag rather than a
+   * constructor: an imported type's `$nua` isn't in scope in the reading file.
+   * Identifiers are quoted rather than trusted.
    */
   async faigh(tábla, réimsí, cinéal) {
     this.dearbhaighColúin(tábla, réimsí);
@@ -194,18 +128,9 @@ class Stór {
 
   /**
    * `cuir duine i stór` — one row of one table, from a typed value.
-   *
-   * `faigh`'s twin, and deliberately its mirror image: the same table name,
-   * the same column list in the same declared order, and the value instead of
-   * the tag. Reading the fields off the value in that order is what keeps the
-   * declared field list the single source of truth in both directions — there
-   * is no second place to write a column list and therefore no second place
-   * for one to drift.
-   *
-   * One row per call, because the R336 side cannot ask for more: `cuir … i …`
-   * is a frame and not a verb, so `déan` cannot distribute it over a list.
-   * That is what defers the transaction story honestly rather than by
-   * omission (§7.6.6).
+   * `faigh`'s mirror: same table, same column order, value instead of tag.
+   * One row per call — `cuir … i …` is a frame, not a verb, so `déan` can't
+   * distribute it. Bulk write is simply not expressible yet.
    */
   async cuir(tábla, réimsí, luach) {
     this.dearbhaighColúin(tábla, réimsí);
@@ -219,10 +144,7 @@ class Stór {
   }
 }
 
-/**
- * node:sqlite hands back null-prototype rows. R336 reads members through
- * `ó`, which compiles to a property read, so a plain object is what we want.
- */
+/** node:sqlite hands back null-prototype rows; normalise to plain objects. */
 function rónNormalaithe(rón) {
   return Object.assign({}, rón);
 }
@@ -239,7 +161,7 @@ async function oscail(conair, ainmTiománaí = 'sqlite') {
   return new Stór(t, t.nasc(conair), conair);
 }
 
-/** First row, or undefined. Handy at the boundary; not a language feature. */
+/** First row, or undefined. */
 function céad(rónna) { return rónna && rónna.length ? rónna[0] : undefined; }
 
 module.exports = { oscail, céad, Stór, TIOMANAITHE };

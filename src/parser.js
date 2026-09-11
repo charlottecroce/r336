@@ -1,42 +1,31 @@
 'use strict';
 
-/*
- * parsálaí.js — recursive descent.
- *
- * The AST keeps grammatical categories rather than machine operations.
- * `ainm ó dhuine` becomes a Sealbhach with a `ball` (member) and a
- * `sealbhóir` (possessor), not a MemberAccess; `scríobh x` becomes an Ordú
- * (command), not a call. Lowering happens in the backend and nowhere earlier.
- *
- * Precedence, loosest to tightest:
- *   is                        copula, non-associative, type on the right
- *   == != < > <= >=
- *   + -
- *   * / %
- *   bí  -  tar éis  ó"…"      unary
- *   call
- *   ó                         right-associative possession
- *   primary
- *
- * `ó` binds tighter than call, which is the one precedence choice that is
- * argued rather than assumed: in Irish `ó dhuine` is a constituent of the
- * noun phrase, so `beannacht ó dhuine(x)` applies the argument to the whole
- * phrase — a method call. The cost is that `ainm ó faigh(id)` needs parens
- * around the call. See CONTEXT.md §5.3.
- */
+// parsálaí.js — recursive descent.
+//
+// The AST keeps grammatical categories, not machine operations: `ainm ó
+// dhuine` is a Sealbhach with `ball`/`sealbhóir`, not a MemberAccess;
+// `scríobh x` is an Ordú, not a call. Lowering happens only in codegen.
+//
+// Precedence, loosest to tightest:
+//   is                        copula, non-associative, type on the right
+//   == != < > <= >=
+//   + -
+//   * / %
+//   bí  -  tar éis  ó"…"      unary
+//   call
+//   ó                         right-associative possession
+//   primary
+//
+// `ó` binds tighter than call: in Irish `ó dhuine` is a constituent of the
+// noun phrase, so `beannacht ó dhuine(x)` applies the argument to the whole
+// phrase (a method call). Cost: a call inside a possessive chain needs
+// parens — `ainm ó faigh(id)`.
 
 const { earraid } = require('./diagnostics');
 const ctae = require('./contaetha');
 const mf = require('./morphology');
 
-/**
- * §5.10 — the adjectives, written form → base form.
- *
- * `bhfuil` is normalised to `bí` and its written surface handed on to be
- * checked; so are `más` and `murab`; so are these. The parser's job is to know
- * that `sheasmhach` is `seasmhach`. Whether the noun in front of it licensed
- * the séimhiú is agreement, and agreement is the analyzer's.
- */
+/** §5.10 — the adjectives, written form → base form. */
 const AIDIACHTAI_STAIDE = new Map([
   ['seasmhach', 'seasmhach'], ['sheasmhach', 'seasmhach'],
   ['sealadach', 'sealadach'], ['shealadach', 'sealadach'],
@@ -47,34 +36,21 @@ const AIDIACHTAI_INSCNE = new Map([
 ]);
 const isAidiachtStaide = (t) => t.cinéal === 'KW' && AIDIACHTAI_STAIDE.has(t.luach);
 const isAidiachtInscne = (t) => t.cinéal === 'KW' && AIDIACHTAI_INSCNE.has(t.luach);
-/** `{ scriofa, bun }` — what was written, and the adjective it is a form of. */
+/** `{ scriofa, bun }` — what was written, and the adjective it's a form of. */
 const aidiacht = (t, tabla) => ({ scriofa: t.luach, bun: tabla.get(t.luach), ionad: t.ionad });
 
 /**
- * §7.6 — the store marker, contextual rather than reserved.
- *
- * `stór` is not in EOCHAIRFHOCAIL and must not be: it is bound as an ordinary
- * name in `feidhmchlár/sonraí.r336`, in `bealaí.r336` and in
- * `examples/aspect.r336`, and reserving it would break all three for nothing.
- * It is read as an `IDENT` in one slot and nowhere else, which is the same
- * treatment `a` gets in `parsailBunuil`.
- *
- * The slot sits after the gender adjective and before `as`, and that order is
- * decided rather than discovered: the adjective agrees with the noun so it
- * stays beside it, the marker is engineering and is not Irish so it sits
- * outside the grammatical material, and provenance closes as it already did.
- * Any other order falls out of the slot and is an ordinary E401.
+ * §7.6 — the `stór` marker, contextual rather than reserved: it's bound as
+ * an ordinary identifier in several files, so reserving it would break them.
+ * Read as IDENT only in the struct-declaration slot.
  */
 const MARC_STOIR = 'stór';
 const marcStoir = (t) => t.cinéal === 'IDENT' && t.luach === MARC_STOIR;
 
 /**
- * Tokens that can begin an expression, for deciding a command's arity.
- *
- * `ó` is deliberately absent and handled by the caller: bare `ó` begins an
- * expression only before a string (`ó "express"`, the elliptical prepositional
- * phrase). Before anything else it is the infix of possession and needs a left
- * operand, so it cannot start one.
+ * Tokens that can begin an expression. `ó` is deliberately absent: bare `ó`
+ * starts an expression only before a string (`ó "express"`); anywhere else
+ * it's the infix of possession and needs a left operand.
  */
 function tosachSloinn(t, aran = null) {
   if (t.cinéal === 'KW' && t.luach === 'ó') return !!aran && aran.cinéal === 'STR';
@@ -88,8 +64,8 @@ function tosachSloinn(t, aran = null) {
 }
 
 /**
- * A trailing `má` is the block's value when every branch produces one, and the
- * chain is closed by a bare `mura`. Branches may contain statements: the
+ * A trailing `má` is the block's value when every branch produces one, and
+ * the chain ends in a bare `mura`. Branches may contain statements; the
  * backend hoists them into a temporary.
  */
 function slonnAbalta(m) {
@@ -130,16 +106,11 @@ class Parsalai {
   }
 
   /**
-   * `Teaghrán`, `Liosta(Duine)`, and the type of a verb.
+   * `Teaghrán`, `Liosta(Duine)`, and verb types. A verb's type is its
+   * declaration with the name abstracted away.
    *
-   * A verb's type is its declaration with the name abstracted away, which is
-   * what a type is. Mood is a lexical property of the verb (§5.4), so it is
-   * part of what the verb *is* and therefore part of its type: `feidhm(T) -> U`
-   * and `gníomh(T)` are different types, not one type with a flag. `ag` sits
-   * where it sits in a declaration, because aspect marks the verb too.
-   *
-   *   feidhm(Uimhir) -> Uimhir      an indicative of one argument
-   *   gníomh(Teaghrán)              an imperative; no toradh, as in §E404
+   *   feidhm(Uimhir) -> Uimhir      indicative, one Uimhir param
+   *   gníomh(Teaghrán)              imperative; no toradh (E404)
    *   ag feidhm(Iasacht) -> Bool    ongoing
    */
   parsailTagairtCineail() {
@@ -176,12 +147,7 @@ class Parsalai {
       }
       this.suil('NOD', ')');
     }
-    // §5.11 — `Uimhir ar Earráid`. The affliction belongs to the type reference
-    // rather than to the signature, so it is written wherever a type is
-    // written: a return, a parameter, a declared binding, a list element. A
-    // verb that takes an afflicted argument is opting in to receive one, and
-    // that is the whole of what "protective only where the verb declared it"
-    // has to mean on the receiving side.
+    // §5.11 — `Uimhir ar Earráid`, written wherever a type is written.
     if (this.seiceail('KW', 'ar')) {
       this.i++;
       ref.dochar = this.parsailTagairtCineail();
@@ -190,32 +156,17 @@ class Parsalai {
   }
 
   /**
-   * `as Corcaigh`, `as Dún na nGall` — a county name after the preposition.
-   *
-   * Several county names are more than one word, and that is a fact about the
-   * table rather than about the tokenizer, so it is handled here instead of by
-   * a compound-keyword rule like `tar éis`. Identifiers are read greedily
-   * while the phrase so far still begins some county name. No name is a proper
-   * prefix of another (contaetha.js checks that), so the longest read is
-   * unambiguous and the parser never backtracks.
-   *
-   * Nothing here parses `an` or `na`. The article is not implemented and is
-   * not being implemented; *An Mhí* and *Dún na nGall* are opaque sequences in
-   * a lookup table (§5.8, and Part 4 of the 0.6 brief).
-   *
-   * Resolution belongs to the analyzer, which owns government and agreement.
-   * The parser only collects the words.
+   * `as Corcaigh`, `as Dún na nGall` — a possibly-multi-word county name.
+   * Identifiers are read greedily while the phrase remains a prefix of some
+   * name (safe since no name is a proper prefix of another). Resolution
+   * belongs to the analyzer; the parser only collects the words.
    */
   /**
-   * A bare county name. `slánú` is the error-path salvage: if the phrase read
-   * is not a whole name, keep taking identifiers so the diagnostic can report
-   * what was actually written — `as Dún na Sí` should name the phrase rather
-   * than stop at "Dún na" and then die on a stray word with a syntax error.
-   * A complete name never enters it, so it cannot swallow the statement after
-   * a good one.
-   *
-   * It is switched off for the first name of a `comhaontú`, where another name
-   * follows and swallowing it would turn a collected E602 into a thrown E401.
+   * `slánú` is error-path salvage: if the phrase read isn't a whole name,
+   * keep taking identifiers so the diagnostic reports what was actually
+   * written, instead of dying on a stray word after a partial match. A
+   * complete name never enters it. Off for the first name of `comhaontú`,
+   * where swallowing the second name would turn E602 into a parse error.
    */
   parsailAinmContae(slánú = true) {
     const tus = this.suil('IDENT');
@@ -223,14 +174,8 @@ class Parsalai {
     while (this.seiceail('IDENT') && ctae.isReamhran([...focail, this.peek().luach])) {
       focail.push(this.toks[this.i++].luach);
     }
-    // Recovery, so that an unknown name is reported whole rather than one
-    // word at a time. It must not run past the start of the next statement —
-    // and since §5.10 a statement can begin with a bare identifier, which is
-    // exactly what this loop eats. `IDENT` followed by a state adjective is a
-    // declaration and nothing else (§5.10), so that is where it stops. This
-    // is the ambiguity §7.2 warned about arriving from the other direction:
-    // the county reader was safe only while every statement began with a
-    // keyword.
+    // Stops at a state adjective, since IDENT + adjective is always a
+    // declaration (§5.10) and never part of a county name.
     while (slánú && !ctae.isContae(focail.join(' ')) && this.seiceail('IDENT')
       && !isAidiachtStaide(this.peek(1))) {
       focail.push(this.toks[this.i++].luach);
@@ -260,19 +205,13 @@ class Parsalai {
   parsailStruchtur() {
     this.suil('KW', 'struchtúr');
     const ainm = this.suil('IDENT');
-    // §5.10 — `struchtúr Duine firinscneach as Corcaigh`. A type's name is an
-    // ordinary Irish noun and has a gender like any other, but nothing in the
-    // language puts an adjective after it, so the gender has to be stated. It
-    // is stated by an adjective, which then agrees with the noun it declares:
-    // `Duine firinscneach`, `Aois bhaininscneach`. The declaration checks
-    // itself, and E526 is what happens when it does not.
+    // §5.10 — `struchtúr Duine firinscneach as Corcaigh`: type names carry
+    // gender too, but nothing else in the grammar puts an adjective after a
+    // type name, so it's stated explicitly and checks itself (E526).
     const inscne = isAidiachtInscne(this.peek())
       ? aidiacht(this.toks[this.i++], AIDIACHTAI_INSCNE) : null;
-    // §7.6 — `struchtúr Duine firinscneach stór as Corcaigh`. Struct only.
-    // There is no slot for it on a `suim` or a `malairt`, and the absence is
-    // the whole answer rather than a missing check: a sum does not enumerate
-    // rows, and a table is a possession of an identified thing (E509's
-    // argument). Writing one is E401 because the grammar has nowhere to put it.
+    // §7.6 — `stór`, struct only (no slot on suim/malairt: a sum doesn't
+    // enumerate rows, same reason it can't carry a method — E509).
     const stor = marcStoir(this.peek()) ? this.toks[this.i++].ionad : null;
     const contae = this.seiceail('KW', 'as') ? this.parsailAsFrasa() : null;
     const reimsi = this.parsailReimsi();
@@ -280,19 +219,12 @@ class Parsalai {
   }
 
   /**
-   * `suim Toradh firinscneach as Corcaigh { Ceart { duine: Duine } Earráid { … } }`
+   * `suim Toradh firinscneach as Corcaigh { Ceart { duine: Duine } Easpa { … } }`
    *
-   * A variant is a name with fields, and the fields are parsed by exactly the
-   * loop `struchtúr` uses — a variant body *is* a struct body, so there is no
-   * second record syntax in the language and nothing here to keep in step.
-   *
-   * Payloads are named rather than positional (`Ceart { duine: Duine }`, not
-   * `Ceart(Duine)`). R336's only accessor is `ó` plus a member name and
-   * there is no tuple type, so a positional payload would have to invent a
-   * field name at the point of use; writing it is better than inventing it.
-   *
-   * `as` sits on the sum and never on a variant. The sum is the identity that
-   * claims a province; a variant is a name that identity goes by (§6).
+   * A variant body is parsed by the same field-loop struct uses — no second
+   * record syntax. Payloads are named, not positional: `ó` + field name is
+   * the only accessor and there's no tuple type. `as` sits on the sum only,
+   * never a variant (the sum claims the province).
    */
   parsailSuim() {
     this.suil('KW', 'suim');
@@ -304,8 +236,7 @@ class Parsalai {
     const malairti = [];
     while (!this.seiceail('NOD', '}')) {
       const m = this.suil('IDENT');
-      // A variant declares its own gender: it is its own noun in the type
-      // namespace (§6), and `Easpa` is feminine whatever `Toradh` is.
+      // A variant declares its own gender — it's its own noun in the type namespace.
       const mInscne = isAidiachtInscne(this.peek())
         ? aidiacht(this.toks[this.i++], AIDIACHTAI_INSCNE) : null;
       malairti.push({ ainm: m.luach, ionad: m.ionad, inscne: mInscne, reimsi: this.parsailReimsi() });
@@ -330,10 +261,10 @@ class Parsalai {
   }
 
   /**
-   * `feidhm f(x: T) -> U { … }`      an indicative: produces a nominal
-   * `gníomh g(x: T) { … }`           an imperative: performs, returns nothing
-   * `feidhm m ó Dhuine(féin) -> U`   a method: belongs to a category
-   * `ag feidhm …` / `ag gníomh …`    ongoing: the action is under way
+   * `feidhm f(x: T) -> U { … }`      indicative: produces a nominal
+   * `gníomh g(x: T) { … }`           imperative: performs, returns nothing
+   * `feidhm m ó Dhuine(féin) -> U`   a method
+   * `ag feidhm …` / `ag gníomh …`    ongoing
    */
   parsailBriathar(leanunach) {
     const modh = this.seiceail('KW', 'gníomh') ? 'ordaitheach'
@@ -342,9 +273,8 @@ class Parsalai {
     const ainm = this.suil('IDENT');
 
     let faighteoir = null;
-    // An autonomous verb has no agent, and a receiver is an agent: `féin` is
-    // exactly the thing the form refuses to express. So it takes no `ó`
-    // phrase, and this is a grammatical refusal rather than a restriction.
+    // The autonomous has no agent, and a receiver is an agent — refused
+    // grammatically, not as a policy restriction.
     if (modh === 'saor' && this.seiceail('KW', 'ó')) {
       throw earraid('E520', this.peek().ionad, ainm.luach);
     }
@@ -356,14 +286,13 @@ class Parsalai {
     this.suil('NOD', '(');
     const params = [];
     while (!this.seiceail('NOD', ')')) {
-      // `sealadach` on a parameter is permission, not storage: it says the
-      // callee may change what the caller passed. It follows its noun for the
-      // same reason every other attributive adjective now does (§5.10).
+      // `sealadach` on a parameter: permission for the callee to mutate
+      // what the caller passed, not storage.
       const p = this.suil('IDENT');
       const aid = isAidiachtStaide(this.peek()) ? aidiacht(this.toks[this.i++], AIDIACHTAI_STAIDE) : null;
       const sealadach = !!aid && aid.bun === 'sealadach';
-      // The receiver of a method carries its type in the `ó` phrase, so it is
-      // the one parameter written bare: `feidhm beannacht ó Dhuine(féin)`.
+      // A method's receiver carries its type via the `ó` phrase, so it's
+      // written bare: `feidhm beannacht ó Dhuine(féin)`.
       let cineal = null;
       if (this.meaitseail('NOD', ':')) cineal = this.parsailTagairtCineail();
       else if (!(faighteoir && params.length === 0)) this.suil('NOD', ':');
@@ -379,9 +308,8 @@ class Parsalai {
       toradh = this.parsailTagairtCineail();
     }
 
-    // §5.11 — an `ar` phrase here has already been swallowed by the return type
-    // if there was one. What is left is `gníomh f(…) ar Earráid`: an
-    // affliction with nothing to sit on.
+    // Any `ar` phrase here has already been swallowed by the return type,
+    // if any — what's left has nothing to be afflicted (E522).
     if (this.seiceail('KW', 'ar')) throw earraid('E522', this.peek().ionad, ainm.luach);
 
     return {
@@ -397,7 +325,7 @@ class Parsalai {
     const raitis = [];
     while (!this.seiceail('NOD', '}') && !this.seiceail('EOF')) raitis.push(this.parsailRaiteas());
     this.suil('NOD', '}');
-    // Rust-style: a trailing expression statement is the value of the block.
+    // Rust-style: a trailing expression statement is the block's value.
     let luach = null;
     const deireanach = raitis[raitis.length - 1];
     if (deireanach && deireanach.cineál === 'Slonn') { luach = deireanach.slonn; raitis.pop(); }
@@ -419,11 +347,8 @@ class Parsalai {
       this.i++;
       return this.parsailBriathar(true);
     }
-    // A declaration is `IDENT` followed by a state adjective, and nothing else
-    // in the language produces that shape — two identifiers side by side are
-    // not a legal expression (§5.7), and a state adjective is a keyword. So
-    // this is settled by shape, and it is settled *before* the VSO test,
-    // because a declaration is not a command however the noun is spelled.
+    // IDENT + state adjective is always a declaration, decided by shape
+    // before the VSO check, since it's never a command.
     if (this.seiceail('IDENT') && isAidiachtStaide(this.peek(1))) return this.parsailCeangal();
     if (this.seiceail('KW', 'cuir')) return this.parsailCuir();
     if (this.seiceail('KW', 'má') || this.seiceail('KW', 'más')
@@ -431,7 +356,7 @@ class Parsalai {
       const m = this.parsailMa(); m.slonn = false; return m;
     }
 
-    // VSO: a statement beginning with a known imperative verb is a command.
+    // VSO: a statement beginning with a known imperative is a command.
     if (this.seiceail('IDENT') && this.gniomhartha.has(this.peek().luach)) return this.parsailOrdu();
 
     const slonn = this.parsailSlonn();
@@ -439,13 +364,9 @@ class Parsalai {
   }
 
   /**
-   * A command, optionally with the prepositional phrase its verb governs.
-   *
-   * Irish verbs select a preposition lexically — *déan scrúdú **ar***, *cuir
-   * uisce **ar***, *éist **le***. `cuir … ar …` was already that pattern with
-   * its own parse rule; this generalises it, so the frame is a property of the
-   * verb in the lexicon rather than a one-off in the grammar. The parser
-   * collects the phrase; the analyzer asks the verb whether it wanted one.
+   * A command, optionally with the prepositional phrase its verb governs
+   * (Irish verbs select a preposition lexically — the parser collects the
+   * phrase, the analyzer asks the verb whether it wanted one).
    */
   parsailOrdu() {
     const ainm = this.toks[this.i++];
@@ -453,8 +374,8 @@ class Parsalai {
     if (tosachSloinn(this.peek(), this.peek(1))) {
       do { argointi.push(this.parsailSlonn()); } while (this.meaitseail('NOD', ','));
     }
-    // `cuirDuine ó shonraí …`. An imported verb joins the lexicon unqualified,
-    // because `ó` builds noun phrases and E501 says an imperative is not one.
+    // Imported verbs join unqualified — `ó` builds noun phrases, and E501
+    // says an imperative isn't one.
     if (this.seiceail('KW', 'ó')) throw earraid('E516', this.peek().ionad, ainm.luach);
     let fras = null;
     const kwAr = this.meaitseail('KW', 'ar');
@@ -463,13 +384,8 @@ class Parsalai {
   }
 
   /**
-   * §5.10 — `duine seasmhach = …`, `aois sheasmhach = 20`.
-   *
-   * The noun comes first because Irish puts an attributive adjective after
-   * its noun, and `seasmhach` and `sealadach` are attributive adjectives:
-   * they say what kind of thing this binding is, not what to do with it. The
-   * pre-0.11 order wrote English word order in Irish words, which is the same
-   * fault §5.5 corrected in the copula and it is corrected the same way.
+   * §5.10 — `duine seasmhach = …`, `aois sheasmhach = 20`. The noun comes
+   * first since Irish puts attributive adjectives after their noun.
    */
   parsailCeangal() {
     const ainm = this.suil('IDENT');
@@ -485,32 +401,12 @@ class Parsalai {
   }
 
   /**
-   * `cuir <luach> ar <sprioc>` — "put this on that". Irish expresses a state
-   * an entity is in with `ar` (tá ocras orm), and `cuir X ar Y` is the
-   * ordinary way to give something a state. It is an imperative, so mutation
-   * is a command and the existing mood rules confine it to `gníomh`.
-   *
-   * §7.6, 0.13 — and `cuir <luach> i <stór>`, "put this in that", which is
-   * the store write.
-   *
-   * A second frame rather than a third verb, and no new keyword. An Irish
-   * light verb selects its preposition lexically, which is already this
-   * language's argument for `déan … ar …` (§12); a light verb selecting two
-   * is that pattern doing more work, not a new mechanism. *cuir i dtaisce* is
-   * the idiom, so the reading is as ordinary as `faigh X as Y` is. And §5.8
-   * stays literally true — `déan` and `cuir` are still the only two built-ins
-   * that take an **`ar`**-phrase as a verb frame, because this frame is not
-   * one.
-   *
-   * The preposition decides what follows it, so the branch is here rather
-   * than in the analyzer. `ar` takes a possessive chain, because its target
-   * is a binding that is about to change; `i` takes an ordinary expression,
-   * because its target is an argument that is not.
-   *
-   * `in` is normalised to `i` and the written form is carried for the
-   * analyzer to check, exactly as `bhfuil`, `más`, `murab` and the lenited
-   * state adjectives are. The particle's form is conditioned on the word
-   * after it (§5.2, `mf.mirI`), so it is agreement and not spelling.
+   * `cuir <luach> ar <sprioc>` — a state change as a command. `cuir <luach>
+   * i <stór>` (0.13) is the store write: same verb, second preposition/frame
+   * ("cuir i dtaisce" is the idiom). The preposition decides what follows:
+   * `ar` takes a possessive chain (mutation target), `i` takes an ordinary
+   * expression (argument). `in` is normalised to `i`, written form carried
+   * for the analyzer to check, same as `bhfuil`/`más`.
    */
   parsailCuir() {
     const kw = this.suil('KW', 'cuir');
@@ -532,20 +428,12 @@ class Parsalai {
 
   /**
    * `má <c> { }` / `mura <c> { }` / a chain closed by a bare `mura { }`.
-   *
-   * Irish has no word for "else". It has `má` (if) and `mura` (if…not), and
-   * writes the second clause with its predicate elided: "Má tá sé fuar, dún
-   * an doras. Mura bhfuil, fág oscailte é." A bare `mura` is that ellipsis.
+   * Irish has no word for "else" — `mura` on its own is the elided negative clause.
    */
   parsailMa() {
     const kw = this.toks[this.i++];               // má | más | mura | murab
     const diultach = kw.luach === 'mura' || kw.luach === 'murab';
-    // The written form of the copula, kept for the analyzer. The particle is
-    // normalised here because `más` *is* `má` syntactically — it is one word
-    // only because Irish writes the fusion — so nothing downstream should
-    // have to know which of the two was on the page. That is the same split
-    // `bhfuil` gets: the parser sees the particle, the analyzer checks the
-    // form (§5.5).
+    // Normalised here; the analyzer checks the written form (§5.5).
     const copail = kw.luach;
     let coinniall = null;
     if (!this.seiceail('NOD', '{')) {
@@ -558,8 +446,7 @@ class Parsalai {
       throw earraid('E401', kw.ionad, '"{"', '"coinníoll"');
     } else if (kw.luach === 'murab') {
       // A bare `mura` is the elided second clause and is good Irish. A bare
-      // `murab` is not: the -b exists only to meet a following vowel, so
-      // there has to be something following.
+      // `murab` is not — the -b exists only to meet a following vowel.
       throw earraid('E401', kw.ionad, '"{"', '"coinníoll"');
     }
     const ansin = this.parsailBloc();
@@ -572,31 +459,15 @@ class Parsalai {
   }
 
   /**
-   * Is the condition a copular clause rather than an ordinary expression?
-   *
-   * Irish word order answers this without a symbol table. A copular clause is
-   * PARTICLE + PREDICATE + SUBJECT and contains no verb, so two juxtaposed
-   * expressions follow the particle; every other condition is a single
-   * expression, and juxtaposition is not otherwise legal here. Two tokens are
-   * enough:
+   * Is the condition a copular clause? Decided by shape, not lookup: a
+   * copular clause is PARTICLE + PREDICATE + SUBJECT with no verb, so two
+   * juxtaposed expressions follow the particle — juxtaposition is otherwise
+   * illegal here. `(` is excluded explicitly: `f(x)` looks like two tokens
+   * but is one call.
    *
    *   más Ceart toradh     IDENT IDENT   → copular
-   *   más Ceart cuardaigh(20)  IDENT IDENT → copular; the subject is a call
    *   mura aois > 17       IDENT OP      → ordinary
-   *   mura duine {         IDENT NOD     → ordinary
-   *   má tá duine          KW            → ordinary
-   *   má óg(duine) {       IDENT NOD "(" → ordinary; this is one call, not two
-   *   má aosta ó dhuine()  IDENT KW      → ordinary
-   *
-   * The second token has to *open* a subject, which means an identifier, a
-   * number or a string. Anything else — an operator, a bracket, a keyword —
-   * means the two words were one expression all along. `(` is the case worth
-   * naming: `f(x)` is a call and reads as juxtaposition if you only count
-   * tokens, so it is excluded by shape rather than by knowing what `f` is.
-   *
-   * Note what this does *not* do: it never asks whether the first identifier
-   * names a type. Deciding by shape rather than by lookup is what keeps this
-   * agreement rather than inference (§6).
+   *   má óg(duine) {       IDENT NOD "(" → ordinary (one call)
    */
   copailFaoiMhir() {
     if (!this.seiceail('IDENT')) return false;
@@ -614,7 +485,7 @@ class Parsalai {
   // ── sloinn ────────────────────────────────────────────────────────────
   parsailSlonn() { return this.parsailCopail(); }
 
-  /** `x is Cineál` — the right operand is a *type*, not an expression (§5.5). */
+  /** `x is Cineál` — the right operand is a type, not an expression. */
   parsailCopail() {
     const clé = this.parsailComparaid();
     const kw = this.meaitseail('KW', 'is');
@@ -636,19 +507,14 @@ class Parsalai {
   }
 
   parsailComparaid() { return this.denartha(this.parsailSuimiu, ['==', '!=', '<', '>', '<=', '>=']); }
-  // `suimiú` is the operation; `suim` is the type (§6). They were the same
-  // word here until 0.8, when the keyword arrived and took the plain name.
   parsailSuimiu() { return this.denartha(this.parsailIolrach, ['+', '-']); }
   parsailIolrach() { return this.denartha(this.parsailAonartha, ['*', '/', '%']); }
 
   parsailAonartha() {
     if (this.seiceail('KW', 'bí') || this.seiceail('KW', 'tá') || this.seiceail('KW', 'bhfuil')) {
       const kw = this.toks[this.i++];
-      // §5.11 — `tá Earráid ar thoradh`. Decided by shape, never by lookup, on
-      // the §5.5 pattern: an identifier followed by `ar` can only be this,
-      // because `tá <slonn>` takes one operand and `ar` cannot continue it.
-      // Asking whether the identifier names a type would make the predication
-      // inference rather than agreement, which §6 refused.
+      // §5.11 — `tá Earráid ar thoradh`, decided by shape: IDENT then `ar`
+      // can only be this, since `tá <slonn>` takes one operand.
       if (this.seiceail('IDENT') && this.peek(1).cinéal === 'KW' && this.peek(1).luach === 'ar') {
         const t = this.toks[this.i++];
         this.i++;                                     // ar
@@ -668,7 +534,7 @@ class Parsalai {
       return { cineál: 'Críoch', abhar: this.parsailAonartha(), ionad: kw.ionad };
     }
     if (this.seiceail('KW', 'faigh')) return this.parsailFaigh();
-    // A bare prepositional phrase: `ó "express"` — the whole foreign origin.
+    // A bare prepositional phrase: `ó "express"` — foreign origin.
     if (this.seiceail('KW', 'ó')) {
       const kw = this.toks[this.i++];
       const s = this.suil('STR');
@@ -682,22 +548,10 @@ class Parsalai {
   }
 
   /**
-   * §7.6 — `faigh Duine as stór`.
-   *
-   * The type name is read first, and that is why `faigh` had to be a real
-   * keyword rather than a contextual one: `Duine as stór` on its own is not an
-   * expression this language has, so there is nothing for a lookahead to
-   * disambiguate against.
-   *
-   * `as` and not `ó`. `Duine ó stór` parses as a possessive chain — a member
-   * read of `stór` — which is the opposite of what is meant. And `as` is the
-   * right preposition on the Irish as well: a row comes *out of* a store.
-   * `as` demands the base form, which is what every operator except `ó`, `ar`
-   * and `a` already demands, so the government table does not grow.
-   *
-   * `as` and not `ar`. `ar` introduces a verb frame, and `faigh` takes a type
-   * rather than a verb; §5.8's "only `déan` and `cuir` take an `ar`-phrase as
-   * a frame" stays true.
+   * §7.6 — `faigh Duine as stór`. Type name read first, which is why
+   * `faigh` had to be a real keyword: nothing else can disambiguate a
+   * lookahead here. `as` (not `ó`, which would read as possession; not
+   * `ar`, reserved for verb frames) demands the base form.
    */
   parsailFaigh() {
     const kw = this.suil('KW', 'faigh');
@@ -706,10 +560,7 @@ class Parsalai {
     const foinse = this.parsailSeilbh();
     return {
       cineál: 'Faigh', cineal, foinse, ionad: kw.ionad,
-      // Every store operation is under way. Marking it here means the aspect
-      // rules apply with nothing added to them: E505 without `tar éis`, E504
-      // outside an `ag` verb, E508 on `tar éis` of anything else.
-      leanunach: true,
+      leanunach: true, // every store op is ongoing; existing E504/E505 apply
     };
   }
 
@@ -774,7 +625,7 @@ class Parsalai {
       this.suil('NOD', ')');
       return e;
     }
-    // `a` + lenited verb: the particle that turns a verb into a noun.
+    // `a` + lenited verb: turns a verb into a noun.
     if (t.cinéal === 'IDENT' && t.luach === 'a' && this.peek(1).cinéal === 'IDENT') {
       const iarrtha = this.peek(1).luach;
       const lemma = iarrtha.length > 1 && iarrtha[1] === 'h' ? iarrtha[0] + iarrtha.slice(2) : iarrtha;
@@ -783,11 +634,9 @@ class Parsalai {
         this.i += 2;
         return { cineál: 'Ainmniú', surface: iarrtha, ionad: ionadV };
       }
-      // Not a verb. `a` falls back to being an ordinary identifier — which is
-      // why `a seasmhach = 3` still works — but two identifiers side by side
-      // are not a legal expression here, so the only reading left is a
-      // particle in front of something that cannot be named. Decided by shape
-      // rather than by lookup, as the copular clause is (§5.5).
+      // Not a verb: `a` falls back to an ordinary identifier (`a seasmhach
+      // = 3` still works), but two bare identifiers side by side aren't a
+      // legal expression otherwise, so this is E513.
       throw earraid('E513', this.peek(1).ionad, iarrtha);
     }
     if (t.cinéal === 'IDENT') {

@@ -1,23 +1,13 @@
 'use strict';
 
-/*
- * cúlchríoch.js — the JavaScript backend.
- *
- * By the time we get here, morphology is gone. `dhuine` was resolved to the
- * lemma `duine` in the analyzer, so the emitter only ever sees lemmas. That
- * is the test of whether the grammatical layer is real: if the backend had to
- * know about lenition, we would only have written a find-and-replace (§2.4).
- *
- * Mood and aspect are gone too. An imperative is a plain function; `ag` is
- * `async`; `tar éis` is `await`; a method is a top-level function taking its
- * receiver first, dispatched statically because the analyzer already knew the
- * possessor's category.
- *
- * So is verb inflection: `tá` and `bhfuil` both emit `__bí`, because the
- * independent/dependent alternation is agreement, not meaning. The same proof
- * that applies to lenition applies here — if the backend had to know which
- * form was written, the distinction would be decoration.
- */
+// cúlchríoch.js — the JavaScript backend.
+//
+// By here, morphology is gone: `dhuine` was resolved to lemma `duine` in the
+// analyzer, so the emitter only ever sees lemmas. Mood/aspect are gone too:
+// an imperative is a plain function, `ag` is `async`, `tar éis` is `await`,
+// and a method is a top-level function taking its receiver first (dispatched
+// statically since the analyzer already knew the possessor's category).
+// `tá`/`bhfuil` both emit `__bí` — the alternation is agreement, not meaning.
 
 const REAMHRA = `// arna ghiniúint ag an tiomsaitheoir R336 — ná cuir eagar air
 "use strict";
@@ -35,12 +25,9 @@ function __is(luach, cineál) {
   }
 }
 function __bí(luach) { return luach !== undefined && luach !== null; }
-// §7.6.6 — \`céad ó liosta\` is typed as the element type, so on an empty list
-// it used to hand R336 an \`undefined\` wearing a declared type. The type is
-// right whenever there is a row and the language has no way to say "or not",
-// so the answer is not to weaken the type: it is to stop the wrong answer
-// travelling. Emptiness is still asked about with \`folamh\`, which is what
-// makes this reachable only by a program that did not ask.
+// §7.6.6 — an empty list has no way to say "or not" for a bare Uimhir, so
+// \`céad\` on an empty list throws rather than silently returning undefined
+// wearing a declared type.
 function __céad(liosta) {
   if (!liosta.length) throw new Error("céad: liosta folamh");
   return liosta[0];
@@ -59,24 +46,18 @@ class Ginteoir {
   clar(ast) {
     const onnmhairi = [];
     const beo = [];   // bindings sealadach: exported live, not as a snapshot
-    // Verbs imported unqualified still have to come from somewhere at run
-    // time. The alias is invisible in the source, as the lexicon is.
     for (const [foinse, ailias] of (ast.ailiasanna || new Map())) {
       this.líne(`const ${ailias} = require(${JSON.stringify(conair(foinse))});`);
     }
     for (const m of ast.mireanna) {
-      // Provenance is decided entirely in the front end and emits nothing.
-      // Deliberately no `__contae` on instances: `__cineál` is there because
-      // `__is` reads it and `async` is there because `ag` means it, but
-      // nothing at run time ever asks a value what county it is from. A tag
-      // nobody reads would assert a guarantee the emitted code does not make.
+      // Provenance is decided entirely front-end and emits nothing. No
+      // __contae on instances: nothing at runtime asks a value its county.
       if (m.cineál === 'Contae' || m.cineál === 'Comhaontú') continue;
       if (m.cineál === 'Struchtúr') { this.struchtur(m); onnmhairi.push(`${m.ainm}$nua`); continue; }
       if (m.cineál === 'Suim') {
-        // The sum itself emits nothing: it is a statement about which tags are
-        // possible, and a statement about possibility has no run-time shadow.
-        // Each variant gets the same tagging constructor a struct gets, so
-        // `__is` needs no new case and the backend learns no new concept.
+        // The sum itself emits nothing (a statement about which tags are
+        // possible has no runtime shadow). Each variant gets a struct-style
+        // tagging constructor.
         for (const mal of m.malairti) { this.struchtur(mal); onnmhairi.push(`${mal.ainm}$nua`); }
         continue;
       }
@@ -137,17 +118,9 @@ class Ginteoir {
 
       case 'Cuir': {
         const luach = this.slonn(r.luach);
-        // §7.6 — `cuir duine i stór`. `faigh`'s twin, and the same three
-        // things: a table name, a column list, and the value. The preposition
-        // does not survive, the urú does not survive, and the `stór` marker
-        // still emits nothing — a table-carrying struct compiles byte for byte
-        // to what an ordinary one compiles to. The INSERT itself stays in
-        // `rt/stór.js`, which is what keeps driver vocabulary out of this file.
-        //
-        // No tag is passed, because a row going out needs no `__cineál`: the
-        // column list says which fields to read off the value, and the table
-        // already knows what it is. `faigh` passes one because `__is` wants a
-        // tag on the way back in.
+        // §7.6 — `cuir duine i stór`: table name, column list, value. No
+        // tag on the write side (the column list says what to read off the
+        // value); `faigh` passes one because `__is` wants it coming back in.
         if (r.reamhfhocal === 'i') {
           const t = r.cineálStoir;
           const colúin = t.stor.reimsi.map((c) => JSON.stringify(c)).join(', ');
@@ -161,10 +134,8 @@ class Ginteoir {
         return this.máRáiteas(r, null);
 
       case 'Ordú': {
-        // `déan a fhógair ar dhaoine`. A `for…of` rather than `forEach`,
-        // because an ongoing verb has to be awaited in sequence — commands are
-        // sequential by nature — and because R336 has no closure to hand
-        // a callback anyway.
+        // `déan a fhógair ar dhaoine` — for…of rather than forEach, since an
+        // ongoing verb must await in sequence and R336 has no closures.
         if (r.iteraid) {
           const g = this.slonn(r.argointi[0]);
           const xs = this.slonn(r.fras.abhar);
@@ -180,14 +151,11 @@ class Ginteoir {
         return this.líne(this.slonn(r.slonn) + ';');
 
       default:
-        throw new Error(`ráiteas anaithnid sa chúlchríoch: ${r.cineál}`);
+        throw new Error(`ráiteas anaithnid: ${r.cineál}`);
     }
   }
 
-  /**
-   * `má`/`mura` as a statement, or as an expression assigning into `sprioc`.
-   * A bare `mura` is `else`; `mura <c>` is `else if (!(c))`.
-   */
+  /** `má`/`mura` as a statement, or assigning into `sprioc` as an expression. */
   máRáiteas(e, sprioc, réamhrá = '') {
     const cond = e.diultach ? `!(${this.slonn(e.coinniall)})` : this.slonn(e.coinniall);
     this.bloc(e.ansin, { réamhrá: `${réamhrá}if (${cond}) `, sprioc });
@@ -238,7 +206,7 @@ class Ginteoir {
         return e.ball ? `${req}.${e.ball.lemma}` : req;
       }
 
-      // The grammatical relation collapses to a property read only here.
+      // The grammatical possessive relation collapses to a property read.
       case 'Sealbhach': {
         const sealbh = this.slonn(e.sealbhoir);
         if (e.ionsuite === 'fad') return `${sealbh}.length`;
@@ -272,19 +240,12 @@ class Ginteoir {
       case 'Copail': return `__is(${this.slonn(e.abhar)}, ${JSON.stringify(e.cineal.ainm)})`;
       case 'Substaint': return `__bí(${this.slonn(e.abhar)})`;   // tá / bhfuil alike
 
-      // §5.11 — `tá Earráid ar thoradh`. The backend learns nothing: an
-      // affliction is a value carrying a tag, and `__is` already reads tags.
-      // Nothing at run time knows that the tag was reached through `ar`
-      // rather than through the copula, which is the same erasure §6 got.
+      // §5.11 — an affliction is a value carrying a tag; `__is` already
+      // reads tags, so nothing distinguishes this from the copula path.
       case 'Dochar': return `__is(${this.slonn(e.abhar)}, ${JSON.stringify(e.cineal.ainm)})`;
 
-      // §7.6 — `faigh Duine as stór`. The whole of the backend's knowledge of
-      // the feature: a table name, a column list, and a tag. The marker itself
-      // emits nothing — a `stór` struct compiles to exactly the same thing an
-      // ordinary one does — and the query language stayed in `rt/stór.js`,
-      // which is what keeps driver vocabulary out of this file. No constructor
-      // is named, because an imported type's constructor is not in scope here
-      // and the tag is all `__is` ever wanted.
+      // §7.6 — `faigh Duine as stór`. Table name, column list, tag. No
+      // constructor: an imported type's `$nua` isn't in scope here.
       case 'Faigh': {
         const t = e.cineálStoir;
         const colúin = t.stor.reimsi.map((r) => JSON.stringify(r)).join(', ');
