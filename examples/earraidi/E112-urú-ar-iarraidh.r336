@@ -1,0 +1,15 @@
+// E112 — éilíonn an suíomh urú, agus scríobhadh an bhunfhoirm
+//
+// Is é seo E102 an uraithe: an fhoirm a bhí ag teastáil, agus nach
+// bhfuarthas. Uraíonn `i` a chomhlánú, mar sin `i gcuntas` agus ní
+// `i cuntas`.
+
+as Corcaigh
+
+struchtúr Duine stór as Corcaigh {
+    ainm: Teaghrán
+}
+
+ag gníomh cláraigh(cuntas: Iasacht, duine: Duine) {
+    cuir duine i cuntas
+}

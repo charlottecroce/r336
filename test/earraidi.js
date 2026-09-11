@@ -30,6 +30,11 @@ const it = (ainm, fn) => tastail.push([ainm, fn]);
 
 /** Codes with a message and deliberately no way to fire. Each needs a reason. */
 const INAIRITHE = {
+  E108: 'curtha in áirithe ó 0.13: ba é seo an diúltú don urú, agus ó thug an '
+      + 'réamhfhocal `i` slot dó (§5.2) réitítear an fhoirm in ionad í a '
+      + 'dhiúltú. Is é E113 an locht anois nuair nach n-éilíonn an suíomh í. '
+      + 'D\'athródh athúsáid an chóid seo a bhrí, agus is measa cód a athraíonn '
+      + 'brí ná cód a stopann',
   E211: 'curtha in áirithe: rinneadh fíor é i gcéim 0.8 agus díshealbhaíodh '
       + 'arís é sa chéim chéanna (§26.7)',
   E506: 'curtha in áirithe: ardaíonn an chúlchríoch craobhacha ilráiteacha '

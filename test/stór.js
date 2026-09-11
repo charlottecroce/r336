@@ -348,6 +348,140 @@ it('luaitear aitheantóirí, mar nach í seo an léacsóir', async () => {
   await stór.dún();
 });
 
+// ══ 11. 0.13: `cuir … i …`, an scríobh ════════════════════════════════
+
+const CROI = `as Corcaigh
+struchtúr Duine firinscneach stór as Corcaigh {
+    ainm: Teaghrán
+    aois: Uimhir
+}
+`;
+
+it('scríobhtar rón le `cuir … i …`, agus ní hordú nua é', () => {
+  assert.deepStrictEqual(coid(`${CROI}ag gníomh cláraigh(stór: Iasacht, duine: Duine) {
+    cuir duine i stór
+}`), []);
+});
+
+it('fanann `cuir … ar …` mar a bhí: dhá fhráma, aon bhriathar amháin', () => {
+  // The `ar` frame is still mutation, still walks the chain back to a root,
+  // and still refuses a `seasmhach` target. Adding a second frame took
+  // nothing from the first.
+  assert.deepStrictEqual(coid('x sealadach = 0\ngníomh g() { cuir 1 ar x }'), []);
+  assert.deepStrictEqual(coid('x seasmhach = 0\ngníomh g() { cuir 1 ar x }'), ['E510']);
+  // Agus ní éilíonn an fráma `i` inathraitheacht ar chor ar bith: argóint atá
+  // sa sprioc, ní ceangal, mar sin níl aon E510 le lasadh.
+  assert.deepStrictEqual(coid(`${CROI}ag gníomh f(stór seasmhach: Iasacht, d: Duine) {
+    cuir d i stór
+}`), []);
+});
+
+it('níl tábla ag an gcineál: E611 arís, ón taobh eile', () => {
+  assert.deepStrictEqual(coid(`as Corcaigh
+struchtúr Lom as Corcaigh { x: Uimhir }
+ag gníomh f(stór: Iasacht, l: Lom) { cuir l i stór }`), ['E611']);
+});
+
+it('tá an scríobh ar siúl, mar atá `faigh` (E504)', () => {
+  assert.deepStrictEqual(coid(`${CROI}gníomh cláraigh(stór: Iasacht, duine: Duine) {
+    cuir duine i stór
+}`), ['E504']);
+});
+
+it('ní sprioc bhailí í rud nach ainmníonn stór (E511)', () => {
+  assert.deepStrictEqual(coid(`${CROI}ag gníomh f(stór: Iasacht, d: Duine) {
+    cuir d i 3
+}`), ['E511']);
+});
+
+it('is ordú é an scríobh, mar sin tá sé faoi na rialacha modha (E502)', () => {
+  assert.deepStrictEqual(coid(`${CROI}ag feidhm f(stór: Iasacht, d: Duine) -> Uimhir {
+    cuir d i stór
+    1
+}`), ['E502']);
+});
+
+it('gineann an scríobh glaoch amháin, agus níl mír ná urú ann', () => {
+  const js = jsDe(`${CROI}ag gníomh cláraigh(stór: Iasacht, duine: Duine) {
+    cuir duine i stór
+}`);
+  assert.ok(js.includes('await stór.cuir("duine", ["ainm", "aois"], duine);'), js);
+  const corp = js.split('function scríobh(luach) { console.log(luach); }')[1];
+  for (const focal of [' i ', ' in ', 'urú', 'uraithe', 'séimhiú', 'INSERT', 'Corcaigh']) {
+    assert.ok(!corp.includes(focal), `${focal} sa JS`);
+  }
+});
+
+it('ní ghineann an marc cód ar bith fós — an cruthúnas arís, leis an scríobh ann', () => {
+  // The same whole-string proof as §41's, with the write in the program: a
+  // table-carrying struct still compiles byte for byte to an ordinary one.
+  const le = `as Corcaigh\nstruchtúr D stór as Corcaigh { x: Uimhir }`;
+  const gan = `as Corcaigh\nstruchtúr D as Corcaigh { x: Uimhir }`;
+  assert.strictEqual(jsDe(le), jsDe(gan));
+});
+
+it('ní féidir an scríobh a dháileadh: níl aon scéal idirbhirt ag teastáil fós', () => {
+  // `déan V ar Xs` wants a `gníomh(T)` value and this is a frame, not a verb.
+  // That is what defers §7.6.6's transaction story honestly: bulk write is
+  // not expressible, so it is not owed.
+  const c = coid(`${CROI}ag gníomh f(stór: Iasacht, ds: Liosta(Duine)) {
+    déan cuir ar ds
+}`);
+  assert.notDeepStrictEqual(c, []);
+});
+
+// ══ 12. 0.13: dearbhú na gcolún i rt/stór.js ══════════════════════════
+
+it('diúltaítear do cholún nach bhfuil ar an tábla, agus ainmnítear é', async () => {
+  const { oscail } = require('../rt/stór.js');
+  const stór = await oscail(':memory:');
+  await stór.scéim('CREATE TABLE duine (id INTEGER PRIMARY KEY, ainm TEXT)');
+  await assert.rejects(() => stór.faigh('duine', ['ainm', 'aois'], 'Duine'),
+    /aois.*duine|duine.*aois/s);
+  await assert.rejects(() => stór.faigh('nachAnn', ['x'], 'X'), /nachAnn/);
+  await stór.dún();
+});
+
+it('fanann colún breise ar an diosca dofheicthe', async () => {
+  const { oscail } = require('../rt/stór.js');
+  const stór = await oscail(':memory:');
+  await stór.scéim('CREATE TABLE duine (id INTEGER PRIMARY KEY, ainm TEXT, aois INTEGER)');
+  await stór.cuir('duine', ['ainm', 'aois'], { __cineál: 'Duine', ainm: 'Cáit', aois: 20 });
+  const rónna = await stór.faigh('duine', ['ainm', 'aois'], 'Duine');
+  assert.deepStrictEqual(Object.keys(rónna[0]).sort(), ['__cineál', 'ainm', 'aois']);
+  await stór.dún();
+});
+
+it('turas iomlán: scríobh agus léigh tríd an gcód a ghintear', async () => {
+  const js = jsDe(`${CROI}ag gníomh cláraigh(stór: Iasacht, duine: Duine) {
+    cuir duine i stór
+}
+
+ag gníomh liostaigh(stór: Iasacht) {
+    daoine seasmhach: Liosta(Duine) = tar éis faigh Duine as stór
+    scríobh ainm ó chéad ó dhaoine
+}`);
+  const m = { exports: {} };
+  new Function('module', 'exports', 'require', js)(m, m.exports, require);
+  const { oscail } = require('../rt/stór.js');
+  const stór = await oscail(':memory:');
+  await stór.scéim('CREATE TABLE duine (ainm TEXT, aois INTEGER)');
+  await m.exports.cláraigh(stór, { __cineál: 'Duine', ainm: 'Cáit', aois: 20 });
+  const línte = await scriofa(() => m.exports.liostaigh(stór));
+  assert.deepStrictEqual(línte, ['Cáit']);
+  await stór.dún();
+});
+
+it('ní thugann `céad` ar liosta folamh freagra bréagach a thuilleadh', async () => {
+  // §7.6.6 #4, closed by refusal: emptiness is `folamh`, and the escape hatch
+  // beside it stops handing R336 an `undefined` wearing a declared type.
+  const js = jsDe('xs seasmhach: Liosta(Uimhir) = []\nscríobh céad ó xs');
+  assert.ok(js.includes('__céad(xs)'), js);
+  const m = { exports: {} };
+  assert.throws(() => new Function('module', 'exports', 'require', js)(m, m.exports, require),
+    /liosta folamh/);
+});
+
 // ── rith ──────────────────────────────────────────────────────────────
 (async () => {
   let teip = 0;

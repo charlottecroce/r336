@@ -68,6 +68,17 @@ const EOCHAIRFHOCAIL = new Set([
   // struct-declaration slot only, because `stór` is bound as an ordinary name
   // in `feidhmchlár/sonraí.r336`, `bealaí.r336` and `examples/aspect.r336`.
   'faigh',
+  // §5.2, §5.8 — the preposition of containment, and the first thing in the
+  // language to demand an urú. Two written forms of one particle, conditioned
+  // on the word that follows: `i gcuntas`, `in áit`. They live in this table
+  // for the reason `bhfuil`, `más` and `sheasmhach` do — an inflected form of
+  // a function word is not a new word, and the parser normalises `in` back to
+  // `i` and hands the written form to the analyzer to check.
+  //
+  // A single letter is a legal identifier, so this reserves `i`. `in` is
+  // reserved with it. Neither is bound anywhere in the repository.
+  'i',
+  'in',
   'ar',          // "on" — the surface an action lands on; lenites
   'fíor',        // true
   'bréagach',    // false

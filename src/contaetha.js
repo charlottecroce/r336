@@ -41,12 +41,21 @@
  *
  *  3. `nGall` in *Dún na nGall* is an eclipsed form, and so is `Fhailí` in
  *     *Uíbh Fhailí* a lenited one. Both are frozen inside proper names. They
- *     are not produced by morphology.js and they demand nothing:
- *     `foirmDe(lemma, FOIRM.URAITHE)` still throws, because there is still no
- *     syntactic slot that asks for eclipsis (§5.2). The temptation to reach
- *     for `as an mbaile` is explicitly refused: that eclipsis belongs to the
- *     article, which is future research. Provinces do not change this. There
- *     is no `as An Mhumhain` in the language and there is not going to be.
+ *     are not produced by morphology.js and they demand nothing.
+ *
+ *     0.13 gave eclipsis a slot — the preposition `i` (§5.2) — and that
+ *     changes nothing here, in either direction. These are still opaque
+ *     strings: the greedy reader matches the head word (`Dún`), `nGall` is
+ *     never handed to `reitighFoirm`, and no county name is ever mutated by a
+ *     rule.
+ *
+ *     **The temptation to reach for `as an mbaile` is still explicitly
+ *     refused, and 0.13 is not a step towards it.** That eclipsis belongs to
+ *     the definite article; `i` eclipses on its own — *i mbaile*, never *i an
+ *     mbaile* — so nothing in the new government needs `an` or `na`, and §10's
+ *     first fear about admitting eclipsis does not arrive with it. Provinces
+ *     do not change this either. There is no `as An Mhumhain` in the language
+ *     and there is not going to be.
  *
  * All of the Irish here needs a fluent reader. The county names are standard
  * and I am confident in them; `deoraíocht` in this position, and the wording

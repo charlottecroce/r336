@@ -73,10 +73,29 @@ it('ní shéimhítear rud atá séimhithe cheana', () => {
   assert.strictEqual(mf.inSeimhithe('dhuine').cuis, 'seimhithe-cheana');
 });
 
-it('níl brí ríomhchláraithe ag an urú (§5.2)', () => {
-  // The morphology exists; no syntactic slot ever demands it of an identifier.
-  assert.throws(() => mf.foirmDe('duine', mf.FOIRM.URAITHE), /§5.2/);
+it('éilíonn `i` an t-urú, agus fanann an slot folamh folamh (§5.2)', () => {
+  // 0.13 — the slot §10 said did not exist. `foirmDe` produces the eclipsed
+  // form now, and the fallback is the SEIMHITHE arm's fallback: a word with
+  // nothing to change comes back unchanged, which is the rule and not an
+  // exception to it.
+  assert.strictEqual(mf.foirmDe('duine', mf.FOIRM.URAITHE), 'nduine');
+  assert.strictEqual(mf.foirmDe('cuntas', mf.FOIRM.URAITHE), 'gcuntas');
+  assert.strictEqual(mf.foirmDe('stór', mf.FOIRM.URAITHE), 'stór');
+  assert.strictEqual(mf.foirmDe('rud', mf.FOIRM.URAITHE), 'rud');
   assert.strictEqual(mf.paraidim('duine').uruFéideartha, 'nduine');
+});
+
+it('roghnaíonn an focal ina dhiaidh foirm na míre, mar a dhéanann an chopail', () => {
+  // The second conditioned government in the language, and the copula is its
+  // model: both rules are regressive, so a lookup table on the preposition
+  // could not produce either answer.
+  assert.deepStrictEqual(mf.mirI('cuntas'), { mir: 'i', foirm: mf.FOIRM.URAITHE });
+  assert.deepStrictEqual(mf.mirI('stór'), { mir: 'i', foirm: mf.FOIRM.URAITHE });
+  assert.deepStrictEqual(mf.mirI('áit'), { mir: 'in', foirm: mf.FOIRM.BUN });
+  assert.deepStrictEqual(mf.mirI('Éire'), { mir: 'in', foirm: mf.FOIRM.BUN });
+  // Before a vowel the particle moves and the noun does not, so `uraigh`'s
+  // vowel branch is still computed and still demanded by nothing.
+  assert.strictEqual(mf.uraigh('áit'), 'n-áit');
 });
 
 it('urú ceart ar na consain agus ar na gutaí', () => {
@@ -997,15 +1016,38 @@ it('ní shroicheann an fhoirm shaor an JavaScript', () => {
 
 // ══ 14. Dhá chód a bhí marbh, agus atá beo anois (§38) ════════════════
 
-it('aithnítear foirm uraithe chun í a dhiúltú faoina hainm (E108, §12)', () => {
-  // Bhí E108 sa tábla ó 0.4 agus ní raibh aon áit á chur i bhfeidhm. Thit
-  // foirm uraithe trí na scoilteanna go E101 — "aitheantóir gan sainmhíniú"
-  // mar fhreagra ar Ghaeilge cheart.
-  assert.deepStrictEqual(coid('baile seasmhach = 3\ngníomh p() { scríobh mbaile }'), ['E108']);
-  assert.deepStrictEqual(coid('cat seasmhach = 3\ngníomh p() { scríobh gcat }'), ['E108']);
-  assert.deepStrictEqual(coid('duine seasmhach = 3\ngníomh p() { scríobh nduine }'), ['E108']);
+it('is urú gan údar é foirm uraithe i suíomh nach n-éilíonn í (E113, §5.2)', () => {
+  // Ba é E108 a bhí anseo: aithníodh an fhoirm uraithe chun í a dhiúltú as a
+  // hainm, mar nach raibh brí ríomhchláraithe ag an urú. Ó tá slot ag an urú
+  // (§5.2) réitítear an fhoirm chéanna anois in ionad í a dhiúltú, agus is í an
+  // cheist a chuirtear ná ar cheadaigh an suíomh seo í. Tá E108 curtha in
+  // áirithe: d'athródh a athúsáid brí an chóid, agus is measa sin ná cód a
+  // stopann.
+  assert.deepStrictEqual(coid('baile seasmhach = 3\ngníomh p() { scríobh mbaile }'), ['E113']);
+  assert.deepStrictEqual(coid('cat seasmhach = 3\ngníomh p() { scríobh gcat }'), ['E113']);
+  assert.deepStrictEqual(coid('duine seasmhach = 3\ngníomh p() { scríobh nduine }'), ['E113']);
   // Agus fanann E101 mar atá nuair nach bhfuil lemma ar bith taobh thiar de.
   assert.deepStrictEqual(coid('gníomh p() { scríobh mbaile }'), ['E101']);
+});
+
+it('rialaíonn `i` a chomhlánú, agus is é `reitighFoirm` a dhéanann é (§5.2)', () => {
+  const D = 'struchtúr D stór as Corcaigh { ainm: Teaghrán }\n';
+  const corp = (s) => `as Corcaigh\n${D}ag gníomh f(cuntas: Iasacht, áit: Iasacht, stór: Iasacht, d: D) {\n    ${s}\n}`;
+  assert.deepStrictEqual(coid(corp('cuir d i gcuntas')), []);
+  assert.deepStrictEqual(coid(corp('cuir d in áit')), []);
+  // Tá slot folamh ag `stór` sa DÁ athrú tosaigh — seasann s in aghaidh an
+  // tséimhithe in `st-` agus níl foirm uraithe ar bith aige — agus mar sin ní
+  // thaispeánann an frása is tábhachtaí sa ghné seo athrú ar bith.
+  assert.deepStrictEqual(coid(corp('cuir d i stór')), []);
+  assert.deepStrictEqual(coid(corp('cuir d i cuntas')), ['E112']);
+  assert.deepStrictEqual(coid(corp('cuir d i shtór')), ['E104']);
+});
+
+it('bíonn an mhír féin mícheart uaireanta, agus ní hé an t-ainmfhocal (E111)', () => {
+  const D = 'struchtúr D stór as Corcaigh { ainm: Teaghrán }\n';
+  const corp = (s) => `as Corcaigh\n${D}ag gníomh f(cuntas: Iasacht, áit: Iasacht, d: D) {\n    ${s}\n}`;
+  assert.deepStrictEqual(coid(corp('cuir d in gcuntas')), ['E111']);
+  assert.deepStrictEqual(coid(corp('cuir d i áit')), ['E111']);
 });
 
 it('inbhéartaítear an t-urú go tacar, mar nach mapáil aonair é', () => {

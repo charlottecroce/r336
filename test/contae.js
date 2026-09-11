@@ -90,13 +90,21 @@ it('ní contae í an deoraíocht', () => {
   assert.strictEqual(ctae.CONTAETHA.has('deoraíocht'), false);
 });
 
-it('fanann an t-urú gan bhrí: ainm dílis atá i "nGall", ní foirm', () => {
-  // `Dún na nGall` is in the table as a frozen proper name. Nothing produced
-  // it and nothing demands it: the eclipsed slot is still empty (§12).
+it('ní chuireann slot an uraithe isteach ar ainm dílis: "nGall" atá ann, ní foirm', () => {
+  // `Dún na nGall` is in the table as a frozen proper name. 0.13 gave eclipsis
+  // a slot — the preposition `i` (§5.2) — and that changes nothing here in
+  // either direction: the greedy reader matches the head word, `nGall` is
+  // never handed to `reitighFoirm`, and no rule mutates a county name.
   assert.ok(ctae.isContae('Dún na nGall'));
-  assert.throws(() => mf.foirmDe('gall', mf.FOIRM.URAITHE));
-  // Nor did the article arrive with it. Nor did it arrive with the provinces:
-  // `An Mhumhain` is one opaque string and no program ever writes it.
+  assert.deepStrictEqual(coid('as Dún na nGall\nx seasmhach = 1'), []);
+  assert.deepStrictEqual(coid('as Uíbh Fhailí\nx seasmhach = 1'), []);
+  // Agus is teaghrán reoite é, ní foirm: níl aon fhoirm eile aige. Ní
+  // aithnítear `nDún na nGall` mar urú ar chontae — ní contae ar bith é.
+  assert.deepStrictEqual(coid('as nDún na nGall\nx seasmhach = 1'), ['E602']);
+  assert.strictEqual(ctae.isContae('nDún na nGall'), false);
+  // Nor did the article arrive with it, and 0.13 is not a step towards it:
+  // `i` eclipses on its own — *i mbaile*, never *i an mbaile*. `An Mhumhain`
+  // is still one opaque string and no program ever writes it.
   assert.strictEqual(ctae.isContae('na'), false);
   assert.strictEqual(ctae.isContae('An'), false);
   assert.strictEqual(ctae.isContae('An Mhumhain'), false);

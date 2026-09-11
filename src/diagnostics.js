@@ -45,6 +45,10 @@ const CUISEANNA = {
   'seimhithe-cheana': 'tá séimhiú air cheana',
   'neamhlitir': 'ní tosaíonn sé le consan inséimhithe',
   'folamh': 'tá sé folamh',
+  // §5.2 — the two `inUraithe` returns. `gan-uru` is the common one and is
+  // the reason `i stór` is correct as written: s has no eclipsed form at all.
+  'gan-uru': 'ní tosaíonn sé le consan in-uraithe ná le guta',
+  'uraithe-cheana': 'tá urú air cheana',
 };
 
 /**
@@ -82,12 +86,43 @@ const M = {
   E107: (surface, ceart) =>
     `Ní mór aitheantóirí a fhógairt sa bhunfhoirm. Fógraíodh "${surface}"; úsáid "${ceart}".`,
 
+  // CURTHA IN ÁIRITHE ó 0.13 — ní lasann sé a thuilleadh.
+  //
+  // Ba é seo an diúltú: aithníodh foirm uraithe chun í a dhiúltú as a hainm,
+  // mar nach raibh brí ríomhchláraithe ag an urú. Ó chuir `i` slot ar fáil
+  // (§5.2) tá an fhoirm sin inghlactha nuair a éilítear í, agus is é E113 an
+  // locht nuair nach n-éilítear. D'athródh sé brí an chóid é a athúsáid, agus
+  // is measa cód a athraíonn brí ná cód a stopann. Tá an chúis in `INAIRITHE`
+  // in `test/earraidi.js`; níl aon chomhad cáis aige a thuilleadh.
   E108: (ainm) => `Níl urú curtha i bhfeidhm sa teanga fós: "${ainm}".`,
 
   E109: (conair) => `Ní bhfuarthas an modúl "${conair}".`,
 
   E110: (timthriall) =>
     `Timthriall i measc na modúl: ${timthriall.join(' → ')}. Ní féidir modúl a thiomsú roimhe féin.`,
+
+  // ── an t-urú, agus an réamhfhocal a éilíonn é (§5.2, 0.13) ────────────
+  //
+  // Ceithre chód nua seachas trí cinn atá ann a leathnú: tá an t-urú agus an
+  // séimhiú ar comhdhéanamh, ach ní hionann iad, agus is fearr cód in aghaidh
+  // an athraithe tosaigh ná cód in aghaidh an chruth. Leanann E112/E113/E114
+  // E102/E103/E104 líne ar líne d'aon ghnó — an fhoirm a bhí ag teastáil, an
+  // t-athrú gan údar, an focal nach féidir a athrú.
+  //
+  // Baineann E111 le rud eile ar fad. Ní locht athraithe tosaigh é ach locht
+  // allamorph: tá an mhír féin mícheart. Is é cruth E512/E517 é — cad a
+  // scríobhadh, cad atá ag teastáil, agus cén fáth.
+  E111: (scriofa, ceart, focal) =>
+    `Foirm mhícheart den réamhfhocal: scríobhadh "${scriofa}", ach is é "${ceart}" atá ag teastáil roimh "${focal}".`,
+
+  E112: (surface, ceart, oibreoir) =>
+    `Ní mór urú a chur ar an aitheantóir "${surface}" i ndiaidh "${oibreoir}". Úsáid "${ceart}".`,
+
+  E113: (surface, ceart) =>
+    `Urú gan údar ar "${surface}": níl an suíomh seo á rialú ag oibreoir uraithe. Úsáid an bhunfhoirm "${ceart}".`,
+
+  E114: (lemma, cuis) =>
+    `Ní féidir urú a chur ar an aitheantóir "${lemma}" (${CUISEANNA[cuis] || cuis}); is í an bhunfhoirm an t-aon fhoirm atá aige.`,
 
   // ── 2xx: cineálacha ───────────────────────────────────────────────────
   // `le` prefixes h- to a vowel-initial word (le hUimhir, le Teaghrán), so
@@ -133,7 +168,7 @@ const M = {
   // istigh d'áireamh catagóirí: sin suim nár críochnaíodh a scríobh. Ceadaítear
   // é fós i réimse struchtúir, mar nár mhaígh taifead riamh go n-áiríonn sé.
   E213: (suim, malairt, reimse, cineal) =>
-    `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad firinscneach is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
+    `Ní féidir le réimse malairte a bheith ina ${cineal}: tá "${reimse}" sa mhalairt "${malairt}" den tsuim "${suim}". Dearbhaíonn suim cad is féidir le luach a bheith, agus ní catagóir í an Iasacht. Tiontaigh ar an teorainn é.`,
 
   // §6 — ní suim í suim nach bhfuil dhá mhalairt inti.
   //
@@ -143,7 +178,7 @@ const M = {
   // mar sin níl san eiliminéatóir ach deasghnáth: struchtúr a bhfuil `más`
   // éigeantach air. Luaitear a bhfuarthas, mar is é sin an rud atá le ceartú.
   E214: (ainm, lion) =>
-    `Ní suim í firinscneach "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
+    `Ní suim í "${ainm}": ${lion === 0 ? 'níl malairt ar bith inti' : 'níl inti ach malairt amháin'}. Ní mór dhá cheann ar a laghad a bheith i suim, mar is é rogha idir catagóirí an t-aon rud a dhearbhaíonn sí.`,
 
   // ── 3xx: copail agus briathar substaintigh ────────────────────────────
   E301: () => `Ní mór gur cineál atá ar dheis na copaile "is".`,
@@ -170,8 +205,12 @@ const M = {
   E503: () =>
     `Luach á chaitheamh i dtraipisí taobh istigh d'fheidhm. Sa mhodh táscach luaitear rudaí; sa mhodh ordaitheach a dhéantar iad.`,
 
+  // Athfhoclaithe ag 0.13 chun `cuir … i …` a chlúdach. Ní athrú brí é: ba é
+  // an locht céanna riamh é — gníomh ar siúl i suíomh nach bhfuil ar siúl —
+  // agus "tar éis" an t-aon bhealach chuige go dtí seo. Is é an cód an
+  // conradh agus ní hé an foclaíocht (§9).
   E504: () =>
-    `"tar éis" gan "ag": ní féidir gníomh a chríochnú mura bhfuil sé ar siúl. Cuir "ag" roimh an bhfógra.`,
+    `Gníomh ar siúl gan "ag": ní féidir gníomh a chríochnú ná a chur i gcrích mura bhfuil an fógra ar siúl. Cuir "ag" roimh an bhfógra.`,
 
   E505: (cineal) =>
     `Gníomh atá ar siúl (${cineal}) á úsáid mar luach. Úsáid "tar éis" chun é a chríochnú.`,
@@ -191,7 +230,9 @@ const M = {
   E510: (ainm) =>
     `Tá "${ainm}" seasmhach: ní féidir staid a chur air. Fógair le "sealadach" é más rud é atá le hathrú.`,
 
-  E511: () => `Ní sprioc bhailí do "cuir … ar" é seo: teastaíonn ceangal nó réimse.`,
+  E511: (fras) => (fras === 'i'
+    ? `Ní sprioc bhailí do "cuir … i" é seo: teastaíonn aitheantóir a ainmníonn stór.`
+    : `Ní sprioc bhailí do "cuir … ar" é seo: teastaíonn ceangal nó réimse.`),
 
   E512: (surface, ceart, rialu) =>
     `Foirm mhícheart den bhriathar substaintigh: scríobhadh "${surface}", ach is í an fhoirm ${rialu} "${ceart}" atá ag teastáil sa suíomh seo.`,

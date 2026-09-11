@@ -155,11 +155,16 @@ it('coinníonn an modúl inscne amháin in aghaidh an fhocail (E527)', () => {
 });
 
 it('fanann "a" ina cháithnín ainmnithe: níor thóg an inscne an slot sin', () => {
-  // §40 declined the possessive determiner, so `a` before a noun is still
-  // E513 and eclipsis is still *gan bhrí* (§12). The eclipsed slot is empty.
+  // §40 declined the possessive determiner, and 0.13 does not undeclined it.
+  // `a` before a noun is still E513. What changed is only that eclipsis has a
+  // slot of its own now — the preposition `i` (§5.2) — and that slot is not
+  // this one: `i` eclipses the noun it governs, it does not select a
+  // referent, and selecting is the semantic use of gender the original
+  // refusal was about (§13).
   assert.deepStrictEqual(coid('struchtúr D { cóta: Teaghrán }\n'
     + 'cóta seasmhach = "glas"\ngníomh p() { scríobh a chóta }'), ['E513']);
-  assert.throws(() => mf.foirmDe('cóta', mf.FOIRM.URAITHE));
+  assert.strictEqual(mf.foirmDe('cóta', mf.FOIRM.URAITHE), 'gcóta');
+  assert.deepStrictEqual(coid('cóta seasmhach = "glas"\ngníomh p() { scríobh gcóta }'), ['E113']);
 });
 
 // ══ 3. Ní shroicheann ceachtar acu an chúlchríoch ════════════════════

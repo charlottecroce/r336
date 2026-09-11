@@ -26,7 +26,7 @@ const URU = { b: 'm', c: 'g', d: 'n', f: 'bh', g: 'n', p: 'b', t: 'd' };
 const FOIRM = Object.freeze({
   BUN: 'bun',            // base / citation form
   SEIMHITHE: 'séimhithe', // lenited
-  URAITHE: 'uraithe',    // eclipsed — recognised, deliberately unimplemented (§5.2)
+  URAITHE: 'uraithe',    // eclipsed — demanded by `i` since 0.13 (§5.2)
 });
 
 const isGuta = (ch) => !!ch && GUTAI.includes(ch.toLowerCase());
@@ -92,11 +92,19 @@ function foirmDe(lemma, foirm) {
     case FOIRM.SEIMHITHE:
       return inSeimhithe(lemma).ok ? seimhigh(lemma) : lemma;
     case FOIRM.URAITHE:
-      // §5.2 stands: no identifier has an eclipsed form, because eclipsis has
-      // been given no programming meaning. `uraigh` below exists, and is used
-      // only where Irish itself puts eclipsis — on a verb after a
-      // subordinating particle. See CONTEXT.md §5.2.
-      throw new Error('urú: níl brí ríomhchláraithe sannta dó (§5.2)');
+      // §5.2, as of 0.13: eclipsis is demanded, by the preposition `i`, and
+      // the arm is the SEIMHITHE arm above with a different mutation — the
+      // fallback included. `i stór` is not an exception to the rule, it is
+      // the rule applied to a word with an empty mutation slot, exactly as
+      // `as stór` and `aois óg` are.
+      //
+      // The refusal shrank rather than vanished. `uraigh` still prefixes `n-`
+      // to a vowel and nothing demands that form: before a vowel the
+      // preposition takes the `in` allomorph and the noun is left alone (see
+      // `mirI`). So the pre-0.13 state of this slot survives, narrowed to
+      // vowel-initial words, and `--paraidím` still prints what no position
+      // asks for.
+      return inUraithe(lemma).ok ? uraigh(lemma) : lemma;
     default:
       throw new Error(`foirm anaithnid: ${foirm}`);
   }
@@ -163,7 +171,10 @@ function paraidim(lemma) {
     [FOIRM.SEIMHITHE]: can.ok ? seimhigh(lemma) : lemma,
     inSeimhithe: can.ok,
     cuis: can.cuis || null,
-    // Shown but never demanded: no syntactic slot asks for it (§5.2).
+    // Demanded by `i` since 0.13, for a consonant-initial word. For a
+    // vowel-initial one this is still shown and never asked for, because the
+    // particle moves instead of the noun (`in áit`). Key unchanged: it is in
+    // `--paraidím --json` output and `index.js` reads it.
     uruFéideartha: ur.ok ? uraigh(lemma) : null,
   };
 }
@@ -287,6 +298,51 @@ function paraidimChopail(focal = 'Cineál') {
 
 /** Every written form of the copula, for the lexer's keyword table. */
 const FOIRMEACHA_COPAIL = Object.freeze(['is', 'más', 'mura', 'murab']);
+
+/**
+ * Is this a cell some syntactic position can actually demand?
+ *
+ * The guard for `foirmChopail`'s four dead cells, and the twin of `inShaor`
+ * below. It exists so that a caller asks *before* calling rather than reading
+ * a thrown message: a section pointer inside a runtime string made
+ * documentation numbering part of the test contract once already, and §9's
+ * rule — codes are the contract, wording is not — only ever covered
+ * diagnostics routed through `diagnostics.js`. The `throw` stays where it is
+ * and is now unreachable from the compiler, which is the position
+ * `foirmShaor`'s has been in since 0.10.
+ */
+function cealBeo(rialu) {
+  return COPAIL_BEO.includes(rialu);
+}
+
+/**
+ * The preposition `i`, and the form it demands of the word it governs.
+ *
+ * Irish `i` eclipses — *i mbaile*, *i gcathair*, *i dteach* — and takes the
+ * allomorph `in` before a vowel, where the noun is then left alone: *in áit*,
+ * not the pre-Caighdeán *i n-áit*.
+ *
+ * So the form this preposition demands is **not a constant**. It is a
+ * function of the first letter of the word that follows, which makes this the
+ * second conditioned government in the language and puts it in the copula's
+ * shape rather than `ó`'s: `foirmChopail` above chooses `mura`/`murab` on
+ * exactly the same evidence, and for exactly the same reason — both rules are
+ * regressive. That is also the answer to the sixth question's fifth cousin:
+ * the compiler has to know the grammar here, because a lookup table keyed on
+ * the preposition cannot produce an answer that depends on the noun.
+ *
+ * Two written forms of one particle, like `bhfuil`, `más` and `sheasmhach`:
+ * the parser normalises `in` back to `i` and hands the written form to the
+ * analyzer to check.
+ */
+function mirI(ceadFhocal) {
+  return isGuta((ceadFhocal || '')[0])
+    ? { mir: 'in', foirm: FOIRM.BUN }
+    : { mir: 'i', foirm: FOIRM.URAITHE };
+}
+
+/** Every written form of `i`, for the lexer's keyword table. */
+const MIREANNA_I = Object.freeze(['i', 'in']);
 
 /**
  * An briathar saor — the autonomous verb. Céim 0.10, §8.
@@ -571,7 +627,10 @@ module.exports = {
   foirmBhriathartha,
   RIALU_COPAIL,
   COPAIL_BEO,
+  cealBeo,
   FOIRMEACHA_COPAIL,
+  mirI,
+  MIREANNA_I,
   foirmChopail,
   paraidimChopail,
   foirmShaor,

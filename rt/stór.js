@@ -36,6 +36,34 @@
  * compiler, and hands back rows already tagged, so `__is` can read them.
  * Nothing here knows what a `struchtúr` is: it receives three strings and a
  * list of strings, and it does not ask what they mean.
+ *
+ * ── 0.13: `cuir`, agus an dearbhú colún ───────────────────────────────
+ *
+ * Two additions, and they answer two different things.
+ *
+ * `cuir` is `faigh`'s twin and arrives for the same reason: `cuir X i stór`
+ * on the R336 side (§7.6) hands down a table name, a column list and a value,
+ * and the INSERT is built here so that no SQL is written above this file.
+ * There is no tag on the way out, because a row leaving does not need one —
+ * the column list says which fields to read off the value. `faigh` passes one
+ * because `__is` wants a tag on the way back in.
+ *
+ * `dearbhaighColúin` answers §7.6.6's standing question: what happens when the
+ * table on disk disagrees with the type in the file. Until now, nothing — a
+ * declared column that was not there came back as a raw driver error naming
+ * neither the type nor the field. The compiler will still not *generate* a
+ * schema, because that needs a type→column-type map, which is another
+ * language's vocabulary shipped inside this one. Checking is not supplying:
+ * this is the move §5.12.1 makes about the gender dictionary, and it is the
+ * reason the refusal to generate can stay a refusal rather than a gap.
+ *
+ * The check is cached per table per connection, so it costs one extra read the
+ * first time a table is touched and nothing after that. **The interrogation
+ * itself belongs to the driver, not to this class**: `PRAGMA table_info` is
+ * SQLite's, not SQL's, and a driver over a socket would answer the question
+ * some other way. So `colúin` joins `nasc`, `gach`, `rith`, `scéim` and `dún`
+ * in the driver table below, which is exactly where everything
+ * driver-specific already lives.
  */
 
 const TIOMANAITHE = Object.create(null);
@@ -54,6 +82,15 @@ TIOMANAITHE.sqlite = {
   },
   scéim(db, sql) { db.exec(sql); },
   dún(db) { db.close(); },
+  // 0.13 — the columns a table actually has. `PRAGMA table_info` is SQLite's
+  // own and belongs here for that reason; a different driver answers the same
+  // question with a different sentence. An empty list means no such table,
+  // which the caller reports as such rather than guessing.
+  colúin(db, tábla) {
+    return db.prepare(`PRAGMA table_info(${aitheantóirLuaite(tábla)})`)
+      .all()
+      .map((r) => r.name);
+  },
 };
 
 class Stór {
@@ -62,6 +99,9 @@ class Stór {
     this.tiománaí = tiománaí;
     this.db = db;
     this.conair = conair;
+    // tábla → Set de na colúin atá air. Ní líontar é ach nuair a bhaintear
+    // úsáid as tábla den chéad uair.
+    this.scéimeanna = new Map();
   }
 
   /** Read. A query asks a question, so on the R336 side it is a feidhm. */
@@ -74,9 +114,49 @@ class Stór {
     return this.tiománaí.rith(this.db, sql, params);
   }
 
-  async scéim(sql) { this.tiománaí.scéim(this.db, sql); }
+  async scéim(sql) {
+    this.tiománaí.scéim(this.db, sql);
+    // A statement that may have created or altered a table invalidates what we
+    // believe about every table. Cheap to drop, and the alternative is a cache
+    // that is quietly wrong exactly once, on the run where the schema changed.
+    this.scéimeanna.clear();
+  }
 
   async dún() { this.tiománaí.dún(this.db); }
+
+  /**
+   * §7.6.6 — the declared columns are on the table, or the program stops here
+   * and says which one is not.
+   *
+   * The compiler knows the type's field list and nothing about the disk; the
+   * disk knows its columns and nothing about the type. This is the only place
+   * the two are ever in the same room, so it is the only place the question
+   * can be asked. It refuses rather than adapting: a read that silently
+   * dropped a missing field would hand R336 a value of a type it is not.
+   *
+   * Extra columns on disk are not an error and stay invisible — `id` in
+   * `feidhmchlár/` is exactly that, and a `struchtúr` states every field it
+   * has, so a row carrying one the type never declared is not a value of that
+   * type but a row that happens to contain one.
+   */
+  dearbhaighColúin(tábla, réimsí) {
+    let atá = this.scéimeanna.get(tábla);
+    if (!atá) {
+      atá = new Set(this.tiománaí.colúin(this.db, tábla));
+      this.scéimeanna.set(tábla, atá);
+    }
+    if (!atá.size) {
+      throw new Error(`stór: níl tábla "${tábla}" sa bhunachar seo.`);
+    }
+    for (const r of réimsí) {
+      if (!atá.has(r)) {
+        throw new Error(
+          `stór: níl colún "${r}" ar an tábla "${tábla}". `
+          + `Tá na colúin seo air: ${[...atá].join(', ')}.`,
+        );
+      }
+    }
+  }
 
   /**
    * `tar éis faigh Duine as stór` — every row of one table, typed.
@@ -102,6 +182,7 @@ class Stór {
    * is a property of the lexer and this file is not the lexer.
    */
   async faigh(tábla, réimsí, cinéal) {
+    this.dearbhaighColúin(tábla, réimsí);
     const colúin = réimsí.map(aitheantóirLuaite).join(', ');
     const rónna = this.tiománaí.gach(
       this.db,
@@ -109,6 +190,32 @@ class Stór {
       [],
     );
     return rónna.map((rón) => Object.assign({ __cineál: cinéal }, rón));
+  }
+
+  /**
+   * `cuir duine i stór` — one row of one table, from a typed value.
+   *
+   * `faigh`'s twin, and deliberately its mirror image: the same table name,
+   * the same column list in the same declared order, and the value instead of
+   * the tag. Reading the fields off the value in that order is what keeps the
+   * declared field list the single source of truth in both directions — there
+   * is no second place to write a column list and therefore no second place
+   * for one to drift.
+   *
+   * One row per call, because the R336 side cannot ask for more: `cuir … i …`
+   * is a frame and not a verb, so `déan` cannot distribute it over a list.
+   * That is what defers the transaction story honestly rather than by
+   * omission (§7.6.6).
+   */
+  async cuir(tábla, réimsí, luach) {
+    this.dearbhaighColúin(tábla, réimsí);
+    const colúin = réimsí.map(aitheantóirLuaite).join(', ');
+    const áiteanna = réimsí.map(() => '?').join(', ');
+    return this.tiománaí.rith(
+      this.db,
+      `INSERT INTO ${aitheantóirLuaite(tábla)} (${colúin}) VALUES (${áiteanna})`,
+      réimsí.map((r) => luach[r]),
+    );
   }
 }
 

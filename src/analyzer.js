@@ -414,33 +414,70 @@ class Anailiseoir {
    * the form the slot demands (`foirm`), and a way to ask whether a lemma is
    * known here, either return the lemma or file a precise diagnostic.
    */
-  reitighFoirm(surface, foirm, lemmaAnn, oibreoir) {
+  /**
+   * The lemma a surface form stands for, or null.
+   *
+   * Split out of `reitighFoirm` at 0.13 because a second caller needs it, and
+   * needs it *before* it knows which form to demand. `i` chooses its own
+   * allomorph from the first letter of the word it governs (§5.2, `mf.mirI`),
+   * so the government cannot be computed until the lemma is in hand, and the
+   * lemma cannot be recovered from the surface without trying a de-eclipsis.
+   * Resolution and agreement are two jobs, and only the second one was ever
+   * the thing §11.2 requires to live in a single function.
+   *
+   * A de-eclipsis is tried second and only if the plain guess fails, because
+   * `lemmaiFaoiUru` returns a set: `ng-` is an eclipsed `g-` or an ordinary
+   * word beginning `ng-`, and the symbol table is what decides.
+   */
+  lemmaCeangailte(surface, lemmaAnn) {
     const lemma = mf.lemmaTuairim(surface);
-    if (!lemmaAnn(lemma)) {
-      // §5.2 — an eclipsed identifier is recognised so that it can be refused
-      // by name. Eclipsis has no programming meaning, `foirmDe(…, URAITHE)`
-      // throws, and `--paraidím` prints every eclipsed form annotated *gan
-      // bhrí*. Falling through to E101 would answer a form that is correct
-      // Irish with "undefined identifier", which is the worst of the two
-      // available answers. Same move as E519 makes for the past autonomous.
-      if (mf.cosuilLeUru(surface)) {
-        for (const iarracht of mf.lemmaiFaoiUru(surface)) {
-          if (lemmaAnn(iarracht)) return { earraid: ['E108', surface] };
-        }
+    if (lemmaAnn(lemma)) return lemma;
+    if (mf.cosuilLeUru(surface)) {
+      for (const iarracht of mf.lemmaiFaoiUru(surface)) {
+        if (lemmaAnn(iarracht)) return iarracht;
       }
-      return { earraid: ['E101', lemma] };
     }
+    return null;
+  }
+
+  reitighFoirm(surface, foirm, lemmaAnn, oibreoir) {
+    // §5.2 — an eclipsed identifier used to be recognised here only so that it
+    // could be refused by name (E108), because eclipsis had no programming
+    // meaning. Since 0.13 `i` demands it, so the same recognition *resolves*
+    // instead: the form is correct Irish, and answering correct Irish with
+    // "undefined identifier" was always the worse of the two available
+    // answers. Whether this position licensed the urú is the agreement
+    // question below, not the resolution question here.
+    const lemma = this.lemmaCeangailte(surface, lemmaAnn);
+    if (lemma === null) return { earraid: ['E101', mf.lemmaTuairim(surface)] };
 
     const ceart = mf.foirmDe(lemma, foirm);
     if (ceart === surface) return { lemma };
 
     const scriobhSeimhithe = mf.cosuilLeSeimhiu(surface);
+    const scriobhUraithe = mf.cosuilLeUru(surface);
     const inSeim = mf.inSeimhithe(lemma);
+    const inUr = mf.inUraithe(lemma);
 
+    // Six arms, three per mutation, in the same order and saying the same
+    // three things: this word cannot take that mutation, this position did
+    // not license it, this position demanded it and did not get it. The
+    // eclipsis codes are separate from the lenition ones on purpose (§9,
+    // 0.13): the shapes are identical but the mutations are not, and a reader
+    // holding an E112 should not have to work out which mutation is meant.
     if (scriobhSeimhithe && !inSeim.ok) return { earraid: ['E104', lemma, inSeim.cuis] };
-    if (scriobhSeimhithe && foirm === FOIRM.BUN) return { earraid: ['E103', surface, lemma] };
+    if (scriobhUraithe && !inUr.ok) return { earraid: ['E114', lemma, inUr.cuis] };
+    if (scriobhSeimhithe && foirm !== FOIRM.SEIMHITHE) {
+      return { earraid: ['E103', surface, lemma] };
+    }
+    if (scriobhUraithe && foirm !== FOIRM.URAITHE) {
+      return { earraid: ['E113', surface, lemma] };
+    }
     if (!scriobhSeimhithe && foirm === FOIRM.SEIMHITHE) {
       return { earraid: ['E102', surface, ceart, oibreoir || 'ó'] };
+    }
+    if (!scriobhUraithe && foirm === FOIRM.URAITHE) {
+      return { earraid: ['E112', surface, ceart, oibreoir || 'i'] };
     }
     return { earraid: ['E105', surface, lemma, ceart] };
   }
@@ -465,6 +502,17 @@ class Anailiseoir {
       return;
     }
     const rialu = mhir.diultach ? mf.RIALU_COPAIL.MURA : mf.RIALU_COPAIL.MA;
+    // §0.3 — ask before calling. Four of the copula's seven cells have no
+    // syntactic slot and `foirmChopail` throws a bare `Error` for them, with a
+    // section number inside the message; asserting on that message made
+    // documentation numbering part of the test contract, which is the thing
+    // §9's rule exists to prevent and which §9 could not cover, because a bare
+    // `Error` is not a coded diagnostic. Guarding here is `mf.inShaor`'s shape
+    // exactly (§8), and it leaves the `throw` as an assertion the compiler can
+    // no longer reach. Only MA and MURA are constructible above, so this
+    // cannot fire today; it is here so that it still cannot fire when a fifth
+    // particle is added.
+    if (!mf.cealBeo(rialu)) return;
     const ceart = mf.foirmChopail(rialu, e.cineal.ainm);
     // A separate `is` after the particle is the pre-0.9 word order. It is not
     // a wrong allomorph but a missing fusion, so it is named as it was
@@ -1132,6 +1180,68 @@ class Anailiseoir {
       // Mutation is a command: `cuir 3 ar chomhaireamh`.
       case 'Cuir': {
         if (this.ctx.modh === 'táscach') this.bail.cuir('E502', r.ionad, 'cuir');
+
+        /*
+         * §7.6 — `cuir duine i stór`, the write. The second frame of one verb,
+         * and it learns almost nothing:
+         *
+         *  - Mood learned nothing. It is a command, so E502 above already
+         *    covers it, and the `Ordú` path already emits `await` under `ag`.
+         *  - Aspect learned nothing. It is ongoing by construction, which is
+         *    what E504 was always about; only that code's wording moved.
+         *  - The type system learned nothing. E611 is `faigh`'s code read from
+         *    the other end: there it names a type with no table, here it holds
+         *    a value of one.
+         *  - The county system learned nothing. Passing a value as an argument
+         *    is not a member read, so it is never border-checked (§7.2) — the
+         *    same free ride `faigh` took.
+         *  - Government learned one call site, and it is the fifth. What it did
+         *    not learn is a fifth mechanism: `reitighFoirm` still does all of
+         *    the agreement in this language, and the invariant §11.2 states was
+         *    always the function and never the number.
+         *
+         * There is no bulk write. `déan V ar Xs` wants a `gníomh(T)` value and
+         * this is a built-in frame, not a verb, so no statement can write more
+         * than one row. §7.6.6's demand that a write needs a transaction story
+         * first is therefore answered rather than deferred: it needs one when
+         * bulk write arrives, and bulk write is not expressible.
+         */
+        if (r.reamhfhocal === 'i') {
+          // Ongoing by construction, as `faigh` is, and marked the way every
+          // other ongoing command is marked — the backend reads this flag and
+          // writes the `await` from it.
+          r.leanunach = true;
+          if (!this.ctx.leanunach) this.bail.cuir('E504', r.ionad);
+
+          const tScriofa = this.luach(r.luach, scoip);
+          if (tScriofa && tScriofa.k === 'struchtúr' && tScriofa.stor) r.cineálStoir = tScriofa;
+          else this.bail.cuir('E611', r.luach.ionad, ainmCineail(tScriofa || IASACHT));
+
+          // The destination is an argument, not a binding, so it is named
+          // rather than walked: no `fréamhCheangal`, no E510. A store is not
+          // a thing this program owns and writing to one is not mutation of
+          // anything the file can see.
+          if (r.stor.cineál !== 'Aitheantóir') {
+            this.bail.cuir('E511', r.stor.ionad, 'i');
+            return;
+          }
+
+          // The particle is chosen by the word it governs, so the lemma has to
+          // be recovered before the government is known (§5.2, `mf.mirI`).
+          // Unresolvable falls back to the surface, and `reitighFoirm` files
+          // the E101 a line later.
+          const lemma = this.lemmaCeangailte(r.stor.surface, (l) => !!scoip.faigh(l));
+          const { mir, foirm } = mf.mirI(lemma || r.stor.surface);
+          if (r.mirScriofa !== mir) {
+            this.bail.cuir('E111', r.ionadMhir, r.mirScriofa, mir, lemma || r.stor.surface);
+          }
+          const tStor = this.luach(r.stor, scoip, foirm, mir);
+          if (tStor && tStor.k !== 'iasacht') {
+            this.bail.cuir('E201', r.stor.ionad, 'Iasacht', ainmCineail(tStor));
+          }
+          return;
+        }
+
         const tLuach = this.luach(r.luach, scoip);
         // `ar` governs its complement exactly as `ó` does.
         const tSprioc = this.luach(r.sprioc, scoip, FOIRM.SEIMHITHE, 'ar');

@@ -1,0 +1,21 @@
+// E113 — urú gan údar: níl an suíomh seo á rialú ag oibreoir uraithe.
+//
+// Ba é E108 a bhí ag freagairt an chomhaid seo go dtí 0.13, agus diúltú a bhí
+// ann: aithníodh an fhoirm uraithe d'aon ghnó chun í a dhiúltú faoina hainm,
+// mar nach raibh aon bhrí ríomhchláraithe sannta don urú in aon áit.
+//
+// Tá slot aige anois — an réamhfhocal `i` (§5.2) — agus mar sin athraíonn an
+// freagra seachas an cheist. Réitítear `mbaile` go `baile` in ionad é a
+// dhiúltú, agus is í an cheist a chuirtear ansin ná ar cheadaigh an suíomh
+// seo urú ar chor ar bith. Níor cheadaigh: ní rialaíonn `scríobh` a argóint.
+//
+// Tá `mbaile` ina Ghaeilge cheart i gcónaí, agus is measa go mór
+// "aitheantóir gan sainmhíniú" mar fhreagra uirthi ná an ceann seo. Sin an
+// cóireáil chéanna a fhaigheann `liostaíodh` ó E519 — ach le difríocht: is
+// cheist faoin suíomh atá anseo anois, agus ní cheist faoin teanga.
+
+baile seasmhach = 3
+
+gníomh príomh() {
+    scríobh mbaile
+}

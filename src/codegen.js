@@ -35,6 +35,16 @@ function __is(luach, cineál) {
   }
 }
 function __bí(luach) { return luach !== undefined && luach !== null; }
+// §7.6.6 — \`céad ó liosta\` is typed as the element type, so on an empty list
+// it used to hand R336 an \`undefined\` wearing a declared type. The type is
+// right whenever there is a row and the language has no way to say "or not",
+// so the answer is not to weaken the type: it is to stop the wrong answer
+// travelling. Emptiness is still asked about with \`folamh\`, which is what
+// makes this reachable only by a program that did not ask.
+function __céad(liosta) {
+  if (!liosta.length) throw new Error("céad: liosta folamh");
+  return liosta[0];
+}
 function scríobh(luach) { console.log(luach); }
 `;
 
@@ -127,6 +137,23 @@ class Ginteoir {
 
       case 'Cuir': {
         const luach = this.slonn(r.luach);
+        // §7.6 — `cuir duine i stór`. `faigh`'s twin, and the same three
+        // things: a table name, a column list, and the value. The preposition
+        // does not survive, the urú does not survive, and the `stór` marker
+        // still emits nothing — a table-carrying struct compiles byte for byte
+        // to what an ordinary one compiles to. The INSERT itself stays in
+        // `rt/stór.js`, which is what keeps driver vocabulary out of this file.
+        //
+        // No tag is passed, because a row going out needs no `__cineál`: the
+        // column list says which fields to read off the value, and the table
+        // already knows what it is. `faigh` passes one because `__is` wants a
+        // tag on the way back in.
+        if (r.reamhfhocal === 'i') {
+          const t = r.cineálStoir;
+          const colúin = t.stor.reimsi.map((c) => JSON.stringify(c)).join(', ');
+          return this.líne(`${r.leanunach ? 'await ' : ''}${this.slonn(r.stor)}`
+            + `.cuir(${JSON.stringify(t.stor.tabla)}, [${colúin}], ${luach});`);
+        }
         return this.líne(`${this.slonn(r.sprioc)} = ${luach};`);
       }
 
@@ -216,7 +243,7 @@ class Ginteoir {
         const sealbh = this.slonn(e.sealbhoir);
         if (e.ionsuite === 'fad') return `${sealbh}.length`;
         if (e.ionsuite === 'folamh') return `(${sealbh}.length === 0)`;
-        if (e.ionsuite === 'céad') return `${sealbh}[0]`;
+        if (e.ionsuite === 'céad') return `__céad(${sealbh})`;
         if (e.modhR336) return `((...a) => ${e.modhR336.jsAinm}(${sealbh}, ...a))`;
         return `${sealbh}.${e.ball.lemma}`;
       }

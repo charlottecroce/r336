@@ -1,0 +1,15 @@
+// E114 — ní féidir urú a chur ar an bhfocal seo
+//
+// Is é seo E104 an uraithe, agus tagann sé chugainn ón treo céanna: focal a
+// bhfuil urú air cheana níl aon urú eile le cur air. Séimhiú a éilíonn `ar`,
+// agus tá `gcat` scríofa i gcruth uraithe nach féidir leis an lemma a iompar.
+//
+// Tabhair faoi deara cé chomh cúng is atá an cás. Ní shroicheann an cód seo
+// focal a thosaíonn le l, m, n, r, s ná h — níl aon chruth uraithe
+// inscríofa acu sin ar chor ar bith, mar sin is é E101 a fhaigheann siad.
+
+gcat sealadach = 3
+
+gníomh príomh() {
+    cuir 1 ar gcat
+}

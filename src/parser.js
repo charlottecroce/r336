@@ -489,12 +489,45 @@ class Parsalai {
    * an entity is in with `ar` (tá ocras orm), and `cuir X ar Y` is the
    * ordinary way to give something a state. It is an imperative, so mutation
    * is a command and the existing mood rules confine it to `gníomh`.
+   *
+   * §7.6, 0.13 — and `cuir <luach> i <stór>`, "put this in that", which is
+   * the store write.
+   *
+   * A second frame rather than a third verb, and no new keyword. An Irish
+   * light verb selects its preposition lexically, which is already this
+   * language's argument for `déan … ar …` (§12); a light verb selecting two
+   * is that pattern doing more work, not a new mechanism. *cuir i dtaisce* is
+   * the idiom, so the reading is as ordinary as `faigh X as Y` is. And §5.8
+   * stays literally true — `déan` and `cuir` are still the only two built-ins
+   * that take an **`ar`**-phrase as a verb frame, because this frame is not
+   * one.
+   *
+   * The preposition decides what follows it, so the branch is here rather
+   * than in the analyzer. `ar` takes a possessive chain, because its target
+   * is a binding that is about to change; `i` takes an ordinary expression,
+   * because its target is an argument that is not.
+   *
+   * `in` is normalised to `i` and the written form is carried for the
+   * analyzer to check, exactly as `bhfuil`, `más`, `murab` and the lenited
+   * state adjectives are. The particle's form is conditioned on the word
+   * after it (§5.2, `mf.mirI`), so it is agreement and not spelling.
    */
   parsailCuir() {
     const kw = this.suil('KW', 'cuir');
     const luach = this.parsailSlonn();
+    const mir = this.meaitseail('KW', 'i') || this.meaitseail('KW', 'in');
+    if (mir) {
+      return {
+        cineál: 'Cuir', reamhfhocal: 'i', luach,
+        stor: this.parsailSlonn(), mirScriofa: mir.luach,
+        ionadMhir: mir.ionad, ionad: kw.ionad,
+      };
+    }
     this.suil('KW', 'ar');
-    return { cineál: 'Cuir', luach, sprioc: this.parsailSeilbh(), ionad: kw.ionad };
+    return {
+      cineál: 'Cuir', reamhfhocal: 'ar', luach,
+      sprioc: this.parsailSeilbh(), ionad: kw.ionad,
+    };
   }
 
   /**
